@@ -1,0 +1,222 @@
+.meus-dados-container {
+  display: none;
+}
+
+.section-title {
+  font-size: 18px;
+  color: #4a4a4a;
+  font-weight: 700;
+  margin-bottom: 15px;
+  border-left: 4px solid #e91e63;
+  padding-left: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.grid-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-row {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+}
+
+.triple-row {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+.address-main-row {
+  grid-template-columns: 1fr 1.5fr 1.5fr;
+}
+
+.address-street-row {
+  grid-template-columns: 3fr 1fr;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+}
+
+.form-group input {
+  padding: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #fafafa;
+  transition: 0.3s;
+}
+
+.form-group input:focus {
+  border-color: #e91e63;
+  background-color: #fff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+}
+
+.input-readonly {
+  background-color: #f0f0f0 !important;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.input-container-simples {
+  position: relative;
+  width: 100%;
+}
+
+.texto-mostrar {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+  color: #e91e63;
+  text-transform: uppercase;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 1024px) {
+  .section-title {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .form-group input {
+    padding: 11px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .orders-header {
+    padding: 20px 15px;
+  }
+
+  .orders-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .grid-form {
+    gap: 12px;
+  }
+
+  .form-row {
+    gap: 15px;
+  }
+
+  .triple-row,
+  .address-main-row,
+  .address-street-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .form-group label {
+    font-size: 12px;
+  }
+
+  .form-group input {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .form-group input:focus {
+    box-shadow: 0 0 0 2px rgba(233, 30, 99, 0.1);
+  }
+
+  .texto-mostrar {
+    font-size: 10px;
+    right: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .orders-page {
+    padding: 25px 12px;
+  }
+
+  .orders-header {
+    padding: 15px 12px;
+    margin-bottom: 20px;
+  }
+
+  .orders-header h1 {
+    font-size: 1.2rem;
+    margin-bottom: 3px;
+  }
+
+  .orders-header p {
+    font-size: 0.85rem;
+  }
+
+  .admin-table-container {
+    padding: 12px;
+    margin-bottom: 25px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    margin-bottom: 8px;
+    border-left: 3px solid #e91e63;
+  }
+
+  .grid-form {
+    gap: 10px;
+  }
+
+  .form-row {
+    gap: 10px;
+  }
+
+  .form-group label {
+    font-size: 11px;
+  }
+
+  .form-group input {
+    padding: 9px;
+    font-size: 11px;
+  }
+
+  .texto-mostrar {
+    font-size: 9px;
+    right: 8px;
+  }
+
+  .input-container-simples {
+    position: relative;
+    width: 100%;
+  }
+}
+
+@media (max-width: 320px) {
+  .orders-header h1 {
+    font-size: 1rem;
+  }
+
+  .section-title {
+    font-size: 12px;
+  }
+
+  .form-group input {
+    font-size: 10px;
+  }
+}

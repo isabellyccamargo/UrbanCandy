@@ -1,0 +1,7 @@
+# Ignorar completamente a pasta da IA
+UrbanCandy_IA/
+
+# Ignorar pastas de dependências que serão recriadas
+**/node_modules/
+**/dist/
+**/.env

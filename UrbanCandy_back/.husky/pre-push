@@ -1,0 +1,22 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🧪 Validação final antes do push: Executando testes unitários (Jest)..."
+npm test -- --passWithNoTests
+
+if [ $? -ne 0 ]; then
+  echo "❌ Testes unitários falharam! Push bloqueado."
+  echo "📋 Execute 'npm test' localmente e corrija os erros."
+  exit 1
+fi
+
+echo "🎭 Executando testes End-to-End (Playwright) antes do push..."
+npm run test:e2e
+
+if [ $? -ne 0 ]; then
+  echo "❌ Testes E2E falharam! Push bloqueado."
+  echo "📋 Execute 'npm run test:e2e' localmente e corrija os erros."
+  exit 1
+fi
+
+echo "✅ Todos os testes (unitários e E2E) aprovados! Push permitido."

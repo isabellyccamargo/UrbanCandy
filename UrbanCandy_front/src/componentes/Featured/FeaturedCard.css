@@ -1,0 +1,142 @@
+.feature-card {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  width: 280px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 35px rgba(209, 47, 122, 0.15);
+}
+
+.feature-image-container {
+  position: relative;
+  height: 180px;
+  width: 100%;
+}
+
+.feature-bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feature-icon-badge {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #d12f7a;
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 4px solid white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon-badge {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.feature-info {
+  padding: 40px 20px 25px;
+}
+
+.feature-info h3 {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.feature-info p {
+  font-size: 0.9rem;
+  color: #777;
+  line-height: 1.4;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 768px) {
+  .feature-card {
+    width: 240px;
+  }
+
+  .feature-image-container {
+    height: 150px;
+  }
+
+  .feature-icon-badge {
+    width: 45px;
+    height: 45px;
+    border: 3px solid white;
+  }
+
+  .feature-info {
+    padding: 35px 15px 20px;
+  }
+
+  .feature-info h3 {
+    font-size: 1.05rem;
+    margin-bottom: 8px;
+  }
+
+  .feature-info p {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .feature-card {
+    width: calc(100% - 20px);
+    max-width: 100%;
+    margin: 0 10px;
+  }
+
+  .feature-image-container {
+    height: 120px;
+  }
+
+  .feature-icon-badge {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    border: 2px solid white;
+  }
+
+  .feature-info {
+    padding: 30px 12px 15px;
+  }
+
+  .feature-info h3 {
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+
+  .feature-info p {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .feature-card {
+    width: calc(100% - 16px);
+    margin: 0 8px;
+  }
+
+  .feature-image-container {
+    height: 100px;
+  }
+
+  .feature-info h3 {
+    font-size: 0.85rem;
+  }
+}

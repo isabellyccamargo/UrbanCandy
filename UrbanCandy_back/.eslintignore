@@ -1,0 +1,7 @@
+node_modules
+dist
+build
+coverage
+.husky
+jest.config.cjs
+commitlint.config.cjs

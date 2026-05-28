@@ -1,0 +1,134 @@
+.orders-page {
+  background-color: #fff5f8;
+  min-height: 50vh;
+  padding: 40px 20px;
+}
+
+.admin-table-container {
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  max-width: 100%;
+  margin: 0 auto;
+  margin-bottom: 50px;
+}
+
+.orders-header h1 {
+  color: #4a4a4a;
+  font-size: 2rem;
+  margin-bottom: 5px;
+}
+
+.orders-header p {
+  color: #888;
+  margin-bottom: 20px;
+}
+
+.badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.badge.status-pending {
+  background-color: #f1c40f;
+  color: #fff;
+}
+
+.badge.status-paid {
+  background-color: #2ecc71;
+  color: #fff;
+}
+
+.badge.status-canceled {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.badge.status-delivered {
+  background-color: #3498db;
+  color: #fff;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 1024px) {
+  .orders-page {
+    padding: 30px 15px;
+  }
+
+  .admin-table-container {
+    padding: 20px;
+    margin-bottom: 40px;
+  }
+
+  .orders-header h1 {
+    font-size: 1.7rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .orders-page {
+    padding: 25px 12px;
+  }
+
+  .admin-table-container {
+    padding: 15px;
+    margin-bottom: 30px;
+    overflow-x: auto;
+  }
+
+  .orders-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .orders-header p {
+    font-size: 0.9rem;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .orders-page {
+    padding: 20px 10px;
+  }
+
+  .admin-table-container {
+    padding: 12px;
+    margin-bottom: 25px;
+    overflow-x: auto;
+    max-width: calc(100vw - 20px);
+  }
+
+  .orders-header h1 {
+    font-size: 1.2rem;
+  }
+
+  .orders-header p {
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+  }
+
+  .badge {
+    padding: 3px 8px;
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .orders-header h1 {
+    font-size: 1rem;
+  }
+
+  .admin-table-container {
+    padding: 10px;
+  }
+}

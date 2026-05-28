@@ -1,0 +1,247 @@
+.category-form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: #ff2d78;
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.form-title {
+  color: #333333;
+  font-size: 1.8rem;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.form-subtitle {
+  color: #666;
+  margin-bottom: 45px;
+  font-size: 0.95rem;
+}
+
+.category-card-form {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  width: 94%;
+  border: 1px solid #f5f5f5;
+}
+
+.input-group {
+  margin-bottom: 25px;
+}
+
+.input-group label {
+  display: block;
+  color: #ff2d78;
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  outline: none;
+  font-size: 0.9rem;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.input-group input:focus {
+  border-color: #ffb3d1;
+  background-color: #fffafc;
+}
+
+.input-group input::placeholder {
+  color: #ccc;
+  font-size: 0.85rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.btn-cancel {
+  flex: 1;
+  background: transparent;
+  border: 1px solid #ff2d78;
+  color: #ff2d78;
+  padding: 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #fff5f8;
+}
+
+.btn-save {
+  flex: 1;
+  background: #ff2d78;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-save:hover {
+  filter: brightness(1.05);
+}
+
+/* ===== RESPONSIVIDADE ===== */
+
+@media (max-width: 1024px) {
+  .form-title {
+    font-size: 1.5rem;
+  }
+
+  .category-card-form {
+    width: 96%;
+    padding: 30px;
+  }
+
+  .input-group {
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .category-form-container {
+    padding: 20px 15px;
+  }
+
+  .form-title {
+    font-size: 1.3rem;
+  }
+
+  .form-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+  }
+
+  .category-card-form {
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .input-group {
+    margin-bottom: 15px;
+  }
+
+  .input-group label {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+
+  .input-group input {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+
+  .form-actions {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    flex: 1;
+    min-width: 120px;
+    padding: 9px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-form-container {
+    padding: 15px 12px;
+  }
+
+  .btn-back {
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+  }
+
+  .form-title {
+    font-size: 1.1rem;
+  }
+
+  .form-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+  }
+
+  .category-card-form {
+    padding: 15px;
+  }
+
+  .input-group {
+    margin-bottom: 12px;
+  }
+
+  .input-group label {
+    font-size: 0.75rem;
+    margin-bottom: 6px;
+  }
+
+  .input-group input {
+    padding: 9px 10px;
+    font-size: 0.8rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    flex: 1;
+    min-width: 100%;
+    width: 100%;
+    padding: 10px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .form-title {
+    font-size: 1rem;
+  }
+
+  .category-card-form {
+    padding: 12px;
+  }
+}
