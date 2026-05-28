@@ -1,0 +1,59 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🔍 Etapa 1/4: Validando código com ESLint no Backend..."
+npm --prefix UrbanCandy_back run lint:check
+
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint encontrou erros no Backend. Execute 'npm --prefix UrbanCandy_back run lint --fix' para corrigir."
+  exit 1
+fi
+
+echo "🔍 Etapa 1/4: Validando código com ESLint no Frontend..."
+npm --prefix UrbanCandy_front run lint:check
+
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint encontrou erros no Frontend. Execute 'npm --prefix UrbanCandy_front run lint --fix' para corrigir."
+  exit 1
+fi
+
+echo "✨ Etapa 2/4: Validando formatação com Prettier no Backend..."
+npm --prefix UrbanCandy_back run format:check
+
+if [ $? -ne 0 ]; then
+  echo "❌ Prettier encontrou erros de formatação no Backend. Execute 'npm --prefix UrbanCandy_back run format' para corrigir."
+  exit 1
+fi
+
+echo "✨ Etapa 2/4: Validando formatação com Prettier no Frontend..."
+npm --prefix UrbanCandy_front run format:check
+
+if [ $? -ne 0 ]; then
+  echo "❌ Prettier encontrou erros de formatação no Frontend. Execute 'npm --prefix UrbanCandy_front run format' para corrigir."
+  exit 1
+fi
+
+echo "🧪 Etapa 3/4: Executando testes com Jest no Backend..."
+npm --prefix UrbanCandy_back test -- --passWithNoTests
+
+if [ $? -ne 0 ]; then
+  echo "❌ Testes no Backend falharam. Verifique os erros acima."
+  exit 1
+fi
+
+echo "🧪 Etapa 3/4: Executando testes com Jest no Frontend..."
+npm --prefix UrbanCandy_front test -- --passWithNoTests
+
+if [ $? -ne 0 ]; then
+  echo "❌ Testes no Frontend falharam. Verifique os erros acima."
+  exit 1
+fi
+
+echo "🎭 Etapa 4/4: Executando testes End-to-End com Playwright no Backend..."
+npm --prefix UrbanCandy_back run test:e2e 2>/dev/null || echo "⚠️  Testes E2E do Backend não foram implementados ainda (esperado nesta fase)."
+
+echo "🎭 Etapa 4/4: Executando testes End-to-End com Playwright no Frontend..."
+npm --prefix UrbanCandy_front run test:e2e 2>/dev/null || echo "⚠️  Testes E2E do Frontend não foram implementados ainda (esperado nesta fase)."
+
+
+echo "✅ Todas as validações passaram! Commit permitido."

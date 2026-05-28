@@ -13,8 +13,7 @@
     "lint": "eslint src --fix",
     "lint:check": "eslint src",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "postinstall": "husky install"
+    "format:check": "prettier --check ."
   },
   "keywords": [],
   "author": "",
