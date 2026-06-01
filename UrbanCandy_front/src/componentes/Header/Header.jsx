@@ -6,7 +6,7 @@ import { Button } from '../Button/Button';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/AuthContext';
 import './Header.css';
-import { useCart } from '../../Hooks/UseCart';
+import { useCart } from '../../hooks/UseCart';
 
 export const Header = () => {
   const { user, setUser, logout, isLoginModalOpen, setIsLoginModalOpen } = useAuth();
