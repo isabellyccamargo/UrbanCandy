@@ -1,14 +1,14 @@
 {
-	"folders": [
-		{
-			"path": "UrbanCandy_back"
-		},
-		{
-			"path": "UrbanCandy_front"
-		},
-		{
-			"path": "UrbanCandy_IA"
-		}
-	],
-	"settings": {}
+  "folders": [
+    {
+      "path": "UrbanCandy_back",
+    },
+    {
+      "path": "UrbanCandy_front",
+    },
+    {
+      "path": "UrbanCandy_IA",
+    },
+  ],
+  "settings": {},
 }
