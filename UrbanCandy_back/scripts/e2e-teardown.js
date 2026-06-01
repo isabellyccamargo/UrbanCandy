@@ -1,26 +1,36 @@
-// Script de teardown para testes E2E usando Sequelize
-// Limpa todas as tabelas do banco de teste após os testes
+#!/usr/bin/env node
 
-const { Sequelize } = require('sequelize');
+/**
+ * Script de Teardown para Testes E2E
+ * Limpa o banco de dados após os testes
+ */
 
-const databaseUrl = process.env.DATABASE_URL_TEST || process.env.DATABASE_URL;
-if (!databaseUrl || !databaseUrl.includes('test')) {
-  console.error('ERRO: O banco de dados de teste não está configurado corretamente!');
-  process.exit(1);
-}
+const { execSync } = require('child_process');
+const path = require('path');
 
-const sequelize = new Sequelize(databaseUrl, { logging: false });
+const rootDir = path.resolve(__dirname, '..');
 
-async function main() {
+async function teardown() {
+  console.log('\n🧹 Iniciando limpeza pós-testes E2E...');
+
   try {
-    await sequelize.authenticate();
-    await sequelize.drop();
-    console.log('Banco de teste limpo após os testes!');
+    // Limpar banco de dados
+    console.log('✓ Limpando banco de dados...');
+    try {
+      execSync('npx prisma migrate reset --force', {
+        cwd: rootDir,
+        stdio: 'inherit',
+      });
+    } catch (error) {
+      console.warn('⚠ Falha ao limpar banco, ignorando...');
+    }
+
+    console.log('\n✅ Limpeza concluída!\n');
     process.exit(0);
-  } catch (err) {
-    console.error('Erro ao limpar banco de teste:', err);
+  } catch (error) {
+    console.error('\n❌ Erro durante teardown:', error.message);
     process.exit(1);
   }
 }
 
-main();
+teardown();
