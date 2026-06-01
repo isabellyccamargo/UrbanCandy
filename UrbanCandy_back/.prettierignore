@@ -6,3 +6,5 @@ coverage
 *.log
 .env*
 uploads/
+test-results/
+
