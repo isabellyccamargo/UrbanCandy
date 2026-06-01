@@ -1,5 +1,4 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
 echo "🔍 Etapa 1/4: Corrigindo código com ESLint no Backend..."
 npm --prefix UrbanCandy_back run lint
