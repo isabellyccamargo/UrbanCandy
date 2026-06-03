@@ -5,8 +5,8 @@ services:
     container_name: urbancandy-mysql-container
     restart: always
     environment:
-      MYSQL_DATABASE: urbancandy_dockercompose
-      MYSQL_ROOT_PASSWORD: ADMIN
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     ports:
       - '3306:3306'
     volumes:
@@ -22,11 +22,11 @@ services:
     build: ./UrbanCandy_back 
     image: urbancandy-backend:v9
     environment:
-      JWT_SECRET: uogvyfivcyifvcgifcvyf
-      DB_HOST: urbancandy-db
-      DB_USER: root
-      DB_PASSWORD: ADMIN
-      DB_NAME: urbancandy_dockercompose
+      JWT_SECRET:  ${JWT_SECRET}  
+      DB_HOST: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
     volumes:
       - ./UrbanCandy_back:/app
       - /app/node_modules
