@@ -8,7 +8,7 @@ services:
       MYSQL_DATABASE: urbancandy_dockercompose
       MYSQL_ROOT_PASSWORD: ADMIN
     ports:
-      - '3307:3306'
+      - '3306:3306'
     volumes:
       - urbancandy_db_data:/var/lib/mysql
     networks:
@@ -20,9 +20,7 @@ services:
     container_name: urbancandy-backend-container
     restart: on-failure
     build: ./UrbanCandy_back 
-    image: urbancandy-backend:v7
-    ports:
-      - '3030:3000' 
+    image: urbancandy-backend:v9
     environment:
       JWT_SECRET: uogvyfivcyifvcgifcvyf
       DB_HOST: urbancandy-db
@@ -41,13 +39,27 @@ services:
 
   # FRONTEND
   urbancandy-frontend:
+    build: ./UrbanCandy_front
     image: urbancandy-frontend:latest
     container_name: urbancandy-frontend-container
     restart: always
-    ports:
-      - '5173:5173' 
     networks:
       - urbancandy-network
+
+  # Nginx
+  urbancandy-nginx:
+    image: nginx:alpine
+    container_name: urbancandy-nginx-container
+    restart: always
+    ports:
+      - '80:80' 
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - urbancandy-network
+    depends_on:
+      - urbancandy-frontend
+      - urbancandy-backend
 
 volumes:
   urbancandy_db_data:
