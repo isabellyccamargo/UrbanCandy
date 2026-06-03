@@ -3,7 +3,7 @@ import './CategoryCard.css';
 
 export const CategoryCard = ({ title, image }) => {
   const navigate = useNavigate();
-  const baseImgUrl = 'http://localhost/uploads/';
+  const baseImgUrl = '/uploads/';
 
   const nomeExibicao = typeof title === 'object' ? title.name_category : title;
 

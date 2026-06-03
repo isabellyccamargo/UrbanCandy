@@ -16,9 +16,10 @@ const PORT = process.env.PORT || 3000;
 // 2. Configure o CORS ANTES das rotas e do express.json
 server.use(
   cors({
-    origin: '*', // Em desenvolvimento, o '*' libera para qualquer origem (Vite, Thunder Client, etc.)
+    origin: ['https://urbancandy.local', 'http://localhost:3000', 'http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: true,
   })
 );
 
@@ -35,7 +36,7 @@ server.get('/api/health', (req, res) => {
 
 // Altere para usar process.cwd() para apontar para a raiz (/app)
 server.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-server.use(publico);
+server.use('/api', publico);
 
 // Middleware de tratamento de erros - DEVE ser o último middleware
 server.use(errorHandler);
