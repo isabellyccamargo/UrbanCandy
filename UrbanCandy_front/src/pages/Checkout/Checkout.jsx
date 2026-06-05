@@ -164,7 +164,7 @@ const Checkout = () => {
           {cart.items.map((item) => (
             <div key={item.id_product} className="summary-item">
               <img
-                src={`http://localhost:3030/uploads/${item.products?.image}`}
+                src={`https://urbancandy.local/uploads/${item.products?.image}`}
                 alt={item.products?.name}
                 onError={(e) => {
                   e.target.src = 'https://via.placeholder.com/50';

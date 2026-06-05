@@ -35,7 +35,7 @@ server.get('/api/health', (req, res) => {
 
 // Altere para usar process.cwd() para apontar para a raiz (/app)
 server.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-server.use(publico);
+server.use('/api', publico);
 
 // Middleware de tratamento de erros - DEVE ser o último middleware
 server.use(errorHandler);

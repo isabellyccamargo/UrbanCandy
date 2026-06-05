@@ -82,7 +82,7 @@ const ProductList = () => {
                   <td>#{p.id_product}</td>
                   <td>
                     <img
-                      src={`http://localhost:3030/uploads/${p.image}`}
+                      src={`https://urbancandy.local/uploads/${p.image}`}
                       alt={p.name}
                       className="product-img-table"
                       onError={(e) => {
