@@ -10,8 +10,8 @@ import sobre1 from '../../assets/sobre1.png';
 import sobre2 from '../../assets/sobre2.png';
 import sobre3 from '../../assets/sobre3.png';
 import imginicio from '../../assets/imgInicio.jpg';
-import imginicio2 from '../../assets/imginicio2.jpg';
-import imginicio3 from '../../assets/imginicio3.png';
+import imginicio2 from '../../assets/imgInicio2.jpg';
+import imginicio3 from '../../assets/imgInicio3.png';
 import './Home.css';
 
 const SectionHeader = ({ title, sub }) => (

@@ -1,4 +1,4 @@
-import { useCart } from '../../Hooks/UseCart';
+import { useCart } from '../../hooks/UseCart';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
 import { Button } from '../Button/Button';

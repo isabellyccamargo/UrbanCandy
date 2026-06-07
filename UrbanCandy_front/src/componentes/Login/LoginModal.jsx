@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { loginUser, setHeaderToken } from '../../services/Api';
 import { Link } from 'react-router-dom';
-import { useCart } from '../../Hooks/UseCart';
+import { useCart } from '../../hooks/UseCart';
 import { Button } from '../Button/Button';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/AuthContext';

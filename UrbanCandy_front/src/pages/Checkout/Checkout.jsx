@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../../Hooks/UseCart';
+import { useCart } from '../../hooks/UseCart';
 import { createOrder, getUserProfile, getAllTypeOfPayment } from '../../services/Api';
 import { Button } from '../../componentes/Button/Button';
 import { toast } from 'react-toastify';
