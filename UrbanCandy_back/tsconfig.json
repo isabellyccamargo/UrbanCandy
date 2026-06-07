@@ -2,27 +2,21 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "nodenext",
+    "outDir": "./dist",
     "strict": true,
-
     "typeRoots": ["./node_modules/@types", "./src/@types"],
-
     "types": ["jest"],
     "sourceMap": true,
     "declaration": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "declaration": true,
     "declarationMap": true,
-
+    "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-
-    "strict": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true
-  }
+    "moduleDetection": "force"
+  },
+  "exclude": ["node_modules", "dist", "__tests__", "**/*.test.ts", "**/*.spec.ts"]
 }

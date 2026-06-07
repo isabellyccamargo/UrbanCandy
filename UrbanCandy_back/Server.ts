@@ -24,8 +24,6 @@ server.use(
 dataBaseConectionn();
 setupAssociations();
 
-server.use(express.json());
-
 // 3. O express.json deve vir logo após o CORS
 server.use(express.json());
 
