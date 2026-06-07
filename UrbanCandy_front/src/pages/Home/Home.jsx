@@ -1,18 +1,18 @@
-import { useEffect, useState, useRef } from "react";
-import { getAllProducts } from "../../services/Api";
-import { CardProduct } from "../../componentes/CardProduct/CardProduct";
-import { CategoryCard } from "../../componentes/Category/CategoryCard";
-import { FeatureCard } from "../../componentes/Featured/FeaturedCard";
-import { Link } from "react-router-dom";
-import { FEATURES, CATEGORY_IMAGES } from "./HomeData";
-import { toast } from "react-toastify";
-import sobre1 from "../../assets/sobre1.png";
-import sobre2 from "../../assets/sobre2.png";
-import sobre3 from "../../assets/sobre3.png";
-import imginicio from "../../assets/imgInicio.jpg";
-import imginicio2 from "../../assets/imginicio2.jpg";
-import imginicio3 from "../../assets/imginicio3.png";
-import "./Home.css";
+import { useEffect, useState, useRef } from 'react';
+import { getAllProducts } from '../../services/Api';
+import { CardProduct } from '../../componentes/CardProduct/CardProduct';
+import { CategoryCard } from '../../componentes/Category/CategoryCard';
+import { FeatureCard } from '../../componentes/Featured/FeaturedCard';
+import { Link } from 'react-router-dom';
+import { FEATURES, CATEGORY_IMAGES } from './HomeData';
+import { toast } from 'react-toastify';
+import sobre1 from '../../assets/sobre1.png';
+import sobre2 from '../../assets/sobre2.png';
+import sobre3 from '../../assets/sobre3.png';
+import imginicio from '../../assets/imgInicio.jpg';
+import imginicio2 from '../../assets/imginicio2.jpg';
+import imginicio3 from '../../assets/imginicio3.png';
+import './Home.css';
 
 const SectionHeader = ({ title, sub }) => (
   <div className="categories-header">
@@ -27,14 +27,14 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const heroImages = [imginicio, imginicio2, imginicio3];
-  
+
   // 1. Referência criada corretamente aqui
   const destaquesRef = useRef(null);
 
   // 2. Função de scroll suave mapeada
   const scrollToDestaques = (e) => {
-    e.preventDefault(); 
-    destaquesRef.current?.scrollIntoView({ behavior: "smooth" });
+    e.preventDefault();
+    destaquesRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -55,42 +55,33 @@ const Home = () => {
         const productsArray = response?.data?.data || [];
 
         if (!Array.isArray(productsArray)) {
-          throw new Error("Formato de dados inválido");
+          throw new Error('Formato de dados inválido');
         }
 
         const featuredProducts = productsArray.filter(
           (p) =>
-            p.featured == 1 ||
-            p.featured == true ||
-            p.featured === "1" ||
-            p.featured === "true",
+            p.featured == 1 || p.featured == true || p.featured === '1' || p.featured === 'true'
         );
 
         setProducts(featuredProducts);
 
         const uniqueCategories = Array.from(
-          new Set(
-            productsArray.map(
-              (p) => p.category?.name_category || p.category || "Geral",
-            ),
-          ),
+          new Set(productsArray.map((p) => p.category?.name_category || p.category || 'Geral'))
         ).map((name) => ({
           name,
           image:
             CATEGORY_IMAGES[name] ||
-            productsArray.find(
-              (p) => (p.category?.name_category || p.category) === name,
-            )?.image,
+            productsArray.find((p) => (p.category?.name_category || p.category) === name)?.image,
         }));
 
         setCategories(uniqueCategories);
       } catch (err) {
-        console.error("Erro na Home:", err);
+        console.error('Erro na Home:', err);
         toast.error(
-          "Ops! Tivemos um problema ao carregar nossos doces. Tente atualizar a página! 🍬",
+          'Ops! Tivemos um problema ao carregar nossos doces. Tente atualizar a página! 🍬',
           {
-            theme: "colored",
-          },
+            theme: 'colored',
+          }
         );
       } finally {
         setLoading(false);
@@ -107,7 +98,7 @@ const Home = () => {
             {heroImages.map((img, index) => (
               <div
                 key={index}
-                className={`hero-bg-image ${index === currentSlide ? "active" : ""}`}
+                className={`hero-bg-image ${index === currentSlide ? 'active' : ''}`}
                 style={{ backgroundImage: `url(${img})` }}
               />
             ))}
@@ -124,23 +115,16 @@ const Home = () => {
                 </h1>
                 <p className="hero-subtitle">Macios, úmidos e irresistíveis</p>
                 <p className="hero-description">
-                  Ingredientes nobres, receitas exclusivas e muito amor em cada
-                  criação. Descubra o sabor da verdadeira confeitaria artesanal.
+                  Ingredientes nobres, receitas exclusivas e muito amor em cada criação. Descubra o
+                  sabor da verdadeira confeitaria artesanal.
                 </p>
 
                 <div className="hero-actions">
-                  <Link
-                    to="../cardapio/brigadeiros"
-                    className="btn-hero-filled"
-                  >
+                  <Link to="../cardapio/brigadeiros" className="btn-hero-filled">
                     Explorar Cardápio <span className="arrow">➔</span>
                   </Link>
                   {/* Botão configurado com o clique para scroll */}
-                  <a
-                    href="#destaques"
-                    className="btn-hero-outline"
-                    onClick={scrollToDestaques}
-                  >
+                  <a href="#destaques" className="btn-hero-outline" onClick={scrollToDestaques}>
                     Ver Favoritos
                   </a>
                 </div>
@@ -150,9 +134,9 @@ const Home = () => {
                 {heroImages.map((_, index) => (
                   <span
                     key={index}
-                    className={`dot ${index === currentSlide ? "active" : ""}`}
+                    className={`dot ${index === currentSlide ? 'active' : ''}`}
                     onClick={() => setCurrentSlide(index)}
-                    style={{ cursor: "pointer" }}
+                    style={{ cursor: 'pointer' }}
                   />
                 ))}
               </div>
@@ -183,7 +167,11 @@ const Home = () => {
           </section>
 
           {/* AJUSTADO: Adicionado ref={destaquesRef} aqui embaixo para receber a rolagem */}
-          <section ref={destaquesRef} className="highlights-section animate-entrance" id="destaques">
+          <section
+            ref={destaquesRef}
+            className="highlights-section animate-entrance"
+            id="destaques"
+          >
             <SectionHeader
               title="Destaques da Casa"
               sub="Os produtos mais amados pelos nossos clientes"
@@ -197,9 +185,7 @@ const Home = () => {
                     </div>
                   ))
                 ) : (
-                  <p className="no-data-msg">
-                    Nenhum destaque disponível no momento.
-                  </p>
+                  <p className="no-data-msg">Nenhum destaque disponível no momento.</p>
                 )}
               </div>
             </div>
@@ -236,8 +222,8 @@ const Home = () => {
                   Doces feitos com <span>amor e dedicação</span>
                 </h2>
                 <p>
-                  Na Urban Candy, cada doce é uma obra de arte artesanal.
-                  Utilizamos ingredientes premium e receitas exclusivas.
+                  Na Urban Candy, cada doce é uma obra de arte artesanal. Utilizamos ingredientes
+                  premium e receitas exclusivas.
                 </p>
                 <div className="about-buttons">
                   <Link to="/cardapio/brigadeiros" className="btn-filled">
