@@ -10,8 +10,8 @@ test.describe('Fluxo de Autenticação (Login)', () => {
   test('Deve exibir erro ao tentar entrar com campos vazios', async ({ page }) => {
     // Tenta submeter sem preencher nada (removendo validação nativa do HTML se necessário, ou checando se o form barra)
     await page.locator('button:has-text("Entrar")').click();
-    
-    // O formulário possui "required", então o navegador barra nativamente. 
+
+    // O formulário possui "required", então o navegador barra nativamente.
     // Vamos preencher espaços em branco para testar a validação do estado do React:
     await page.locator('input[name="email"]').fill('   ');
     await page.locator('input[name="password"]').fill('   ');
@@ -36,11 +36,11 @@ test.describe('Fluxo de Autenticação (Login)', () => {
 
   test('Deve exibir mensagem de erro para credenciais inválidas', async ({ page }) => {
     // Intercepta a rota da API para simular falha de login
-    await page.route('**/api/login', async route => {
+    await page.route('**/api/login', async (route) => {
       await route.fulfill({
         status: 401,
         contentType: 'application/json',
-        body: JSON.stringify({ mensagem: 'E-mail ou senha incorretos.' })
+        body: JSON.stringify({ mensagem: 'E-mail ou senha incorretos.' }),
       });
     });
 

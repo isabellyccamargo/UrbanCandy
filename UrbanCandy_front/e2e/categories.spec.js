@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('CRUD de Categorias (Painel Admin)', () => {
   test.beforeEach(async ({ page }) => {
     // Mock do carregamento inicial de categorias (Página 1)
-    await page.route('**/categoria**', async route => {
+    await page.route('**/categoria**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -11,11 +11,11 @@ test.describe('CRUD de Categorias (Painel Admin)', () => {
           data: {
             data: [
               { id_category: 1, name_category: 'Brigadeiros' },
-              { id_category: 2, name_category: 'Cookies' }
+              { id_category: 2, name_category: 'Cookies' },
             ],
-            totalPages: 2
-          }
-        })
+            totalPages: 2,
+          },
+        }),
       });
     });
 
@@ -27,16 +27,16 @@ test.describe('CRUD de Categorias (Painel Admin)', () => {
     await expect(page.locator('text=Página 1 de 2')).toBeVisible();
 
     // Mock para a página 2 ao avançar
-    await page.route('**/categoria?page=2**', async route => {
+    await page.route('**/categoria?page=2**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           data: {
             data: [{ id_category: 3, name_category: 'Brownies' }],
-            totalPages: 2
-          }
-        })
+            totalPages: 2,
+          },
+        }),
       });
     });
 
@@ -51,7 +51,7 @@ test.describe('CRUD de Categorias (Painel Admin)', () => {
     await page.locator('#categoryName').fill('Donuts');
 
     // Mock do POST de criação
-    await page.route('**/categoria/criar', async route => {
+    await page.route('**/categoria/criar', async (route) => {
       await route.fulfill({ status: 201, body: JSON.stringify({ message: 'Criado!' }) });
     });
 
@@ -69,7 +69,7 @@ test.describe('CRUD de Categorias (Painel Admin)', () => {
     await expect(page.locator('text=Deseja realmente excluir esta categoria?')).toBeVisible();
 
     // Mock do Delete na API
-    await page.route('**/categoria/excluir/1', async route => {
+    await page.route('**/categoria/excluir/1', async (route) => {
       await route.fulfill({ status: 200, body: JSON.stringify({ message: 'Removido!' }) });
     });
 
