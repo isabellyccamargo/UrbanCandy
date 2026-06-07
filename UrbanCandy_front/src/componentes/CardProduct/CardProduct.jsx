@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import './CardProduct.css';
 
 export const CardProduct = ({ product, showDescription = false }) => {
-  const baseImgUrl = 'http://localhost:3030/uploads/';
+  const baseImgUrl = 'http://localhost/uploads/';
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {

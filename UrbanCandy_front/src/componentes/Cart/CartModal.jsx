@@ -9,7 +9,7 @@ export const CartModal = () => {
   const { setIsLoginModalOpen } = useAuth();
   const { cart, isCartOpen, setIsCartOpen, removeItem, updateQuantity } = useCart();
   const navigate = useNavigate();
-  const baseImgUrl = 'http://localhost:3030/uploads/';
+  const baseImgUrl = 'http://localhost/uploads/';
 
   if (!isCartOpen) return null;
 

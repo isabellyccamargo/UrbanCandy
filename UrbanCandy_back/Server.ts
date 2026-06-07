@@ -33,7 +33,8 @@ server.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-server.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Altere para usar process.cwd() para apontar para a raiz (/app)
+server.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 server.use(publico);
 
 // Middleware de tratamento de erros - DEVE ser o último middleware
