@@ -1,8 +1,0 @@
-node_modules
-dist
-build
-coverage
-.husky
-eslint.config.js
-commitlint.config.cjs
-vite.config.js
