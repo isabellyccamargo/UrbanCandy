@@ -9,8 +9,7 @@ export const CartModal = () => {
   const { setIsLoginModalOpen } = useAuth();
   const { cart, isCartOpen, setIsCartOpen, removeItem, updateQuantity } = useCart();
   const navigate = useNavigate();
-  const baseImgUrl = '/uploads/';
-
+  const baseImgUrl = 'https://urbancandy.local/uploads/';
   if (!isCartOpen) return null;
 
   const isCartEmpty = !cart.items || cart.items.length === 0;

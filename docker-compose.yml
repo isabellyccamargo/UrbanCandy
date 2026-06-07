@@ -1,5 +1,5 @@
 services:
-  # BANCO DE DADOS (MySQL) 
+  # BANCO DE DADOS
   urbancandy-db:
     image: mysql:8.0
     container_name: urbancandy-mysql-container
@@ -8,26 +8,26 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     ports:
-      - '3306:3306'
+      - '3306:3306' 
     volumes:
       - urbancandy_db_data:/var/lib/mysql
     networks:
       - urbancandy-network
     command: --default-authentication-plugin=mysql_native_password
 
-  #  BACKEND 
+  #  BACKEND
   urbancandy-backend:
     container_name: urbancandy-backend-container
     restart: always 
     build: ./UrbanCandy_back
     image: urbancandy-backend:v9
     environment:
-      JWT_SECRET: "uogvyfivcyifvcgifcvyf"
-      PORT: 3000
-      DB_HOST: "urbancandy-db" 
-      DB_USER: "root"
-      DB_PASSWORD: "ADMIN"
-      DB_NAME: "urbancandy_dockercompose" 
+      JWT_SECRET: ${JWT_SECRET}    
+      PORT: 3030                    
+      DB_HOST: ${DB_HOST}          
+      DB_USER: ${DB_USER}           
+      DB_PASSWORD: ${DB_PASSWORD}   
+      DB_NAME: ${DB_NAME}           
     volumes:
       - ./UrbanCandy_back/uploads:/app/uploads
     networks:

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://urbancandy.local/api',
 });
 
 // Função auxiliar para extrair mensagem de erro
