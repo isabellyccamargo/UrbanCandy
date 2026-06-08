@@ -21,7 +21,7 @@ Categories.init(
   {
     sequelize,
     modelName: 'Categories',
-    tableName: 'categories',
+    tableName: 'Categories',
     timestamps: false,
   }
 );

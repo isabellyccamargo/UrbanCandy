@@ -6,7 +6,7 @@ import { Button } from '../Button/Button';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/AuthContext';
 import './Header.css';
-import { useCart } from '../../hooks/UseCart';
+import { useCart } from '../../Hooks/UseCart';
 
 export const Header = () => {
   const { user, setUser, logout, isLoginModalOpen, setIsLoginModalOpen } = useAuth();
@@ -78,16 +78,10 @@ export const Header = () => {
             <span className="cart-badge">{cart.items.length}</span>
           </div>
 
-          <div data-testid="user-menu-container" className="user-menu-container">
-            <div data-testid="user-menu-trigger" className="user-menu-trigger">
+          <div className="user-menu-container">
+            <div className="user-menu-trigger">
               <User size={24} color="#5D4037" />
-
-              {user && (
-                <span data-testid="logged-user">
-                  Olá, {user.nome?.split(' ')[0] || 'Usuário'}
-                </span>
-              )}
-
+              {user && <span>Olá, {user.nome?.split(' ')[0] || 'Usuário'}</span>}
               <span className="arrow-down">▼</span>
             </div>
 
@@ -119,7 +113,7 @@ export const Header = () => {
                   Sair
                 </Button>
               ) : (
-                <Button data-testid="btn-open-login" onClick={() => setIsLoginModalOpen(true)} variant="primary">
+                <Button onClick={() => setIsLoginModalOpen(true)} variant="primary">
                   Entrar
                 </Button>
               )}

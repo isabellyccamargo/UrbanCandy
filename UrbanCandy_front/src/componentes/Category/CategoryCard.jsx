@@ -3,7 +3,7 @@ import './CategoryCard.css';
 
 export const CategoryCard = ({ title, image }) => {
   const navigate = useNavigate();
-  const baseImgUrl = 'https://urbancandy.local/uploads/';
+  const baseImgUrl = 'http://localhost:3030/uploads/';
 
   const nomeExibicao = typeof title === 'object' ? title.name_category : title;
 

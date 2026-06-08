@@ -465,6 +465,7 @@
   margin: 0;
 }
 
+/* Configuração base para todas as imagens de fundo */
 .hero-bg-image {
   position: absolute;
   top: 0;

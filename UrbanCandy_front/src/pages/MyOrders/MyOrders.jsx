@@ -13,28 +13,28 @@ export const MyOrders = () => {
   const formatCurrency = (value) =>
     Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        setLoading(true);
-        const user = JSON.parse(localStorage.getItem('@UrbanCandy:user'));
-        const personId = user?.id_people || user?.id_user || user?.id;
+  const loadOrders = async () => {
+    try {
+      setLoading(true);
+      const user = JSON.parse(localStorage.getItem('@UrbanCandy:user'));
+      const personId = user?.id_people || user?.id_user || user?.id;
 
-        if (!personId) {
-          toast.error('Sessão expirada. Por favor, faça login novamente.');
-          return;
-        }
-
-        const { data } = await getMyOrders(personId, currentPage, 5);
-        setOrders(data.data || []);
-        setTotalPages(data.totalPages || 1);
-      } catch {
-        toast.error('Não foi possível carregar seu histórico de pedidos.');
-      } finally {
-        setLoading(false);
+      if (!personId) {
+        toast.error('Sessão expirada. Por favor, faça login novamente.');
+        return;
       }
-    };
 
+      const { data } = await getMyOrders(personId, currentPage, 5);
+      setOrders(data.data || []);
+      setTotalPages(data.totalPages || 1);
+    } catch {
+      toast.error('Não foi possível carregar seu histórico de pedidos.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadOrders();
   }, [currentPage]);
 

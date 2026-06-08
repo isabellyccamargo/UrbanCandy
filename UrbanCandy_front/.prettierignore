@@ -5,5 +5,3 @@ coverage
 .next
 *.log
 .env*
-test-results/
-

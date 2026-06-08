@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../../hooks/UseCart';
+import { useCart } from '../../Hooks/UseCart';
 import { createOrder, getUserProfile, getAllTypeOfPayment } from '../../services/Api';
 import { Button } from '../../componentes/Button/Button';
 import { toast } from 'react-toastify';
@@ -164,7 +164,7 @@ const Checkout = () => {
           {cart.items.map((item) => (
             <div key={item.id_product} className="summary-item">
               <img
-                src={`https://urbancandy.local/uploads/${item.products?.image}`}
+                src={`http://localhost:3030/uploads/${item.products?.image}`}
                 alt={item.products?.name}
                 onError={(e) => {
                   e.target.src = 'https://via.placeholder.com/50';

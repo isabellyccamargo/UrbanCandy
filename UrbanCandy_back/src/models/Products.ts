@@ -46,7 +46,7 @@ Products.init(
   {
     sequelize,
     modelName: 'Products',
-    tableName: 'products',
+    tableName: 'Products',
     timestamps: false,
   }
 );
