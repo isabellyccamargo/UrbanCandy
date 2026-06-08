@@ -1,3 +1,6 @@
+/* 1. Importa a fonte moderna (Plus Jakarta Sans) direto do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 html,
 body {
   margin: 0;
@@ -7,6 +10,12 @@ body {
   overflow-x: hidden;
   position: relative;
   padding-top: 40px;
+
+  /* 2. Aplica a nova fonte globalmente e melhora a renderização no navegador */
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #333333; /* Deixa os textos com um tom cinza escuro moderno, menos cansativo que o preto puro */
 }
 
 #root {
