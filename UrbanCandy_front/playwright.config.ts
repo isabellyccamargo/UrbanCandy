@@ -15,10 +15,7 @@ export default defineConfig({
     timeout: 5000,
   },
 
-  reporter: [
-    ['html'],
-    ['list'],
-  ],
+  reporter: [['html'], ['list']],
 
   use: {
     baseURL: 'http://localhost:5173',

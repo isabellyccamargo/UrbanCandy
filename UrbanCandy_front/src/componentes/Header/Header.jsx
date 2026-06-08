@@ -84,9 +84,7 @@ export const Header = () => {
               <User size={24} color="#5D4037" />
 
               {user && (
-                <span data-testid="logged-user">
-                  Olá, {user.nome?.split(' ')[0] || 'Usuário'}
-                </span>
+                <span data-testid="logged-user">Olá, {user.nome?.split(' ')[0] || 'Usuário'}</span>
               )}
 
               <span className="arrow-down">▼</span>
@@ -120,7 +118,11 @@ export const Header = () => {
                   Sair
                 </Button>
               ) : (
-                <Button data-testid="btn-open-login" onClick={() => setIsLoginModalOpen(true)} variant="primary">
+                <Button
+                  data-testid="btn-open-login"
+                  onClick={() => setIsLoginModalOpen(true)}
+                  variant="primary"
+                >
                   Entrar
                 </Button>
               )}

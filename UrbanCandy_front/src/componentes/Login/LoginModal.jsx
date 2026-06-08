@@ -102,7 +102,11 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
-          {error && <p data-testid="login-error" className="error-message-login">{error}</p>}
+          {error && (
+            <p data-testid="login-error" className="error-message-login">
+              {error}
+            </p>
+          )}
 
           <div className="form-group">
             <label>E-mail</label>
@@ -141,7 +145,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
           <div
             style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: '10px' }}
           >
-            <Button  data-testid="btn-submit-login" type="submit" variant="primary">
+            <Button data-testid="btn-submit-login" type="submit" variant="primary">
               Entrar
             </Button>
           </div>

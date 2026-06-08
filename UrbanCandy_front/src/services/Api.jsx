@@ -4,7 +4,6 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
-
 // Função auxiliar para extrair mensagem de erro
 const extractErrorMessage = (errorData) => {
   if (typeof errorData === 'object' && errorData !== null) {
