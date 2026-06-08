@@ -3,17 +3,10 @@ import { Sequelize } from 'sequelize';
 
 // Carrega o arquivo de ambiente correto
 dotenv.config({
-  path: process.env.NODE_ENV === 'test'
-    ? '.env.test'
-    : '.env',
+  path: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
 });
 
-const requiredEnvs = [
-  'DB_NAME',
-  'DB_USER',
-  'DB_PASSWORD',
-  'DB_HOST',
-];
+const requiredEnvs = ['DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST'];
 
 requiredEnvs.forEach((env) => {
   if (!process.env[env]) {
