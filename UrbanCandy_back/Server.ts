@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import publico from './src/routes/Public.js';
 import { dataBaseConectionn } from './src/config/Config.js';
-import { setupAssociations } from './src/models/Associations.js';
+import { initializeDatabase } from './src/config/bootstrap.js';
 import { errorHandler } from './src/middlewares/ErrorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,8 +23,8 @@ server.use(
   })
 );
 
+initializeDatabase();
 dataBaseConectionn();
-setupAssociations();
 
 // 3. O express.json deve vir logo após o CORS
 server.use(express.json());

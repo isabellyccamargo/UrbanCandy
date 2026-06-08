@@ -20,7 +20,7 @@ services:
     container_name: urbancandy-backend-container
     restart: always 
     build: ./UrbanCandy_back
-    image: urbancandy-backend:v9
+    image: urbancandy-backend:latest
     environment:
       JWT_SECRET: ${JWT_SECRET}    
       PORT: 3030                    
