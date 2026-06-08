@@ -1,0 +1,36 @@
+{
+  "name": "urbancandy-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo for UrbanCandy project (Backend, Frontend, AI)",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "husky install",
+    "lint:back": "npm --prefix UrbanCandy_back run lint",
+    "lint:front": "npm --prefix UrbanCandy_front run lint",
+    "lint:check": "npm --prefix UrbanCandy_back run lint:check && npm --prefix UrbanCandy_front run lint:check",
+    "format:back": "npm --prefix UrbanCandy_back run format",
+    "format:front": "npm --prefix UrbanCandy_front run format",
+    "format:check": "npm --prefix UrbanCandy_back run format:check && npm --prefix UrbanCandy_front run format:check",
+    "test:back": "npm --prefix UrbanCandy_back test",
+    "test:front": "npm --prefix UrbanCandy_front test",
+    "test:e2e:back": "npm --prefix UrbanCandy_back run test:e2e",
+    "test:e2e:front": "npm --prefix UrbanCandy_front run test:e2e",
+    "pre-pr-check": "npm run lint:check && npm run format:check && npm run test:back && npm run test:front",
+    "dev:back": "npm --prefix UrbanCandy_back run dev",
+    "dev:front": "npm --prefix UrbanCandy_front run dev",
+    "build:front": "npm --prefix UrbanCandy_front run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@commitlint/config-conventional": "^21.0.1",
+    "commitlint": "^21.0.1",
+    "husky": "^9.1.7"
+  },
+  "workspaces": [
+    "UrbanCandy_back",
+    "UrbanCandy_front"
+  ]
+}

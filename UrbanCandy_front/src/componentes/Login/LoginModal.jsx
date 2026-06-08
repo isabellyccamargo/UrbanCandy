@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { loginUser, setHeaderToken } from '../../services/Api';
 import { Link } from 'react-router-dom';
-import { useCart } from '../../Hooks/UseCart';
+import { useCart } from '../../hooks/UseCart';
 import { Button } from '../Button/Button';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/AuthContext';
@@ -102,11 +102,12 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
-          {error && <p className="error-message-login">{error}</p>}
+          {error && <p data-testid="login-error" className="error-message-login">{error}</p>}
 
           <div className="form-group">
             <label>E-mail</label>
             <input
+              data-testid="input-email"
               name="email"
               type="email"
               value={credentials.email}
@@ -120,6 +121,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
             <label>Senha</label>
             <div className="password-wrapper-modal">
               <input
+                data-testid="input-password"
                 name="password"
                 type={showPass ? 'text' : 'password'}
                 value={credentials.password}
@@ -139,7 +141,7 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
           <div
             style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: '10px' }}
           >
-            <Button type="submit" variant="primary">
+            <Button  data-testid="btn-submit-login" type="submit" variant="primary">
               Entrar
             </Button>
           </div>

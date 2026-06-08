@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch Server.ts",
+    "build": "tsc",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js __tests__",
     "test:watch": "jest --watchAll",
     "test:e2e": "playwright test",
@@ -14,7 +15,9 @@
     "lint:check": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "postinstall": "husky install"
+    "reset-db:test": "cross-env NODE_ENV=test tsx scripts/resetTestDatabase.ts",
+    "seed-db:test": "cross-env NODE_ENV=test tsx scripts/seedTestDatabase.ts",
+    "prepare-db:test": "npm run reset-db:test && npm run seed-db:test"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +25,7 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^7.4.1",
+    "axios": "^1.13.6",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -46,6 +50,7 @@
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "commitlint": "^21.0.1",
+    "cross-env": "^10.1.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",

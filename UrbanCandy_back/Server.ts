@@ -4,13 +4,14 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import publico from './src/routes/Public.js';
 import { dataBaseConectionn } from './src/config/Config.js';
-import { setupAssociations } from './src/models/Associations.js';
+import { initializeDatabase } from './src/config/bootstrap.js';
 import { errorHandler } from './src/middlewares/ErrorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const server: Application = express();
+const PORT = process.env.PORT || 3000;
 
 // 2. Configure o CORS ANTES das rotas e do express.json
 server.use(
@@ -21,22 +22,26 @@ server.use(
   })
 );
 
+initializeDatabase();
 dataBaseConectionn();
-setupAssociations();
-
-server.use(express.json());
 
 // 3. O express.json deve vir logo após o CORS
 server.use(express.json());
 
-server.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-server.use(publico);
+// Health check endpoint
+server.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Altere para usar process.cwd() para apontar para a raiz (/app)
+server.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+server.use('/api', publico);
 
 // Middleware de tratamento de erros - DEVE ser o último middleware
 server.use(errorHandler);
 
-server.listen(3030, () => {
-  console.log('Servidor TypeScript rodando na porta 3030');
+server.listen(PORT, () => {
+  console.log(`Servidor TypeScript rodando na porta ${PORT}`);
 });
 
 export default server;

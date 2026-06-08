@@ -53,7 +53,6 @@ class UserService {
 
   async login(email: string, password: string) {
     const user = (await UserRepository.findByEmail(email)) as UserWithProfile;
-
     if (!user) throw new ApiException('USER_NOT_FOUND', 404);
 
     const isPasswordValid = await bcrypt.compare(password, user.password);

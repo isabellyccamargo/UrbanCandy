@@ -38,7 +38,7 @@ const ProductsForm = () => {
       setIdCat(editItem.id_category);
       setDesc(editItem.description || '');
       setFeat(editItem.featured || false);
-      setPreview(`http://localhost:3030/uploads/${editItem.image}`);
+      setPreview(`https://urbancandy.local//uploads/${editItem.image}`);
     }
   }, [editItem]);
 
