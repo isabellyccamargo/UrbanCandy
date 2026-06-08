@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http:/api';
 
 // ==================== HEALTH CHECK ====================
 // Teste simples para verificar se a API está respondendo
