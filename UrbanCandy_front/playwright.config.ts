@@ -9,7 +9,7 @@ export default defineConfig({
   expect: {
     timeout: 5000,
   },
-  reporter: [['html'], ['list']],
+  reporter: process.env.CI ? 'list' : [['html', { open: 'never' }], ['list']],
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
@@ -19,7 +19,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:5173',
-    reuseExistingServer: true,
-    timeout: 120000,
+    reuseExistingServer: !process.env.CI,
+    timeout: 30000,
   },
 });
