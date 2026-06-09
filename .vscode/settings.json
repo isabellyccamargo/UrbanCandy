@@ -1,0 +1,6 @@
+{
+  "eslint.workingDirectories": [
+    "./UrbanCandy_back",
+    "./UrbanCandy_front"
+  ]
+}

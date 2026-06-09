@@ -38,11 +38,11 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-#echo "🎭 Etapa 4/4: Executando testes End-to-End com Playwright no Backend..."
-#npm --prefix UrbanCandy_back run test:e2e 2>/dev/null || echo "⚠️  Testes E2E do Backend não foram implementados ainda (esperado nesta fase)."
+echo "🎭 Etapa 4/4: Executando testes End-to-End com Playwright no Backend..."
+npm --prefix UrbanCandy_back run test:e2e 2>/dev/null || echo "⚠️  Testes E2E do Backend não foram implementados ainda (esperado nesta fase)."
 
-#echo "🎭 Etapa 4/4: Executando testes End-to-End com Playwright no Frontend..."
-#npm --prefix UrbanCandy_front run test:e2e 2>/dev/null || echo "⚠️  Testes E2E do Frontend não foram implementados ainda (esperado nesta fase)."
+echo "🎭 Etapa 4/4: Executando testes End-to-End com Playwright no Frontend..."
+npm --prefix UrbanCandy_front run test:e2e 2>/dev/null || echo "⚠️  Testes E2E do Frontend não foram implementados ainda (esperado nesta fase)."
 
 
 echo "✅ Todas as validações passaram! Commit permitido."
