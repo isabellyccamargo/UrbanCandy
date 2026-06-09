@@ -1,8 +1,9 @@
 #!/bin/sh
 
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+
 echo "🔍 Etapa 1/4: Corrigindo código com ESLint no Backend..."
 npm --prefix UrbanCandy_back run lint
-
 if [ $? -ne 0 ]; then
   echo "❌ ESLint encontrou erros críticos no Backend que não puderam ser corrigidos automaticamente."
   exit 1
@@ -10,11 +11,12 @@ fi
 
 echo "🔍 Etapa 1/4: Corrigindo código com ESLint no Frontend..."
 npm --prefix UrbanCandy_front run lint
-
 if [ $? -ne 0 ]; then
   echo "❌ ESLint encontrou erros críticos no Frontend que não puderam ser corrigidos automaticamente."
   exit 1
 fi
+
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
 
 echo "✨ Etapa 2/4: Formatando código com Prettier no Backend..."
 npm --prefix UrbanCandy_back run format
@@ -22,9 +24,10 @@ npm --prefix UrbanCandy_back run format
 echo "✨ Etapa 2/4: Formatando código com Prettier no Frontend..."
 npm --prefix UrbanCandy_front run format
 
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+
 echo "🧪 Etapa 3/4: Executando testes com Jest no Backend..."
 npm --prefix UrbanCandy_back test -- --passWithNoTests
-
 if [ $? -ne 0 ]; then
   echo "❌ Testes no Backend falharam. Verifique os erros acima."
   exit 1
@@ -32,17 +35,44 @@ fi
 
 echo "🧪 Etapa 3/4: Executando testes com Jest no Frontend..."
 npm --prefix UrbanCandy_front test -- --passWithNoTests
-
 if [ $? -ne 0 ]; then
   echo "❌ Testes no Frontend falharam. Verifique os erros acima."
   exit 1
 fi
 
-echo "🎭 Etapa 4/4: Executando testes End-to-End com Playwright no Backend..."
-npm --prefix UrbanCandy_back run test:e2e 2>/dev/null || echo "⚠️  Testes E2E do Backend não foram implementados ainda (esperado nesta fase)."
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+
+echo "🚀 Iniciando o Servidor Backend em modo de TESTE (em segundo plano)..."
+# Redirecionamos os logs para evitar o travamento do fluxo de saída do Husky
+NODE_ENV=test npm --prefix UrbanCandy_back run dev >/dev/null 2>&1 &
+
+BACKEND_PID=$!
+
+echo "⏳ Aguardando 5 segundos para o Backend de testes iniciar completamente..."
+sleep 5
+
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
 
 echo "🎭 Etapa 4/4: Executando testes End-to-End com Playwright no Frontend..."
-npm --prefix UrbanCandy_front run test:e2e 2>/dev/null || echo "⚠️  Testes E2E do Frontend não foram implementados ainda (esperado nesta fase)."
+npm --prefix UrbanCandy_front run test:e2e
+FRONTEND_E2E_STATUS=$?
 
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+echo "🧹 Desligando o servidor Backend de testes..."
+
+# Comando nativo do Windows rodando direto pelo Bash de forma limpa e direta
+if command -v taskkill >/dev/null 2>&1; then
+  # Força a finalização da árvore de processos inteira vinculada ao PID do npm inicializado
+  taskkill //F //T //PID $BACKEND_PID >/dev/null 2>&1
+else
+  kill -9 $BACKEND_PID 2>/dev/null
+fi
+
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+
+if [ $FRONTEND_E2E_STATUS -ne 0 ]; then
+  echo "❌ Testes E2E no Frontend falharam. Commit abortado."
+  exit 1
+fi
 
 echo "✅ Todas as validações passaram! Commit permitido."
