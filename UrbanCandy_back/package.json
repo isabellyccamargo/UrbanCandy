@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch Server.ts",
     "build": "tsc",
+    "test:server": "tsx Server.ts",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js __tests__",
     "test:watch": "jest --watchAll",
     "test:e2e": "playwright test",

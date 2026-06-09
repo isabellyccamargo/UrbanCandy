@@ -13,7 +13,7 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --passWithNoTests",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll",
     "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-    "test:e2e": "playwright test",
+    "test:e2e": "cross-env CI=true playwright test",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -41,6 +41,7 @@
     "@types/react-input-mask": "^3.0.6",
     "@vitejs/plugin-react": "^5.1.1",
     "babel-jest": "^29.7.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
