@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/AuthContext';
 import './Header.css';
 import { useCart } from '../../hooks/UseCart';
+import logoImg from '../../assets/logo.png';
 
 export const Header = () => {
   const { user, setUser, logout, isLoginModalOpen, setIsLoginModalOpen } = useAuth();
@@ -65,7 +66,7 @@ export const Header = () => {
     <header className="main-header">
       <div className="header-container">
         <Link to="/" className="logo-area">
-          <img src="/src/assets/logo.png" alt="SugarBeat Logo" className="logo-image" />
+          <img src={logoImg} alt="SugarBeat Logo" className="logo-image" />
         </Link>
 
         <div className="header-actions">
@@ -83,9 +84,7 @@ export const Header = () => {
               <User size={24} color="#5D4037" />
 
               {user && (
-                <span data-testid="logged-user">
-                  Olá, {user.nome?.split(' ')[0] || 'Usuário'}
-                </span>
+                <span data-testid="logged-user">Olá, {user.nome?.split(' ')[0] || 'Usuário'}</span>
               )}
 
               <span className="arrow-down">▼</span>
@@ -119,7 +118,11 @@ export const Header = () => {
                   Sair
                 </Button>
               ) : (
-                <Button data-testid="btn-open-login" onClick={() => setIsLoginModalOpen(true)} variant="primary">
+                <Button
+                  data-testid="btn-open-login"
+                  onClick={() => setIsLoginModalOpen(true)}
+                  variant="primary"
+                >
                   Entrar
                 </Button>
               )}

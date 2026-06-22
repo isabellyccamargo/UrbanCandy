@@ -17,6 +17,7 @@
     "test:e2e:back": "npm --prefix UrbanCandy_back run test:e2e",
     "test:e2e:front": "npm --prefix UrbanCandy_front run test:e2e",
     "pre-pr-check": "npm run lint:check && npm run format:check && npm run test:back && npm run test:front",
+    "test:e2e:ci": "start-server-and-test \"npm --prefix UrbanCandy_back run test:server\" http://localhost:3000 \"npm --prefix UrbanCandy_front run test:e2e\"",
     "dev:back": "npm --prefix UrbanCandy_back run dev",
     "dev:front": "npm --prefix UrbanCandy_front run dev",
     "build:front": "npm --prefix UrbanCandy_front run build"
@@ -27,7 +28,8 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^21.0.1",
     "commitlint": "^21.0.1",
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "start-server-and-test": "^3.0.9"
   },
   "workspaces": [
     "UrbanCandy_back",

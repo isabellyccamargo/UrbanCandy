@@ -1,20 +1,66 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-echo "Running pre-push hooks..."
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+echo "🔍 Etapa 1/4: Corrigindo código com ESLint no Backend..."
+npm --prefix UrbanCandy_back run lint
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint encontrou erros críticos no Backend. Push abortado."
+  exit 1
+fi
 
-echo "🧪 Running backend tests..."
-npm --prefix UrbanCandy_back test -- --passWithNoTests || { echo "❌ Backend tests failed. Push aborted."; exit 1; }
+echo "🔍 Etapa 1/4: Corrigindo código com ESLint no Frontend..."
+npm --prefix UrbanCandy_front run lint
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint encontrou erros críticos no Frontend. Push abortado."
+  exit 1
+fi
 
-echo "🧪 Running frontend tests..."
-# Assumindo que o frontend terá um script de teste unitário similar, se não, pode ser ajustado
-# Por agora, vou usar o mesmo comando do backend, mas você pode ajustá-lo se o frontend tiver um script de teste diferente.
-npm --prefix UrbanCandy_front test -- --passWithNoTests || { echo "❌ Frontend tests failed. Push aborted."; exit 1; }
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+echo "✨ Etapa 2/4: Formatando código com Prettier no Backend..."
+npm --prefix UrbanCandy_back run format
 
-echo "🎭 Running backend E2E tests..."
-npm --prefix UrbanCandy_back run test:e2e 2>/dev/null || echo "⚠️  Backend E2E tests not implemented yet (expected at this phase)."
+echo "✨ Etapa 2/4: Formatando código com Prettier no Frontend..."
+npm --prefix UrbanCandy_front run format
 
-echo "🎭 Running frontend E2E tests..."
-npm --prefix UrbanCandy_front run test:e2e 2>/dev/null || echo "⚠️  Frontend E2E tests not implemented yet (expected at this phase)."
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+echo "🧪 Etapa 3/4: Executando testes com Jest no Backend..."
+npm --prefix UrbanCandy_back test -- --passWithNoTests
+if [ $? -ne 0 ]; then
+  echo "❌ Testes no Backend falharam. Push abortado."
+  exit 1
+fi
 
-echo "✅ All tests passed. Push allowed."
+echo "🧪 Etapa 3/4: Executando testes com Jest no Frontend..."
+npm --prefix UrbanCandy_front test -- --passWithNoTests
+if [ $? -ne 0 ]; then
+  echo "❌ Testes no Frontend falharam. Push abortado."
+  exit 1
+fi
+
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+echo "🚀 Iniciando o Servidor Backend em modo de TESTE (em segundo plano)..."
+
+NODE_ENV=test npm --prefix UrbanCandy_back run dev &
+
+BACKEND_PID=$!
+
+echo "⏳ Aguardando 5 segundos para o Backend de testes iniciar completamente..."
+sleep 5
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+
+echo "🎭 Etapa 4/4: Executando testes End-to-End com Playwright no Frontend..."
+npm --prefix UrbanCandy_front run test:e2e
+FRONTEND_E2E_STATUS=$?
+
+echo "-----------------------------------------------------------------------------------------------------------------------------------------------------------"
+echo "🧹 Desligando o servidor Backend de testes..."
+kill $BACKEND_PID 2>/dev/null
+
+if [ $FRONTEND_E2E_STATUS -ne 0 ]; then
+  echo "❌ Testes E2E no Frontend falharam. Push abortado."
+  exit 1
+fi
+
+echo "✅ Todas as validações passaram! Push permitido."
+
