@@ -81,7 +81,7 @@ export function CategorySection() {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.list}
                 >
-                    {categories.map((category) => {
+                    {categories.map((category, index) => {
 
                         const image =
                             CATEGORY_IMAGES[category.id_category];
@@ -92,18 +92,27 @@ export function CategorySection() {
                         );
 
                         return (
-                            <CategoryCard
+                            <View
                                 key={category.id_category}
-                                name={category.name_category}
-                                image={image}
-                                onPress={() => {
-                                    console.log(
-                                        'Categoria selecionada:',
-                                        category.id_category,
-                                        category.name_category
-                                    );
-                                }}
-                            />
+                                style={styles.categoryItem}
+                            >
+                                <CategoryCard
+                                    name={category.name_category}
+                                    image={image}
+                                    onPress={() => {
+                                        console.log(
+                                            'Categoria selecionada:',
+                                            category.id_category,
+                                            category.name_category
+                                        );
+                                    }}
+                                />
+
+                                {index < categories.length - 1 && (
+                                    <View style={styles.divider} />
+                                )}
+
+                            </View>
                         );
                     })}
                 </ScrollView>
@@ -132,12 +141,23 @@ const styles = StyleSheet.create({
 
     list: {
         paddingHorizontal: 20,
-        gap: 18,
     },
 
     loading: {
         minHeight: 100,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+
+    categoryItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+
+    divider: {
+        width: 1,
+        height: 75,
+        backgroundColor: '#e6b3ce',
+        
     },
 });

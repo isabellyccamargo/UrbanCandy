@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+export const API_BASE_URL =
+    process.env.EXPO_PUBLIC_API_URL!;
+
 const api = axios.create({
-    // baseURL: 'http://192.168.0.181:3000/api',
-    baseURL: 'http://10.10.102.33:3000/api',
+    baseURL: `${API_BASE_URL}/api`,
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
@@ -11,7 +13,8 @@ const api = axios.create({
 
 export function setAuthToken(token: string | null) {
     if (token) {
-        api.defaults.headers.common.Authorization = `Bearer ${token}`;
+        api.defaults.headers.common.Authorization =
+            `Bearer ${token}`;
     } else {
         delete api.defaults.headers.common.Authorization;
     }

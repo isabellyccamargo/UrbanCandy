@@ -9,12 +9,14 @@ import { Fonts } from '@/constants/fonts';
 
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { CategorySection } from '@/components/home/CategorySection';
+import { FeaturedSection } from '@/components/home/FeaturedSection';
+import { OfferSection } from '@/components/home/OfferSection';
 
 export default function HomeScreen() {
     return (
         <View style={styles.container}>
             <StatusBar style="dark" />
-
+            <HomeHeader />
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
@@ -23,7 +25,7 @@ export default function HomeScreen() {
                 {/* ÁREA ROSA */}
                 <View style={styles.topSection}>
 
-                    <HomeHeader />
+
 
                     <View style={styles.presentation}>
                         <Text style={styles.brand}>
@@ -35,15 +37,15 @@ export default function HomeScreen() {
                         </Text>
                     </View>
 
-                    {/* OFERTAS ESPECIAIS
-                        Vamos colocar aqui depois
-                    */}
+                    <OfferSection />
 
                 </View>
 
                 {/* CONTEÚDO FORA DO ROSA */}
 
                 <CategorySection />
+
+                <FeaturedSection />
 
             </ScrollView>
         </View>
@@ -62,14 +64,14 @@ const styles = StyleSheet.create({
 
     topSection: {
         width: '100%',
-        minHeight: 300,
+        minHeight: 500,
 
         backgroundColor: '#E7C9DA',
 
         borderBottomLeftRadius: 28,
         borderBottomRightRadius: 28,
 
-        paddingTop: 30,
+        paddingTop: 80,
         paddingHorizontal: 20,
         paddingBottom: 35,
     },

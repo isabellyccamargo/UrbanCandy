@@ -48,7 +48,8 @@ export function CategoryCard({
 
 const styles = StyleSheet.create({
     container: {
-        width: 92,
+        width: 125,
+        marginTop: 20,
         alignItems: 'center',
     },
 
