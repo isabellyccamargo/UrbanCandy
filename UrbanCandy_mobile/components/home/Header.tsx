@@ -41,20 +41,20 @@ export function HomeHeader() {
 }
 
 const styles = StyleSheet.create({
-    container: {
+     container: {
         position: 'absolute',
+
         top: 0,
         left: 0,
         right: 0,
 
         zIndex: 100,
 
-        width: '100%',
         flexDirection: 'row',
         alignItems: 'center',
 
         paddingHorizontal: 20,
-        paddingTop: 40,
+        paddingTop: 60,
 
         gap: 12,
     },

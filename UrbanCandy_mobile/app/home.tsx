@@ -16,17 +16,16 @@ import { OfferSection } from '@/components/home/OfferSection';
 export default function HomeScreen() {
     return (
         <View style={styles.container}>
+
             <StatusBar style="dark" />
+
             <HomeHeader />
+
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
-
-                {/* ÁREA ROSA */}
                 <View style={styles.topSection}>
-
-
 
                     <View style={styles.presentation}>
                         <Text style={styles.brand}>
@@ -41,8 +40,6 @@ export default function HomeScreen() {
                     <OfferSection />
 
                 </View>
-
-                {/* CONTEÚDO FORA DO ROSA */}
 
                 <CategorySection />
 
@@ -68,14 +65,12 @@ const styles = StyleSheet.create({
 
     topSection: {
         width: '100%',
-        minHeight: 500,
-
         backgroundColor: '#E7C9DA',
 
         borderBottomLeftRadius: 28,
         borderBottomRightRadius: 28,
 
-        paddingTop: 80,
+        paddingTop: 100,
         paddingHorizontal: 20,
         paddingBottom: 35,
     },

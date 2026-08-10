@@ -4,11 +4,11 @@ import {
     Dimensions,
     Image,
     StyleSheet,
+    View,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
-import { ThemedView } from '@/components/themed-view';
 
 const { height } = Dimensions.get('window');
 
@@ -57,7 +57,7 @@ export default function IndexScreen() {
     }, [router, opacity, scale, translateY]);
 
     return (
-        <ThemedView style={styles.container}>
+        <View style={styles.container}>
             <Animated.View
                 style={[
                     styles.logoWrapper,
@@ -78,7 +78,7 @@ export default function IndexScreen() {
             </Animated.View>
 
             <StatusBar style="dark" />
-        </ThemedView>
+        </View>
     );
 }
 
