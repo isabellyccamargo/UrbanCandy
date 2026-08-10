@@ -7,7 +7,8 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Fonts } from '@/constants/fonts';
 
-import { HomeHeader } from '@/components/home/HomeHeader';
+import { HomeHeader } from '@/components/home/Header';
+import { Menu } from '@/components/home/Menu';
 import { CategorySection } from '@/components/home/CategorySection';
 import { FeaturedSection } from '@/components/home/FeaturedSection';
 import { OfferSection } from '@/components/home/OfferSection';
@@ -48,6 +49,9 @@ export default function HomeScreen() {
                 <FeaturedSection />
 
             </ScrollView>
+
+            <Menu />
+
         </View>
     );
 }

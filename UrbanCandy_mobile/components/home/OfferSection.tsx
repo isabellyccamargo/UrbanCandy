@@ -25,6 +25,7 @@ type Offer = {
 export function OfferSection() {
     const [offers, setOffers] = useState<Offer[]>([]);
     const [loading, setLoading] = useState(true);
+    const [activeIndex, setActiveIndex] = useState(0);
 
     useEffect(() => {
         loadOffers();
@@ -84,6 +85,19 @@ export function OfferSection() {
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={styles.list}
                         pagingEnabled={false}
+                        onScroll={(event) => {
+                            const offsetX =
+                                event.nativeEvent.contentOffset.x;
+
+                            const cardWidth = 308;
+
+                            const index = Math.round(
+                                offsetX / cardWidth
+                            );
+
+                            setActiveIndex(index);
+                        }}
+                        scrollEventThrottle={16}
                     >
                         {offers.map((offer) => (
                             <OfferCard
@@ -111,8 +125,8 @@ export function OfferSection() {
                                     key={offer.id_offer}
                                     style={[
                                         styles.dot,
-                                        index === 0 &&
-                                            styles.activeDot,
+                                        index === activeIndex &&
+                                        styles.activeDot,
                                     ]}
                                 />
                             ))}
@@ -128,19 +142,19 @@ export function OfferSection() {
 const styles = StyleSheet.create({
     container: {
         width: '100%',
-        height: 240,
-        marginTop: 18,
+        height: 260,
+        marginTop: 28,
     },
 
     header: {
         alignItems: 'center',
-        marginBottom: 8,
     },
 
     title: {
         fontFamily: Fonts.semibold,
-        fontSize: 17,
-        color: '#ED1765',
+        fontSize: 24,
+        color: '#DD2E8A',
+        marginBottom: 20,
     },
 
     list: {
@@ -177,6 +191,6 @@ const styles = StyleSheet.create({
 
         borderRadius: 10,
 
-        backgroundColor: '#ED1765',
+        backgroundColor: '#DD2E8A',
     },
 });

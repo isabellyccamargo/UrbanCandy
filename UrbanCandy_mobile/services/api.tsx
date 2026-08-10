@@ -1,7 +1,11 @@
 import axios from 'axios';
-
 export const API_BASE_URL =
     process.env.EXPO_PUBLIC_API_URL!;
+
+console.log('==========================');
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('API URL:', `${API_BASE_URL}/api`);
+console.log('==========================');
 
 const api = axios.create({
     baseURL: `${API_BASE_URL}/api`,

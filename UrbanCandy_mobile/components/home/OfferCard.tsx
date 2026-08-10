@@ -132,32 +132,30 @@ const styles = StyleSheet.create({
 
     name: {
         fontFamily: Fonts.semibold,
-        fontSize: 13,
-        color: '#ED1765',
+        fontSize: 14,
+        color: '#DD2E8A',
     },
 
     description: {
         fontFamily: Fonts.regular,
-        fontSize: 9,
-        lineHeight: 12,
+        fontSize: 12,
+        lineHeight: 14,
         color: '#555555',
-
-        marginTop: 2,
     },
 
     price: {
         fontFamily: Fonts.semibold,
-        fontSize: 13,
-        color: '#ED1765',
+        fontSize: 16,
+        color: '#DD2E8A',
 
         marginTop: 2,
     },
 
     button: {
-        width: 74,
-        height: 22,
+        width: 85,
+        height: 25,
 
-        backgroundColor: '#ED1765',
+        backgroundColor: '#DD2E8A',
 
         borderRadius: 12,
 
@@ -167,13 +165,15 @@ const styles = StyleSheet.create({
 
     buttonText: {
         fontFamily: Fonts.regular,
-        fontSize: 10,
+        fontSize: 12,
         color: '#FFFFFF',
     },
 
     image: {
-        width: 110,
+        width: 170,
         height: '100%',
+        borderTopLeftRadius: 40,
+        borderBottomLeftRadius: 40,
     },
 
     imagePlaceholder: {
