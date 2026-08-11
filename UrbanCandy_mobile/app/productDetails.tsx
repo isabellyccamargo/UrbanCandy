@@ -274,11 +274,11 @@ const styles = StyleSheet.create({
     price: {
         fontFamily: Fonts.regular,
         fontSize: 22,
-        color: '#111111',
+        color: '#DD2E8A',
         marginTop: 10,
     },
     addButton: {
-        backgroundColor: '#ED1766',
+        backgroundColor: '#DD2E8A',
         height: 34,
         minWidth: 127,
         borderRadius: 20,
