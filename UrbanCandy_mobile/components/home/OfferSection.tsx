@@ -171,7 +171,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-
         marginTop: 8,
         gap: 6,
     },
@@ -179,18 +178,14 @@ const styles = StyleSheet.create({
     dot: {
         width: 10,
         height: 10,
-
         borderRadius: 10,
-
         backgroundColor: '#E5E5E5',
     },
 
     activeDot: {
         width: 10,
         height: 10,
-
         borderRadius: 10,
-
         backgroundColor: '#DD2E8A',
     },
 });

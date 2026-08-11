@@ -179,9 +179,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         height: 225,
-
         backgroundColor: '#E7C9DA',
-
         borderBottomLeftRadius: 32,
         borderBottomRightRadius: 32,
     },
@@ -215,16 +213,11 @@ const styles = StyleSheet.create({
     input: {
         width: '100%',
         height: 50,
-
         backgroundColor: '#FFFFFF',
-
         borderRadius: 18,
-
         paddingHorizontal: 18,
-
         fontSize: 18,
         color: '#3B1E36',
-
         shadowColor: '#000000',
         shadowOffset: {
             width: 0,
@@ -232,23 +225,17 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.18,
         shadowRadius: 6,
-
         elevation: 5,
     },
 
     loginButton: {
         width: 290,
         height: 54,
-
         marginTop: 65,
-
         backgroundColor: '#DD2E8A',
-
         borderRadius: 18,
-
         justifyContent: 'center',
         alignItems: 'center',
-
         shadowColor: '#000000',
         shadowOffset: {
             width: 0,
@@ -256,7 +243,6 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.18,
         shadowRadius: 5,
-
         elevation: 4,
     },
 

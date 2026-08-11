@@ -43,33 +43,24 @@ export function HomeHeader() {
 const styles = StyleSheet.create({
      container: {
         position: 'absolute',
-
         top: 0,
         left: 0,
         right: 0,
-
         zIndex: 100,
-
         flexDirection: 'row',
         alignItems: 'center',
-
         paddingHorizontal: 20,
         paddingTop: 60,
-
         gap: 12,
     },
 
     searchContainer: {
         flex: 1,
         height: 40,
-
         backgroundColor: '#FFFFFF',
-
         borderRadius: 22,
-
         flexDirection: 'row',
         alignItems: 'center',
-
         paddingHorizontal: 12,
     },
 
@@ -77,7 +68,6 @@ const styles = StyleSheet.create({
         flex: 1,
         height: '100%',
         marginLeft: 6,
-
         fontSize: 16,
         color: '#3B1E36',
     },
@@ -85,11 +75,8 @@ const styles = StyleSheet.create({
     cartButton: {
         width: 40,
         height: 40,
-
         borderRadius: 20,
-
         backgroundColor: '#FFFFFF',
-
         justifyContent: 'center',
         alignItems: 'center',
     },

@@ -64,3 +64,25 @@ export async function getProductsByCategory(
         throw error;
     }
 }
+
+/**
+ * Busca um produto específico pelo ID
+ */
+export async function getProductById(
+    id_product: number
+) {
+    try {
+        const response = await api.get(
+            `/produto/listarPorId/${id_product}`
+        );
+
+        return response.data;
+    } catch (error) {
+        console.error(
+            `Erro ao buscar produto ${id_product}:`,
+            error
+        );
+
+        throw error;
+    }
+}

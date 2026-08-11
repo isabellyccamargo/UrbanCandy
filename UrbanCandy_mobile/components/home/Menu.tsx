@@ -50,9 +50,7 @@ export function Menu() {
             {/* Cardápio */}
             <Pressable
                 style={styles.item}
-                onPress={() => {
-                    console.log('Cardápio');
-                }}
+                onPress={() => router.replace('/cardapio')}
             >
                 <View style={styles.menuButton}>
                     <Ionicons
@@ -110,24 +108,17 @@ export function Menu() {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-
         bottom: 0,
         left: 0,
         right: 0,
-
         height: 80,
-
         backgroundColor: '#FFFFFF',
-
         borderTopLeftRadius: 18,
         borderTopRightRadius: 18,
-
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-around',
-
         paddingHorizontal: 8,
-
         shadowColor: '#000000',
         shadowOffset: {
             width: 0,
@@ -135,40 +126,31 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.12,
         shadowRadius: 5,
-
         elevation: 10,
-
         zIndex: 100,
     },
 
     item: {
         flex: 1,
         height: '100%',
-
         justifyContent: 'center',
         alignItems: 'center',
     },
 
     label: {
         marginTop: 3,
-
         fontFamily: 'serif',
         fontSize: 14,
-
         color: '#333333',
     },
 
     menuButton: {
         width: 56,
         height: 56,
-
         borderRadius: 28,
-
-        backgroundColor: '#ED1765',
-
+        backgroundColor: '#DD2E8A',
         justifyContent: 'center',
         alignItems: 'center',
-
         marginTop: -20,
     },
 });

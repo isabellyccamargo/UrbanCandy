@@ -66,10 +66,8 @@ const styles = StyleSheet.create({
     topSection: {
         width: '100%',
         backgroundColor: '#E7C9DA',
-
         borderBottomLeftRadius: 28,
         borderBottomRightRadius: 28,
-
         paddingTop: 100,
         paddingHorizontal: 20,
         paddingBottom: 35,

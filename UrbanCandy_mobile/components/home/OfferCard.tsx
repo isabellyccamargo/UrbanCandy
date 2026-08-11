@@ -94,15 +94,10 @@ const styles = StyleSheet.create({
     container: {
         width: 340,
         height: 180,
-
         backgroundColor: '#FFFFFF',
-
         borderRadius: 10,
-
         overflow: 'hidden',
-
         marginRight: 12,
-
         shadowColor: '#000000',
         shadowOffset: {
             width: 0,
@@ -110,7 +105,6 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.12,
         shadowRadius: 4,
-
         elevation: 3,
     },
 
@@ -121,12 +115,10 @@ const styles = StyleSheet.create({
 
     info: {
         flex: 1,
-
         paddingLeft: 12,
         paddingTop: 8,
         paddingBottom: 8,
         paddingRight: 4,
-
         justifyContent: 'space-between',
     },
 
@@ -154,11 +146,8 @@ const styles = StyleSheet.create({
     button: {
         width: 85,
         height: 25,
-
         backgroundColor: '#DD2E8A',
-
         borderRadius: 12,
-
         justifyContent: 'center',
         alignItems: 'center',
     },

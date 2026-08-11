@@ -10,6 +10,7 @@ import {
 import { CategoryCard } from './Categorycard';
 import api from '@/services/api';
 import { Fonts } from '@/constants/fonts';
+import { useRouter } from 'expo-router';
 
 type Category = {
     id_category: number;
@@ -25,6 +26,7 @@ const CATEGORY_IMAGES: Record<number, any> = {
 export function CategorySection() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         loadCategories();
@@ -100,11 +102,12 @@ export function CategorySection() {
                                     name={category.name_category}
                                     image={image}
                                     onPress={() => {
-                                        console.log(
-                                            'Categoria selecionada:',
-                                            category.id_category,
-                                            category.name_category
-                                        );
+                                        router.push({
+                                            pathname: '/cardapio',
+                                            params: {
+                                                category: category.name_category,
+                                            },
+                                        });
                                     }}
                                 />
 
@@ -158,6 +161,6 @@ const styles = StyleSheet.create({
         width: 1,
         height: 75,
         backgroundColor: '#e6b3ce',
-        
+
     },
 });
