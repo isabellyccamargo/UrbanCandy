@@ -8,6 +8,7 @@ import {
 
 import { Fonts } from '@/constants/fonts';
 import { API_BASE_URL } from '@/services/api';
+import { SmallButton } from '@/components/ui/smallButton';
 
 type FeaturedCardProps = {
     name: string;
@@ -45,6 +46,7 @@ export function FeaturedCard({
             )}
 
             <View style={styles.info}>
+
                 <Text
                     style={styles.name}
                     numberOfLines={1}
@@ -53,25 +55,20 @@ export function FeaturedCard({
                 </Text>
 
                 <View style={styles.footer}>
+
                     <Text style={styles.price}>
-                        R$
-                        {Number(price)
+                        R$ {Number(price)
                             .toFixed(2)
                             .replace('.', ',')}
                     </Text>
 
-                    <Pressable
-                        style={styles.button}
-                        onPress={() => {
-                            console.log('🛒 ADICIONAR CLICADO:', name);
-                            onAdd?.();
-                        }}
-                    >
-                        <Text style={styles.buttonText}>
-                            Adicionar
-                        </Text>
-                    </Pressable>
+                    <SmallButton
+                        title="Adicionar"
+                        onPress={() => onAdd?.()}
+                    />
+
                 </View>
+
             </View>
         </Pressable>
     );
@@ -79,7 +76,7 @@ export function FeaturedCard({
 
 const styles = StyleSheet.create({
     container: {
-        width: 190,
+        width: 193,
         backgroundColor: '#FFFFFF',
         borderRadius: 8,
         overflow: 'hidden',
@@ -125,19 +122,6 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.semibold,
         fontSize: 15,
         color: '#222222',
-    },
-
-    button: {
-        backgroundColor: '#DD2E8A',
-        paddingHorizontal: 13,
-        paddingVertical: 6,
-        borderRadius: 20,
-    },
-
-    buttonText: {
-        fontFamily: Fonts.regular,
-        fontSize: 14,
-        color: '#FFFFFF',
     },
 
     pressed: {

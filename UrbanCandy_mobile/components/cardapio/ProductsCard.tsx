@@ -8,6 +8,7 @@ import {
 
 import { Fonts } from '@/constants/fonts';
 import { API_BASE_URL } from '@/services/api';
+import { SmallButton } from '@/components/ui/smallButton';
 
 type ProductCardProps = {
     id_product: number;
@@ -28,8 +29,6 @@ export function ProductCard({
 }: ProductCardProps) {
     return (
         <View style={styles.card}>
-
-            {/* IMAGEM */}
             {image ? (
                 <Image
                     source={{
@@ -42,24 +41,12 @@ export function ProductCard({
                 <View style={styles.imagePlaceholder} />
             )}
 
-            {/* NOME */}
-            <Text
-                style={styles.name}
-                numberOfLines={1}
-            >
+            <Text style={styles.name} numberOfLines={1}>
                 {name}
             </Text>
 
-            {/* VER DETALHES */}
             <Pressable
-                onPress={() => {
-                    console.log(
-                        'CLICOU EM VER DETALHES:',
-                        id_product
-                    );
-
-                    onPress?.();
-                }}
+                onPress={onPress}
                 style={styles.detailsButton}
             >
                 <Text style={styles.details}>
@@ -67,56 +54,32 @@ export function ProductCard({
                 </Text>
             </Pressable>
 
-            {/* PREÇO + ADICIONAR */}
             <View style={styles.footer}>
-
                 <Text style={styles.price}>
-                    R${' '}
-                    {Number(price)
-                        .toFixed(2)
-                        .replace('.', ',')}
+                    R$ {Number(price).toFixed(2).replace('.', ',')}
                 </Text>
 
-                <Pressable
-                    style={styles.button}
-                    onPress={() => {
-                        console.log(
-                            '🛒 ADICIONAR FUNCIONOU:',
-                            name
-                        );
-
-                        onAdd?.();
-                    }}
-                >
-                    <Text style={styles.buttonText}>
-                        Adicionar
-                    </Text>
-                </Pressable>
-
+                 <SmallButton
+                        title="Adicionar"
+                        onPress={() => onAdd?.()}
+                    />
             </View>
-
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     card: {
-        width: '47%',
+        width: '49%',
         backgroundColor: '#FFFFFF',
         borderRadius: 12,
         padding: 5,
         marginBottom: 14,
-
         shadowColor: '#000000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.20,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
         shadowRadius: 3,
         elevation: 4,
-
-        zIndex: 10,
     },
 
     image: {
@@ -145,7 +108,6 @@ const styles = StyleSheet.create({
         marginTop: 4,
         marginLeft: 3,
         paddingVertical: 2,
-        paddingHorizontal: 2,
     },
 
     details: {
@@ -166,27 +128,5 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.bold,
         fontSize: 14,
         color: '#222222',
-    },
-
-    button: {
-        height: 30,
-        width:90,
-        paddingHorizontal: 14,
-        backgroundColor: '#DD2E8A',
-        borderRadius: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 20,
-    },
-
-    buttonPressed: {
-        opacity: 0.7,
-        transform: [{ scale: 0.95 }],
-    },
-
-    buttonText: {
-        fontFamily: Fonts.regular,
-        fontSize: 12,
-        color: '#FFFFFF',
     },
 });

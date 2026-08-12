@@ -8,6 +8,7 @@ import {
 
 import { Fonts } from '@/constants/fonts';
 import { API_BASE_URL } from '@/services/api';
+import { SmallButton } from '@/components/ui/smallButton';
 
 type OfferCardProps = {
     name: string;
@@ -37,10 +38,8 @@ export function OfferCard({
             <View style={styles.content}>
 
                 <View style={styles.info}>
-                    <Text
-                        style={styles.name}
-                        numberOfLines={1}
-                    >
+
+                    <Text style={styles.name} numberOfLines={1}>
                         {name}
                     </Text>
 
@@ -54,29 +53,16 @@ export function OfferCard({
                     )}
 
                     <Text style={styles.price}>
-                        R${' '}
-                        {Number(price)
+                        R$ {Number(price)
                             .toFixed(2)
                             .replace('.', ',')}
                     </Text>
 
-                    <Pressable
-                        style={styles.button}
-                        onPress={(event) => {
-                            event.stopPropagation();
+                    <SmallButton
+                        title="Adicionar"
+                        onPress={() => onAdd?.()}
+                    />
 
-                            console.log(
-                                '🛒 BOTÃO ADICIONAR OFERTA:',
-                                name
-                            );
-
-                            onAdd?.();
-                        }}
-                    >
-                        <Text style={styles.buttonText}>
-                            Adicionar
-                        </Text>
-                    </Pressable>
                 </View>
 
                 {image ? (
@@ -145,23 +131,7 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.semibold,
         fontSize: 16,
         color: '#DD2E8A',
-
         marginTop: 2,
-    },
-
-    button: {
-        width: 90,
-        height: 30,
-        backgroundColor: '#DD2E8A',
-        borderRadius: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    buttonText: {
-        fontFamily: Fonts.regular,
-        fontSize: 14,
-        color: '#FFFFFF',
     },
 
     image: {

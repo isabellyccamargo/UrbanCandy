@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
 
         zIndex: 999,
 
-        backgroundColor: '#DD2E8A',
+        backgroundColor: '#ddf1d8',
         borderRadius: 14,
 
         paddingVertical: 12,
@@ -64,19 +64,21 @@ const styles = StyleSheet.create({
         shadowColor: '#000000',
         shadowOffset: {
             width: 0,
-            height: 3,
+            height: 2,
         },
         shadowOpacity: 0.18,
         shadowRadius: 5,
         elevation: 6,
-    },
 
+        borderWidth: 1,
+        borderColor: '#3caf62',
+    },
     iconContainer: {
         width: 30,
         height: 30,
         borderRadius: 15,
 
-        backgroundColor: '#DD2E8A',
+        backgroundColor: '#3caf62',
 
         justifyContent: 'center',
         alignItems: 'center',
@@ -91,13 +93,13 @@ const styles = StyleSheet.create({
     title: {
         fontFamily: Fonts.bold,
         fontSize: 14,
-        color: '#222222',
+        color: '#3caf62',
     },
 
     productName: {
         fontFamily: Fonts.regular,
         fontSize: 12,
-        color: '#ffffff',
+        color: '#000000',
         marginTop: 2,
     },
 });
