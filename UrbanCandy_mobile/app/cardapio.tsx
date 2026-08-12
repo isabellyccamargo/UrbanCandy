@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
+import {
+    ActivityIndicator,
+    FlatList,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { Fonts } from '@/constants/fonts';
 import CardapioHeader from '@/components/cardapio/CardapioHeader';
 import CategoryTabs from '@/components/cardapio/CategoryTabs';
 import { ProductCard } from '@/components/cardapio/ProductsCard';
 import { Menu } from '@/components/home/Menu';
+import { CartToast } from '@/components/cart/CartToats';
 
 import { getProductsByCategory } from '@/services/products';
 import { getAllCategories } from '@/services/categories';
@@ -21,94 +28,82 @@ type Category = {
 type Product = {
     id_product: number;
     name: string;
-    description?: string;
     price: number;
     image?: string;
-    id_category?: number;
-    featured?: boolean;
 };
 
 export default function CardapioScreen() {
     const router = useRouter();
     const { addToCart } = useCart();
-    const { category } = useLocalSearchParams<{ category?: string }>();
+    const { category } =
+        useLocalSearchParams<{ category?: string }>();
+
 
     const [categories, setCategories] = useState<Category[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [selectedCategory, setSelectedCategory] =
+        useState<string | null>(null);
     const [loadingCategories, setLoadingCategories] = useState(true);
     const [loadingProducts, setLoadingProducts] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
+    const [showToast, setShowToast] = useState(false);
+    const [toastProduct, setToastProduct] = useState('');
     useEffect(() => {
         loadCategories();
     }, []);
 
     useEffect(() => {
         if (selectedCategory) {
-            loadProductsByCategory(selectedCategory);
+            loadProducts(selectedCategory);
         }
     }, [selectedCategory]);
 
     async function loadCategories() {
         try {
             setLoadingCategories(true);
-            setError(null);
-
             const response = await getAllCategories();
-            const categoryData = response?.data ?? [];
+            const data = response?.data ?? [];
 
-            if (!Array.isArray(categoryData)) {
-                setCategories([]);
-                setSelectedCategory(null);
-                return;
-            }
+            if (!Array.isArray(data)) return;
 
-            setCategories(categoryData);
+            setCategories(data);
 
-            if (typeof category === 'string') {
-                const categoryExists = categoryData.find(
-                    (item: Category) => item.name_category === category
-                );
+            const selected =
+                typeof category === 'string'
+                    ? data.find(
+                        (item: Category) =>
+                            item.name_category === category
+                    )
+                    : null;
 
-                if (categoryExists) {
-                    setSelectedCategory(categoryExists.name_category);
-                    return;
-                }
-            }
-
-            if (categoryData.length > 0) {
-                setSelectedCategory(categoryData[0].name_category);
-            }
+            setSelectedCategory(
+                selected?.name_category ??
+                data[0]?.name_category ??
+                null
+            );
         } catch (err) {
-            console.error('Erro ao carregar categorias:', err);
-            setCategories([]);
-            setSelectedCategory(null);
+            console.error(err);
             setError('Não foi possível carregar as categorias.');
         } finally {
             setLoadingCategories(false);
         }
     }
 
-    async function loadProductsByCategory(categoryName: string) {
+    async function loadProducts(categoryName: string) {
         try {
             setLoadingProducts(true);
             setError(null);
 
-            const response = await getProductsByCategory(categoryName);
-            const productData = response?.data ?? [];
+            const response =
+                await getProductsByCategory(categoryName);
 
-            if (!Array.isArray(productData)) {
-                setProducts([]);
-                return;
-            }
-
-            setProducts(productData);
-        } catch (err: any) {
-            console.error('Erro ao carregar produtos:', err);
-            console.error('Resposta da API:', err?.response?.data);
-            console.error('Status:', err?.response?.status);
-
+            setProducts(
+                Array.isArray(response?.data)
+                    ? response.data
+                    : []
+            );
+        } catch (err) {
+            console.error(err);
             setProducts([]);
             setError('Não foi possível carregar os produtos.');
         } finally {
@@ -116,22 +111,7 @@ export default function CardapioScreen() {
         }
     }
 
-    function handleSelectCategory(categoryName: string) {
-        setSelectedCategory(categoryName);
-    }
-
-    function handleProductPress(id_product: number) {
-        console.log('ABRINDO PRODUTO:', id_product);
-
-        router.push({
-            pathname: '/productDetails',
-            params: { id: String(id_product) },
-        });
-    }
-
     function handleAddProduct(product: Product) {
-        console.log('🛒 CLICOU EM ADICIONAR:', product.name);
-
         addToCart({
             id_product: product.id_product,
             name: product.name,
@@ -139,7 +119,12 @@ export default function CardapioScreen() {
             image: product.image,
         });
 
-        console.log('✅ PRODUTO ENVIADO PARA O CARRINHO');
+        setToastProduct(product.name);
+        setShowToast(true);
+
+        setTimeout(() => {
+            setShowToast(false);
+        }, 2000);
     }
 
     return (
@@ -150,21 +135,29 @@ export default function CardapioScreen() {
 
             {loadingCategories ? (
                 <View style={styles.loadingCategories}>
-                    <ActivityIndicator size="small" color="#DD2E8A" />
+                    <ActivityIndicator
+                        size="small"
+                        color="#DD2E8A"
+                    />
                 </View>
             ) : (
                 <CategoryTabs
                     categories={categories}
                     selectedCategory={selectedCategory}
-                    onSelectCategory={handleSelectCategory}
+                    onSelectCategory={setSelectedCategory}
                 />
             )}
 
-            {error && <Text style={styles.error}>{error}</Text>}
+            {error && (
+                <Text style={styles.error}>{error}</Text>
+            )}
 
             {loadingProducts ? (
                 <View style={styles.loading}>
-                    <ActivityIndicator size="large" color="#DD2E8A" />
+                    <ActivityIndicator
+                        size="large"
+                        color="#DD2E8A"
+                    />
                     <Text style={styles.loadingText}>
                         Carregando produtos...
                     </Text>
@@ -172,10 +165,14 @@ export default function CardapioScreen() {
             ) : (
                 <FlatList
                     data={products}
-                    keyExtractor={(item) => String(item.id_product)}
+                    keyExtractor={(item) =>
+                        String(item.id_product)
+                    }
                     numColumns={2}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.productsContainer}
+                    contentContainerStyle={
+                        styles.productsContainer
+                    }
                     columnWrapperStyle={styles.productRow}
                     renderItem={({ item }) => (
                         <ProductCard
@@ -183,8 +180,19 @@ export default function CardapioScreen() {
                             name={item.name}
                             price={item.price}
                             image={item.image}
-                            onPress={() => handleProductPress(item.id_product)}
-                            onAdd={() => handleAddProduct(item)}
+                            onPress={() =>
+                                router.push({
+                                    pathname: '/productDetails',
+                                    params: {
+                                        id: String(
+                                            item.id_product
+                                        ),
+                                    },
+                                })
+                            }
+                            onAdd={() =>
+                                handleAddProduct(item)
+                            }
                         />
                     )}
                     ListEmptyComponent={
@@ -196,6 +204,11 @@ export default function CardapioScreen() {
                     }
                 />
             )}
+
+            <CartToast
+                visible={showToast}
+                productName={toastProduct}
+            />
 
             <Menu />
         </View>
@@ -234,28 +247,24 @@ const styles = StyleSheet.create({
         marginTop: 10,
         fontFamily: Fonts.regular,
         fontSize: 14,
-        color: '#666666',
+        color: '#666',
     },
 
     error: {
         textAlign: 'center',
-        marginTop: 10,
-        marginHorizontal: 20,
+        margin: 10,
         fontFamily: Fonts.regular,
-        fontSize: 14,
         color: '#DD2E8A',
     },
 
     emptyContainer: {
-        flex: 1,
         alignItems: 'center',
-        justifyContent: 'center',
         paddingTop: 80,
     },
 
     emptyText: {
         fontFamily: Fonts.regular,
         fontSize: 16,
-        color: '#777777',
+        color: '#777',
     },
 });

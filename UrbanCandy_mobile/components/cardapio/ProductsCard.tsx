@@ -76,16 +76,23 @@ export function ProductCard({
                         .toFixed(2)
                         .replace('.', ',')}
                 </Text>
+
                 <Pressable
                     style={styles.button}
                     onPress={() => {
-                        console.log('🛒🛒🛒 ADICIONAR FUNCIONOU:', name);
+                        console.log(
+                            '🛒 ADICIONAR FUNCIONOU:',
+                            name
+                        );
+
+                        onAdd?.();
                     }}
                 >
                     <Text style={styles.buttonText}>
                         Adicionar
                     </Text>
                 </Pressable>
+
             </View>
 
         </View>
@@ -93,7 +100,6 @@ export function ProductCard({
 }
 
 const styles = StyleSheet.create({
-
     card: {
         width: '47%',
         backgroundColor: '#FFFFFF',
@@ -112,6 +118,7 @@ const styles = StyleSheet.create({
 
         zIndex: 10,
     },
+
     image: {
         width: '100%',
         height: 122,
@@ -162,14 +169,19 @@ const styles = StyleSheet.create({
     },
 
     button: {
-        height: 25,
+        height: 30,
+        width:90,
         paddingHorizontal: 14,
         backgroundColor: '#DD2E8A',
-        borderRadius: 13,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-
         zIndex: 20,
+    },
+
+    buttonPressed: {
+        opacity: 0.7,
+        transform: [{ scale: 0.95 }],
     },
 
     buttonText: {
@@ -177,5 +189,4 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#FFFFFF',
     },
-
 });

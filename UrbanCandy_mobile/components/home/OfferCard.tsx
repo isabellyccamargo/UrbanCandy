@@ -150,17 +150,17 @@ const styles = StyleSheet.create({
     },
 
     button: {
-        width: 85,
-        height: 25,
+        width: 90,
+        height: 30,
         backgroundColor: '#DD2E8A',
-        borderRadius: 12,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
     },
 
     buttonText: {
         fontFamily: Fonts.regular,
-        fontSize: 12,
+        fontSize: 14,
         color: '#FFFFFF',
     },
 

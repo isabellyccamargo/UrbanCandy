@@ -1,5 +1,4 @@
 import React from 'react';
-
 import {
     Image,
     Pressable,
@@ -11,7 +10,6 @@ import {
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Fonts } from '@/constants/fonts';
-
 import { API_BASE_URL } from '@/services/api';
 
 type Product = {
@@ -41,8 +39,7 @@ export default function CartItem({
         ? `${API_BASE_URL}/uploads/${product.image}`
         : null;
 
-    const subtotal =
-        Number(product.price) * quantity;
+    const subtotal = Number(product.price) * quantity;
 
     return (
         <View style={styles.container}>
@@ -50,33 +47,39 @@ export default function CartItem({
             <View style={styles.imageContainer}>
                 {imageUrl ? (
                     <Image
-                        source={{
-                            uri: imageUrl,
-                        }}
+                        source={{ uri: imageUrl }}
                         style={styles.image}
                         resizeMode="cover"
                     />
                 ) : (
-                    <View
-                        style={
-                            styles.imagePlaceholder
-                        }
-                    >
-                        <Text>
-                            Sem imagem
-                        </Text>
+                    <View style={styles.imagePlaceholder}>
+                        <Text>Sem imagem</Text>
                     </View>
                 )}
             </View>
 
             <View style={styles.info}>
 
-                <Text
-                    style={styles.name}
-                    numberOfLines={2}
-                >
-                    {product.name}
-                </Text>
+                {/* NOME + LIXEIRA */}
+                <View style={styles.nameRow}>
+                    <Text
+                        style={styles.name}
+                        numberOfLines={2}
+                    >
+                        {product.name}
+                    </Text>
+
+                    <Pressable
+                        onPress={onRemove}
+                        style={styles.removeButton}
+                    >
+                        <Ionicons
+                            name="trash-outline"
+                            size={21}
+                            color="#DD2E8A"
+                        />
+                    </Pressable>
+                </View>
 
                 <Text style={styles.price}>
                     R$ {Number(product.price)
@@ -92,20 +95,12 @@ export default function CartItem({
                             onPress={onDecrease}
                             style={styles.qtyButton}
                         >
-                            <Text
-                                style={
-                                    styles.qtyText
-                                }
-                            >
+                            <Text style={styles.qtyText}>
                                 −
                             </Text>
                         </Pressable>
 
-                        <Text
-                            style={
-                                styles.quantityText
-                            }
-                        >
+                        <Text style={styles.quantityText}>
                             {quantity}
                         </Text>
 
@@ -113,36 +108,19 @@ export default function CartItem({
                             onPress={onIncrease}
                             style={styles.qtyButton}
                         >
-                            <Text
-                                style={
-                                    styles.qtyText
-                                }
-                            >
+                            <Text style={styles.qtyText}>
                                 +
                             </Text>
                         </Pressable>
 
                     </View>
 
-                    <Pressable
-                        onPress={onRemove}
-                        style={styles.removeButton}
-                    >
-                        <Ionicons
-                            name="trash-outline"
-                            size={21}
-                            color="#DD2E8A"
-                        />
-                    </Pressable>
-
                 </View>
 
             </View>
 
             <Text style={styles.subtotal}>
-                R$ {subtotal
-                    .toFixed(2)
-                    .replace('.', ',')}
+                R$ {subtotal.toFixed(2).replace('.', ',')}
             </Text>
 
         </View>
@@ -184,11 +162,23 @@ const styles = StyleSheet.create({
         marginLeft: 12,
     },
 
+    nameRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+    },
+
     name: {
+        flex: 1,
         fontFamily: Fonts.semibold,
         fontSize: 17,
         color: '#222222',
-        paddingRight: 8,
+        paddingRight: 6,
+    },
+
+    removeButton: {
+        padding: 2,
+        marginLeft: 4,
     },
 
     price: {
@@ -199,9 +189,6 @@ const styles = StyleSheet.create({
     },
 
     bottomRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
         marginTop: 12,
     },
 
@@ -212,6 +199,7 @@ const styles = StyleSheet.create({
         borderColor: '#DD2E8A',
         borderRadius: 18,
         overflow: 'hidden',
+        alignSelf: 'flex-start',
     },
 
     qtyButton: {
@@ -233,10 +221,6 @@ const styles = StyleSheet.create({
         color: '#222222',
         minWidth: 25,
         textAlign: 'center',
-    },
-
-    removeButton: {
-        padding: 5,
     },
 
     subtotal: {
