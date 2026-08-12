@@ -76,18 +76,16 @@ export function ProductCard({
                         .toFixed(2)
                         .replace('.', ',')}
                 </Text>
-
                 <Pressable
                     style={styles.button}
                     onPress={() => {
-                        onAdd?.();
+                        console.log('🛒🛒🛒 ADICIONAR FUNCIONOU:', name);
                     }}
                 >
                     <Text style={styles.buttonText}>
                         Adicionar
                     </Text>
                 </Pressable>
-
             </View>
 
         </View>
@@ -111,8 +109,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.20,
         shadowRadius: 3,
         elevation: 4,
-    },
 
+        zIndex: 10,
+    },
     image: {
         width: '100%',
         height: 122,
@@ -157,7 +156,7 @@ const styles = StyleSheet.create({
     },
 
     price: {
-        fontFamily: Fonts.regular,
+        fontFamily: Fonts.bold,
         fontSize: 14,
         color: '#222222',
     },
@@ -169,6 +168,8 @@ const styles = StyleSheet.create({
         borderRadius: 13,
         justifyContent: 'center',
         alignItems: 'center',
+
+        zIndex: 20,
     },
 
     buttonText: {

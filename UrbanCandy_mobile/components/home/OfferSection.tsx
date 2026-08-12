@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+
 import {
     ActivityIndicator,
     ScrollView,
@@ -12,6 +13,8 @@ import { getAllOffers } from '@/services/offers';
 
 import { OfferCard } from './OfferCard';
 
+import { useCart } from '@/context/CartContext';
+
 type Offer = {
     id_offer: number;
     name_offer: string;
@@ -20,11 +23,21 @@ type Offer = {
     price_offer: number | string;
     image?: string;
     active: boolean;
+    id_product?: number;
 };
 
-export function OfferSection() {
+type OfferSectionProps = {
+    onProductAdded?: (productName: string) => void;
+};
+
+export function OfferSection({
+    onProductAdded,
+}: OfferSectionProps) {
+    const { addToCart } = useCart();
+
     const [offers, setOffers] = useState<Offer[]>([]);
     const [loading, setLoading] = useState(true);
+
     const [activeIndex, setActiveIndex] = useState(0);
 
     useEffect(() => {
@@ -62,6 +75,31 @@ export function OfferSection() {
         }
     }
 
+    function handleAddToCart(offer: Offer) {
+        console.log(
+            '🛒 OFERTA ADICIONADA:',
+            offer.name_offer
+        );
+
+        addToCart({
+            id_product:
+                offer.id_product ?? offer.id_offer,
+
+            name: offer.name_offer,
+
+            price: Number(
+                offer.price_offer
+            ),
+
+            image: offer.image,
+        });
+
+        // AVISA A HOME
+        onProductAdded?.(
+            offer.name_offer
+        );
+    }
+
     return (
         <View style={styles.container}>
 
@@ -84,16 +122,17 @@ export function OfferSection() {
                         horizontal
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={styles.list}
-                        pagingEnabled={false}
                         onScroll={(event) => {
                             const offsetX =
                                 event.nativeEvent.contentOffset.x;
 
-                            const cardWidth = 308;
+                            const cardWidth = 352;
 
-                            const index = Math.round(
-                                offsetX / cardWidth
-                            );
+                            const index =
+                                Math.round(
+                                    offsetX /
+                                        cardWidth
+                                );
 
                             setActiveIndex(index);
                         }}
@@ -101,40 +140,56 @@ export function OfferSection() {
                     >
                         {offers.map((offer) => (
                             <OfferCard
-                                key={offer.id_offer}
-                                name={offer.name_offer}
-                                description={offer.description}
+                                key={
+                                    offer.id_offer
+                                }
+                                name={
+                                    offer.name_offer
+                                }
+                                description={
+                                    offer.description
+                                }
                                 price={Number(
                                     offer.price_offer
                                 )}
-                                image={offer.image}
-                                onAdd={() => {
-                                    console.log(
-                                        'Oferta adicionada:',
-                                        offer.id_offer
-                                    );
-                                }}
+                                image={
+                                    offer.image
+                                }
+                                onAdd={() =>
+                                    handleAddToCart(
+                                        offer
+                                    )
+                                }
                             />
                         ))}
                     </ScrollView>
 
                     {offers.length > 0 && (
-                        <View style={styles.dots}>
-                            {offers.map((offer, index) => (
-                                <View
-                                    key={offer.id_offer}
-                                    style={[
-                                        styles.dot,
-                                        index === activeIndex &&
-                                        styles.activeDot,
-                                    ]}
-                                />
-                            ))}
+                        <View
+                            style={styles.dots}
+                        >
+                            {offers.map(
+                                (
+                                    offer,
+                                    index
+                                ) => (
+                                    <View
+                                        key={
+                                            offer.id_offer
+                                        }
+                                        style={[
+                                            styles.dot,
+                                            index ===
+                                                activeIndex &&
+                                                styles.activeDot,
+                                        ]}
+                                    />
+                                )
+                            )}
                         </View>
                     )}
                 </>
             )}
-
         </View>
     );
 }

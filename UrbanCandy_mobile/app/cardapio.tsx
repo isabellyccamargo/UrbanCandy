@@ -11,6 +11,7 @@ import { Menu } from '@/components/home/Menu';
 
 import { getProductsByCategory } from '@/services/products';
 import { getAllCategories } from '@/services/categories';
+import { useCart } from '@/context/CartContext';
 
 type Category = {
     id_category: number;
@@ -29,6 +30,7 @@ type Product = {
 
 export default function CardapioScreen() {
     const router = useRouter();
+    const { addToCart } = useCart();
     const { category } = useLocalSearchParams<{ category?: string }>();
 
     const [categories, setCategories] = useState<Category[]>([]);
@@ -128,7 +130,16 @@ export default function CardapioScreen() {
     }
 
     function handleAddProduct(product: Product) {
-        console.log('Adicionar produto:', product);
+        console.log('🛒 CLICOU EM ADICIONAR:', product.name);
+
+        addToCart({
+            id_product: product.id_product,
+            name: product.name,
+            price: Number(product.price),
+            image: product.image,
+        });
+
+        console.log('✅ PRODUTO ENVIADO PARA O CARRINHO');
     }
 
     return (

@@ -62,8 +62,8 @@ export function FeaturedCard({
 
                     <Pressable
                         style={styles.button}
-                        onPress={(event) => {
-                            event.stopPropagation();
+                        onPress={() => {
+                            console.log('🛒 ADICIONAR CLICADO:', name);
                             onAdd?.();
                         }}
                     >

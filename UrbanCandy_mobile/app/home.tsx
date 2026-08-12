@@ -1,9 +1,12 @@
+import { useState } from 'react';
+
 import {
     ScrollView,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
+
 import { StatusBar } from 'expo-status-bar';
 import { Fonts } from '@/constants/fonts';
 
@@ -12,8 +15,23 @@ import { Menu } from '@/components/home/Menu';
 import { CategorySection } from '@/components/home/CategorySection';
 import { FeaturedSection } from '@/components/home/FeaturedSection';
 import { OfferSection } from '@/components/home/OfferSection';
+import { CartToast } from '@/components/cart/CartToats';
 
 export default function HomeScreen() {
+
+    const [showCartToast, setShowCartToast] = useState(false);
+    const [addedProductName, setAddedProductName] = useState('');
+
+    function handleProductAdded(productName: string) {
+
+        setAddedProductName(productName);
+        setShowCartToast(true);
+
+        setTimeout(() => {
+            setShowCartToast(false);
+        }, 2500);
+    }
+
     return (
         <View style={styles.container}>
 
@@ -21,13 +39,21 @@ export default function HomeScreen() {
 
             <HomeHeader />
 
+            {/* TOAST FICA AQUI, FORA DAS SEÇÕES */}
+            <CartToast
+                visible={showCartToast}
+                productName={addedProductName}
+            />
+
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
+
                 <View style={styles.topSection}>
 
                     <View style={styles.presentation}>
+
                         <Text style={styles.brand}>
                             UrbanCandy
                         </Text>
@@ -35,15 +61,20 @@ export default function HomeScreen() {
                         <Text style={styles.slogan}>
                             Doces que conquistam corações!
                         </Text>
+
                     </View>
 
-                    <OfferSection />
+                    <OfferSection
+                        onProductAdded={handleProductAdded}
+                    />
 
                 </View>
 
                 <CategorySection />
 
-                <FeaturedSection />
+                <FeaturedSection
+                    onProductAdded={handleProductAdded}
+                />
 
             </ScrollView>
 
@@ -54,6 +85,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+
     container: {
         flex: 1,
         backgroundColor: '#F7F7F7',
@@ -91,4 +123,5 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.regular,
         textAlign: 'center',
     },
+
 });

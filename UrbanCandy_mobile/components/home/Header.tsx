@@ -1,7 +1,25 @@
-import { StyleSheet, TextInput, View, Pressable } from 'react-native';
+import {
+    StyleSheet,
+    TextInput,
+    View,
+    Pressable,
+    Text,
+} from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+
+import { useCart } from '@/context/CartContext';
 
 export function HomeHeader() {
+    const { items } = useCart();
+    const router = useRouter();
+
+    const totalItems = items.reduce(
+        (total, item) => total + item.quantity,
+        0
+    );
+
     return (
         <View style={styles.container}>
 
@@ -26,7 +44,9 @@ export function HomeHeader() {
                     pressed && styles.pressed,
                 ]}
                 onPress={() => {
-                    console.log('Carrinho');
+                    console.log('🛒 Abrindo carrinho...');
+
+                    router.push('/cart');
                 }}
             >
                 <Ionicons
@@ -34,6 +54,14 @@ export function HomeHeader() {
                     size={25}
                     color="#000000"
                 />
+
+                {totalItems > 0 && (
+                    <View style={styles.cartBadge}>
+                        <Text style={styles.cartBadgeText}>
+                            {totalItems}
+                        </Text>
+                    </View>
+                )}
             </Pressable>
 
         </View>
@@ -41,7 +69,7 @@ export function HomeHeader() {
 }
 
 const styles = StyleSheet.create({
-     container: {
+    container: {
         position: 'absolute',
         top: 0,
         left: 0,
@@ -79,6 +107,26 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         justifyContent: 'center',
         alignItems: 'center',
+        position: 'relative',
+    },
+
+    cartBadge: {
+        position: 'absolute',
+        top: -4,
+        right: -4,
+        minWidth: 18,
+        height: 18,
+        borderRadius: 9,
+        backgroundColor: '#DD2E8A',
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 4,
+    },
+
+    cartBadgeText: {
+        fontSize: 10,
+        color: '#FFFFFF',
+        fontWeight: 'bold',
     },
 
     pressed: {

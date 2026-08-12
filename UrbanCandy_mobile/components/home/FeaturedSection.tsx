@@ -10,6 +10,7 @@ import {
 import api from '@/services/api';
 import { Fonts } from '@/constants/fonts';
 import { FeaturedCard } from './FeaturedCard';
+import { useCart } from '@/context/CartContext';
 
 type Product = {
     id_product: number;
@@ -20,7 +21,15 @@ type Product = {
     featured?: boolean;
 };
 
-export function FeaturedSection() {
+type FeaturedSectionProps = {
+    onProductAdded?: (productName: string) => void;
+};
+
+export function FeaturedSection({
+    onProductAdded,
+}: FeaturedSectionProps) {
+    const { addToCart } = useCart();
+
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -59,8 +68,26 @@ export function FeaturedSection() {
         }
     }
 
+    function handleAddToCart(product: Product) {
+        console.log(
+            '🛒 ADICIONANDO AO CARRINHO:',
+            product.name
+        );
+
+        addToCart({
+            id_product: product.id_product,
+            name: product.name,
+            price: Number(product.price),
+            image: product.image,
+        });
+
+        // Avisa a Home que o produto foi adicionado
+        onProductAdded?.(product.name);
+    }
+
     return (
         <View style={styles.container}>
+
             <View style={styles.header}>
                 <Text style={styles.title}>
                     Destaques da Casa
@@ -101,10 +128,7 @@ export function FeaturedSection() {
                                 );
                             }}
                             onAdd={() => {
-                                console.log(
-                                    'Adicionar ao carrinho:',
-                                    product.name
-                                );
+                                handleAddToCart(product);
                             }}
                         />
                     ))}

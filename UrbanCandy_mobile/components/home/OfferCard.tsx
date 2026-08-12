@@ -64,6 +64,12 @@ export function OfferCard({
                         style={styles.button}
                         onPress={(event) => {
                             event.stopPropagation();
+
+                            console.log(
+                                '🛒 BOTÃO ADICIONAR OFERTA:',
+                                name
+                            );
+
                             onAdd?.();
                         }}
                     >
