@@ -6,9 +6,9 @@ import {
     View,
 } from 'react-native';
 
-import { Fonts } from '@/constants/fonts';
-import { API_BASE_URL } from '@/services/api';
 import { SmallButton } from '@/components/ui/smallButton';
+import { useTheme } from '@/context/Theme';
+import { API_BASE_URL } from '@/services/api';
 
 type FeaturedCardProps = {
     name: string;
@@ -25,6 +25,63 @@ export function FeaturedCard({
     onPress,
     onAdd,
 }: FeaturedCardProps) {
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+        radius,
+    } = useTheme();
+
+    const styles = StyleSheet.create({
+        container: {
+            width: 193,
+            backgroundColor: colors.white,
+            borderRadius: radius.md,
+            overflow: 'hidden',
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+            elevation: 3,
+        },
+        image: {
+            width: '100%',
+            height: 180,
+        },
+        imagePlaceholder: {
+            width: '100%',
+            height: 140,
+            backgroundColor: '#EDEDED',
+        },
+        info: {
+            padding: space.md,
+        },
+        name: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.text,
+            marginBottom: space.md,
+        },
+        footer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+        },
+        price: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.base,
+            color: colors.text,
+        },
+        pressed: {
+            opacity: 0.75,
+            transform: [{ scale: 0.98 }],
+        },
+    });
+
     return (
         <Pressable
             onPress={onPress}
@@ -46,7 +103,6 @@ export function FeaturedCard({
             )}
 
             <View style={styles.info}>
-
                 <Text
                     style={styles.name}
                     numberOfLines={1}
@@ -55,7 +111,6 @@ export function FeaturedCard({
                 </Text>
 
                 <View style={styles.footer}>
-
                     <Text style={styles.price}>
                         R$ {Number(price)
                             .toFixed(2)
@@ -66,66 +121,8 @@ export function FeaturedCard({
                         title="Adicionar"
                         onPress={() => onAdd?.()}
                     />
-
                 </View>
-
             </View>
         </Pressable>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        width: 193,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 8,
-        overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-
-    image: {
-        width: '100%',
-        height: 180,
-    },
-
-    imagePlaceholder: {
-        width: '100%',
-        height: 140,
-        backgroundColor: '#EDEDED',
-    },
-
-    info: {
-        padding: 10,
-    },
-
-    name: {
-        fontFamily: Fonts.regular,
-        fontSize: 16,
-        color: '#222222',
-        marginBottom: 10,
-    },
-
-    footer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-
-    price: {
-        fontFamily: Fonts.semibold,
-        fontSize: 15,
-        color: '#222222',
-    },
-
-    pressed: {
-        opacity: 0.75,
-        transform: [{ scale: 0.98 }],
-    },
-});

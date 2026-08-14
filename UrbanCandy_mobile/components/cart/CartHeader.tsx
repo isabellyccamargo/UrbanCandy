@@ -1,4 +1,3 @@
-import React from 'react';
 import {
     Pressable,
     StyleSheet,
@@ -10,10 +9,39 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { useRouter } from 'expo-router';
 
-import { Fonts } from '@/constants/fonts';
+import { useTheme } from '@/context/Theme';
 
 export default function CartHeader() {
     const router = useRouter();
+
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+    } = useTheme();
+
+    const styles = StyleSheet.create({
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingTop: 60,
+            paddingHorizontal: space.xl,
+        },
+
+        backButton: {
+            width: 40,
+            height: 40,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        title: {
+            fontSize: fontSize.xxl,
+            color: colors.white,
+            fontFamily: font.regular,
+        },
+    });
 
     return (
         <View style={styles.header}>
@@ -24,7 +52,7 @@ export default function CartHeader() {
                 <Ionicons
                     name="arrow-back"
                     size={26}
-                    color="#FFFFFF"
+                    color={colors.white}
                 />
             </Pressable>
 
@@ -34,25 +62,3 @@ export default function CartHeader() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingTop: 60,
-        paddingHorizontal: 20,
-    },
-
-    backButton: {
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    title: {
-        fontSize: 24,
-        color: '#FFFFFF',
-        fontFamily: 'serif',
-    },
-});

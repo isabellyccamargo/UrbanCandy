@@ -6,10 +6,12 @@ import {
     Text,
     View,
 } from 'react-native';
+
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { Fonts } from '@/constants/fonts';
+import { useTheme } from '@/context/Theme';
+
 import CardapioHeader from '@/components/cardapio/CardapioHeader';
 import CategoryTabs from '@/components/cardapio/CategoryTabs';
 import { ProductCard } from '@/components/cardapio/ProductsCard';
@@ -34,20 +36,40 @@ type Product = {
 
 export default function CardapioScreen() {
     const router = useRouter();
+
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+    } = useTheme();
+
     const { addToCart } = useCart();
+
     const { category } =
         useLocalSearchParams<{ category?: string }>();
 
-
     const [categories, setCategories] = useState<Category[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
+
     const [selectedCategory, setSelectedCategory] =
         useState<string | null>(null);
-    const [loadingCategories, setLoadingCategories] = useState(true);
-    const [loadingProducts, setLoadingProducts] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [showToast, setShowToast] = useState(false);
-    const [toastProduct, setToastProduct] = useState('');
+
+    const [loadingCategories, setLoadingCategories] =
+        useState(true);
+
+    const [loadingProducts, setLoadingProducts] =
+        useState(false);
+
+    const [error, setError] =
+        useState<string | null>(null);
+
+    const [showToast, setShowToast] =
+        useState(false);
+
+    const [toastProduct, setToastProduct] =
+        useState('');
+
     useEffect(() => {
         loadCategories();
     }, []);
@@ -61,10 +83,14 @@ export default function CardapioScreen() {
     async function loadCategories() {
         try {
             setLoadingCategories(true);
+
             const response = await getAllCategories();
+
             const data = response?.data ?? [];
 
-            if (!Array.isArray(data)) return;
+            if (!Array.isArray(data)) {
+                return;
+            }
 
             setCategories(data);
 
@@ -81,9 +107,14 @@ export default function CardapioScreen() {
                 data[0]?.name_category ??
                 null
             );
+
         } catch (err) {
             console.error(err);
-            setError('Não foi possível carregar as categorias.');
+
+            setError(
+                'Não foi possível carregar as categorias.'
+            );
+
         } finally {
             setLoadingCategories(false);
         }
@@ -102,10 +133,16 @@ export default function CardapioScreen() {
                     ? response.data
                     : []
             );
+
         } catch (err) {
             console.error(err);
+
             setProducts([]);
-            setError('Não foi possível carregar os produtos.');
+
+            setError(
+                'Não foi possível carregar os produtos.'
+            );
+
         } finally {
             setLoadingProducts(false);
         }
@@ -127,8 +164,64 @@ export default function CardapioScreen() {
         }, 2000);
     }
 
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+
+        loadingCategories: {
+            height: 58,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        productsContainer: {
+            paddingHorizontal: space.md,
+            paddingTop: space.lg,
+            paddingBottom: 110,
+        },
+
+        productRow: {
+            justifyContent: 'space-between',
+        },
+
+        loading: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        loadingText: {
+            marginTop: space.sm,
+            fontFamily: font.regular,
+            fontSize: fontSize.base,
+            color: colors.textSecondary,
+        },
+
+        error: {
+            textAlign: 'center',
+            margin: space.sm,
+            fontFamily: font.regular,
+            fontSize: fontSize.base,
+            color: colors.primary,
+        },
+
+        emptyContainer: {
+            alignItems: 'center',
+            paddingTop: space.huge,
+        },
+
+        emptyText: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.textTertiary,
+        },
+    });
+
     return (
         <View style={styles.container}>
+
             <StatusBar style="dark" />
 
             <CardapioHeader />
@@ -137,7 +230,7 @@ export default function CardapioScreen() {
                 <View style={styles.loadingCategories}>
                     <ActivityIndicator
                         size="small"
-                        color="#DD2E8A"
+                        color={colors.primary}
                     />
                 </View>
             ) : (
@@ -149,18 +242,23 @@ export default function CardapioScreen() {
             )}
 
             {error && (
-                <Text style={styles.error}>{error}</Text>
+                <Text style={styles.error}>
+                    {error}
+                </Text>
             )}
 
             {loadingProducts ? (
                 <View style={styles.loading}>
+
                     <ActivityIndicator
                         size="large"
-                        color="#DD2E8A"
+                        color={colors.primary}
                     />
+
                     <Text style={styles.loadingText}>
                         Carregando produtos...
                     </Text>
+
                 </View>
             ) : (
                 <FlatList
@@ -173,7 +271,9 @@ export default function CardapioScreen() {
                     contentContainerStyle={
                         styles.productsContainer
                     }
-                    columnWrapperStyle={styles.productRow}
+                    columnWrapperStyle={
+                        styles.productRow
+                    }
                     renderItem={({ item }) => (
                         <ProductCard
                             id_product={item.id_product}
@@ -182,7 +282,8 @@ export default function CardapioScreen() {
                             image={item.image}
                             onPress={() =>
                                 router.push({
-                                    pathname: '/productDetails',
+                                    pathname:
+                                        '/productDetails',
                                     params: {
                                         id: String(
                                             item.id_product
@@ -197,9 +298,11 @@ export default function CardapioScreen() {
                     )}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
+
                             <Text style={styles.emptyText}>
                                 Nenhum produto encontrado.
                             </Text>
+
                         </View>
                     }
                 />
@@ -211,60 +314,7 @@ export default function CardapioScreen() {
             />
 
             <Menu />
+
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#F7F7F7',
-    },
-
-    loadingCategories: {
-        height: 58,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    productsContainer: {
-        paddingHorizontal: 14,
-        paddingTop: 18,
-        paddingBottom: 110,
-    },
-
-    productRow: {
-        justifyContent: 'space-between',
-    },
-
-    loading: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    loadingText: {
-        marginTop: 10,
-        fontFamily: Fonts.regular,
-        fontSize: 14,
-        color: '#666',
-    },
-
-    error: {
-        textAlign: 'center',
-        margin: 10,
-        fontFamily: Fonts.regular,
-        color: '#DD2E8A',
-    },
-
-    emptyContainer: {
-        alignItems: 'center',
-        paddingTop: 80,
-    },
-
-    emptyText: {
-        fontFamily: Fonts.regular,
-        fontSize: 16,
-        color: '#777',
-    },
-});

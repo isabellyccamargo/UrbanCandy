@@ -10,6 +10,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 
 import { useCart } from '@/context/CartContext';
+import { useTheme } from '@/context/Theme';
 
 import CartHeader from '@/components/cart/CartHeader';
 import CartItem from '@/components/cart/CartItem';
@@ -20,12 +21,68 @@ import { Menu } from '@/components/home/Menu';
 export default function CartScreen() {
 
     const {
+        colors,
+        font,
+        fontSize,
+        space,
+        radius,
+    } = useTheme();
+
+    const {
         items,
         total,
         increaseQuantity,
         decreaseQuantity,
         removeFromCart,
     } = useCart();
+
+    const styles = StyleSheet.create({
+
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+
+        topSection: {
+            height: 125,
+            backgroundColor: colors.secondary,
+            borderBottomLeftRadius: radius.xxl,
+            borderBottomRightRadius: radius.xxl,
+        },
+
+        list: {
+            paddingTop: space.xl,
+            paddingBottom: space.xl,
+        },
+
+        empty: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: space.xxxl,
+        },
+
+        emptyIcon: {
+            fontSize: 70,
+            marginBottom: space.md,
+        },
+
+        emptyTitle: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.xl,
+            color: colors.text,
+            marginBottom: space.sm,
+            textAlign: 'center',
+        },
+
+        emptyText: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.textTertiary,
+            textAlign: 'center',
+        },
+
+    });
 
     return (
         <View style={styles.container}>
@@ -39,6 +96,7 @@ export default function CartScreen() {
             {items.length === 0 ? (
 
                 <View style={styles.empty}>
+
                     <Text style={styles.emptyIcon}>
                         🛒
                     </Text>
@@ -50,6 +108,7 @@ export default function CartScreen() {
                     <Text style={styles.emptyText}>
                         Adicione produtos deliciosos!
                     </Text>
+
                 </View>
 
             ) : (
@@ -60,9 +119,7 @@ export default function CartScreen() {
                         String(item.id_product)
                     }
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={
-                        styles.list
-                    }
+                    contentContainerStyle={styles.list}
                     renderItem={({ item }) => (
                         <CartItem
                             product={item.product}
@@ -104,46 +161,3 @@ export default function CartScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#F7F7F7',
-    },
-
-    topSection: {
-        height: 125,
-        backgroundColor: '#E7C9DA',
-        borderBottomLeftRadius: 28,
-        borderBottomRightRadius: 28,
-    },
-
-    list: {
-        paddingTop: 20,
-        paddingBottom: 20,
-    },
-
-    empty: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 30,
-    },
-
-    emptyIcon: {
-        fontSize: 70,
-        marginBottom: 15,
-    },
-
-    emptyTitle: {
-        fontSize: 21,
-        fontWeight: '600',
-        color: '#333333',
-        marginBottom: 8,
-    },
-
-    emptyText: {
-        fontSize: 16,
-        color: '#777777',
-    },
-});

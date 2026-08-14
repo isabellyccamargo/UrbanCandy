@@ -6,7 +6,56 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTheme } from '@/context/Theme';
+
 export function HomeHeader() {
+    const {
+        colors,
+        fontSize,
+        space,
+        radius,
+    } = useTheme();
+
+    const styles = StyleSheet.create({
+
+        container: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 100,
+
+            flexDirection: 'row',
+            alignItems: 'center',
+
+            paddingHorizontal: space.xl,
+            paddingTop: 60,
+        },
+
+        searchContainer: {
+            width: '100%',
+            height: 40,
+
+            backgroundColor: colors.white,
+            borderRadius: radius.xl,
+
+            flexDirection: 'row',
+            alignItems: 'center',
+
+            paddingHorizontal: space.md,
+        },
+
+        input: {
+            flex: 1,
+            height: '100%',
+
+            marginLeft: 6,
+
+            fontSize: fontSize.md,
+            color: colors.text,
+        },
+
+    });
 
     return (
         <View style={styles.container}>
@@ -16,13 +65,13 @@ export function HomeHeader() {
                 <Ionicons
                     name="search-outline"
                     size={24}
-                    color="#000000"
+                    color={colors.text}
                 />
 
                 <TextInput
                     style={styles.input}
                     placeholder=""
-                    placeholderTextColor="#777777"
+                    placeholderTextColor={colors.textTertiary}
                     returnKeyType="search"
                 />
 
@@ -31,44 +80,3 @@ export function HomeHeader() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-
-    container: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-
-        flexDirection: 'row',
-        alignItems: 'center',
-
-        paddingHorizontal: 20,
-        paddingTop: 60,
-    },
-
-    searchContainer: {
-        width: '100%',
-        height: 40,
-
-        backgroundColor: '#FFFFFF',
-        borderRadius: 22,
-
-        flexDirection: 'row',
-        alignItems: 'center',
-
-        paddingHorizontal: 12,
-    },
-
-    input: {
-        flex: 1,
-        height: '100%',
-
-        marginLeft: 6,
-
-        fontSize: 16,
-        color: '#3B1E36',
-    },
-
-});

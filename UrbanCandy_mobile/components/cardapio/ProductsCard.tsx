@@ -6,9 +6,9 @@ import {
     View,
 } from 'react-native';
 
-import { Fonts } from '@/constants/fonts';
 import { API_BASE_URL } from '@/services/api';
 import { SmallButton } from '@/components/ui/smallButton';
+import { useTheme } from '@/context/Theme';
 
 type ProductCardProps = {
     id_product: number;
@@ -27,6 +27,80 @@ export function ProductCard({
     onPress,
     onAdd,
 }: ProductCardProps) {
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+        radius,
+    } = useTheme();
+
+    const styles = StyleSheet.create({
+        card: {
+            width: '49%',
+            backgroundColor: colors.white,
+            borderRadius: radius.md,
+            padding: 5,
+            marginBottom: space.md,
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.2,
+            shadowRadius: 3,
+            elevation: 4,
+        },
+
+        image: {
+            width: '100%',
+            height: 122,
+            borderRadius: radius.sm,
+        },
+
+        imagePlaceholder: {
+            width: '100%',
+            height: 122,
+            borderRadius: radius.sm,
+            backgroundColor: colors.border,
+        },
+
+        name: {
+            fontFamily: font.regular,
+            fontSize: fontSize.base,
+            color: colors.text,
+            marginTop: 6,
+            marginLeft: 3,
+        },
+
+        detailsButton: {
+            alignSelf: 'flex-start',
+            marginTop: 4,
+            marginLeft: 3,
+            paddingVertical: 2,
+        },
+
+        details: {
+            fontFamily: font.regular,
+            fontSize: fontSize.sm,
+            color: colors.primary,
+        },
+
+        footer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: 7,
+            marginHorizontal: 3,
+        },
+
+        price: {
+            fontFamily: font.bold,
+            fontSize: fontSize.base,
+            color: colors.text,
+        },
+    });
+
     return (
         <View style={styles.card}>
             {image ? (
@@ -41,7 +115,10 @@ export function ProductCard({
                 <View style={styles.imagePlaceholder} />
             )}
 
-            <Text style={styles.name} numberOfLines={1}>
+            <Text
+                style={styles.name}
+                numberOfLines={1}
+            >
                 {name}
             </Text>
 
@@ -59,74 +136,11 @@ export function ProductCard({
                     R$ {Number(price).toFixed(2).replace('.', ',')}
                 </Text>
 
-                 <SmallButton
-                        title="Adicionar"
-                        onPress={() => onAdd?.()}
-                    />
+                <SmallButton
+                    title="Adicionar"
+                    onPress={() => onAdd?.()}
+                />
             </View>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    card: {
-        width: '49%',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 5,
-        marginBottom: 14,
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
-        elevation: 4,
-    },
-
-    image: {
-        width: '100%',
-        height: 122,
-        borderRadius: 9,
-    },
-
-    imagePlaceholder: {
-        width: '100%',
-        height: 122,
-        borderRadius: 9,
-        backgroundColor: '#EDEDED',
-    },
-
-    name: {
-        fontFamily: Fonts.regular,
-        fontSize: 14,
-        color: '#222222',
-        marginTop: 6,
-        marginLeft: 3,
-    },
-
-    detailsButton: {
-        alignSelf: 'flex-start',
-        marginTop: 4,
-        marginLeft: 3,
-        paddingVertical: 2,
-    },
-
-    details: {
-        fontFamily: Fonts.regular,
-        fontSize: 12,
-        color: '#DD2E8A',
-    },
-
-    footer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: 7,
-        marginHorizontal: 3,
-    },
-
-    price: {
-        fontFamily: Fonts.bold,
-        fontSize: 14,
-        color: '#222222',
-    },
-});

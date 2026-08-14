@@ -9,11 +9,14 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
+import { useTheme } from '@/context/Theme';
 
 const { height } = Dimensions.get('window');
 
 export default function IndexScreen() {
     const router = useRouter();
+
+    const { colors } = useTheme();
 
     const translateY = useRef(
         new Animated.Value(height * 0.5)
@@ -26,6 +29,25 @@ export default function IndexScreen() {
     const scale = useRef(
         new Animated.Value(0.85)
     ).current;
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: colors.secondary,
+        },
+
+        logoWrapper: {
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        logo: {
+            width: 260,
+            height: 260,
+        },
+    });
 
     useEffect(() => {
         Animated.parallel([
@@ -81,22 +103,3 @@ export default function IndexScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#F3D6E7',
-    },
-
-    logoWrapper: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    logo: {
-        width: 260,
-        height: 260,
-    },
-});

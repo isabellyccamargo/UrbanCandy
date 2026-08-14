@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 import { useCart } from '@/context/CartContext';
+import { useTheme } from '@/context/Theme';
 
 export function Menu() {
 
@@ -16,15 +17,102 @@ export function Menu() {
 
     const { items } = useCart();
 
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+        radius,
+        sizes,
+    } = useTheme();
+
     const totalItems = items.reduce(
         (total, item) => total + item.quantity,
         0
     );
 
+    const styles = StyleSheet.create({
+
+        container: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: sizes.bottomMenuHeight,
+            backgroundColor: colors.white,
+            borderTopLeftRadius: radius.lg,
+            borderTopRightRadius: radius.lg,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            paddingHorizontal: space.xs,
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: -2,
+            },
+            shadowOpacity: 0.12,
+            shadowRadius: 5,
+            elevation: 10,
+            zIndex: 100,
+        },
+
+        item: {
+            flex: 1,
+            height: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        label: {
+            marginTop: space.xs,
+            fontFamily: font.regular,
+            fontSize: fontSize.sm,
+            color: colors.text,
+        },
+
+        menuButton: {
+            width: 56,
+            height: 56,
+            borderRadius: radius.pill,
+            backgroundColor: colors.primary,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: -20,
+        },
+
+        iconContainer: {
+            position: 'relative',
+            width: sizes.iconContainer,
+            height: sizes.iconContainer,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        cartBadge: {
+            position: 'absolute',
+            top: -7,
+            right: -9,
+            minWidth: 18,
+            height: 18,
+            borderRadius: radius.pill,
+            backgroundColor: colors.primary,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: space.xs,
+        },
+
+        cartBadgeText: {
+            fontSize: fontSize.xs,
+            color: colors.white,
+            fontFamily: font.bold,
+        },
+
+    });
+
     return (
         <View style={styles.container}>
 
-            {/* INÍCIO */}
             <Pressable
                 style={styles.item}
                 onPress={() => router.replace('/home')}
@@ -32,7 +120,7 @@ export function Menu() {
                 <Ionicons
                     name="home-outline"
                     size={25}
-                    color="#222222"
+                    color={colors.text}
                 />
 
                 <Text style={styles.label}>
@@ -40,8 +128,6 @@ export function Menu() {
                 </Text>
             </Pressable>
 
-
-            {/* PEDIDOS */}
             <Pressable
                 style={styles.item}
                 onPress={() => {
@@ -51,7 +137,7 @@ export function Menu() {
                 <Ionicons
                     name="bag-handle-outline"
                     size={25}
-                    color="#222222"
+                    color={colors.text}
                 />
 
                 <Text style={styles.label}>
@@ -59,8 +145,6 @@ export function Menu() {
                 </Text>
             </Pressable>
 
-
-            {/* CARDÁPIO */}
             <Pressable
                 style={styles.item}
                 onPress={() => router.replace('/cardapio')}
@@ -70,7 +154,7 @@ export function Menu() {
                     <Ionicons
                         name="restaurant-outline"
                         size={27}
-                        color="#FFFFFF"
+                        color={colors.white}
                     />
 
                 </View>
@@ -80,8 +164,6 @@ export function Menu() {
                 </Text>
             </Pressable>
 
-
-            {/* CARRINHO */}
             <Pressable
                 style={styles.item}
                 onPress={() => {
@@ -98,7 +180,7 @@ export function Menu() {
                     <Ionicons
                         name="cart-outline"
                         size={25}
-                        color="#222222"
+                        color={colors.text}
                     />
 
                     {totalItems > 0 && (
@@ -118,8 +200,6 @@ export function Menu() {
                 </Text>
             </Pressable>
 
-
-            {/* PERFIL */}
             <Pressable
                 style={styles.item}
                 onPress={() => {
@@ -129,7 +209,7 @@ export function Menu() {
                 <Ionicons
                     name="person-outline"
                     size={25}
-                    color="#222222"
+                    color={colors.text}
                 />
 
                 <Text style={styles.label}>
@@ -140,111 +220,3 @@ export function Menu() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-
-    container: {
-        position: 'absolute',
-
-        bottom: 0,
-        left: 0,
-        right: 0,
-
-        height: 80,
-
-        backgroundColor: '#FFFFFF',
-
-        borderTopLeftRadius: 18,
-        borderTopRightRadius: 18,
-
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-
-        paddingHorizontal: 4,
-
-        shadowColor: '#000000',
-
-        shadowOffset: {
-            width: 0,
-            height: -2,
-        },
-
-        shadowOpacity: 0.12,
-        shadowRadius: 5,
-
-        elevation: 10,
-
-        zIndex: 100,
-    },
-
-    item: {
-        flex: 1,
-
-        height: '100%',
-
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    label: {
-        marginTop: 3,
-
-        fontFamily: 'serif',
-        fontSize: 12,
-
-        color: '#333333',
-    },
-
-    menuButton: {
-        width: 56,
-        height: 56,
-
-        borderRadius: 28,
-
-        backgroundColor: '#DD2E8A',
-
-        justifyContent: 'center',
-        alignItems: 'center',
-
-        marginTop: -20,
-    },
-
-    iconContainer: {
-        position: 'relative',
-
-        width: 28,
-        height: 28,
-
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    cartBadge: {
-        position: 'absolute',
-
-        top: -7,
-        right: -9,
-
-        minWidth: 18,
-        height: 18,
-
-        borderRadius: 9,
-
-        backgroundColor: '#DD2E8A',
-
-        justifyContent: 'center',
-        alignItems: 'center',
-
-        paddingHorizontal: 4,
-    },
-
-    cartBadgeText: {
-        fontSize: 10,
-
-        color: '#FFFFFF',
-
-        fontWeight: 'bold',
-    },
-
-});

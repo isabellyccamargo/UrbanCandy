@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-
 import {
     ActivityIndicator,
     ScrollView,
@@ -8,12 +7,11 @@ import {
     View,
 } from 'react-native';
 
-import { Fonts } from '@/constants/fonts';
+import { useCart } from '@/context/CartContext';
+import { useTheme } from '@/context/Theme';
 import { getAllOffers } from '@/services/offers';
 
 import { OfferCard } from './OfferCard';
-
-import { useCart } from '@/context/CartContext';
 
 type Offer = {
     id_offer: number;
@@ -30,15 +28,57 @@ type OfferSectionProps = {
     onProductAdded?: (productName: string) => void;
 };
 
-export function OfferSection({
-    onProductAdded,
-}: OfferSectionProps) {
+export function OfferSection({ onProductAdded }: OfferSectionProps) {
     const { addToCart } = useCart();
+    const { colors, font, fontSize, space } = useTheme();
 
     const [offers, setOffers] = useState<Offer[]>([]);
     const [loading, setLoading] = useState(true);
-
     const [activeIndex, setActiveIndex] = useState(0);
+
+    const styles = StyleSheet.create({
+        container: {
+            width: '100%',
+            height: 260,
+            marginTop: 28,
+        },
+        header: {
+            alignItems: 'center',
+        },
+        title: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.xxl,
+            color: colors.primary,
+            marginBottom: space.xl,
+        },
+        list: {
+            paddingHorizontal: space.xl,
+        },
+        loading: {
+            height: 118,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        dots: {
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: space.sm,
+            gap: 6,
+        },
+        dot: {
+            width: 10,
+            height: 10,
+            borderRadius: 10,
+            backgroundColor: '#E5E5E5',
+        },
+        activeDot: {
+            width: 10,
+            height: 10,
+            borderRadius: 10,
+            backgroundColor: colors.primary,
+        },
+    });
 
     useEffect(() => {
         loadOffers();
@@ -47,9 +87,6 @@ export function OfferSection({
     async function loadOffers() {
         try {
             const response = await getAllOffers();
-
-            console.log('========== OFERTAS ==========');
-            console.log(response.data);
 
             if (!Array.isArray(response.data)) {
                 setOffers([]);
@@ -61,48 +98,27 @@ export function OfferSection({
                     (offer: Offer) => offer.active
                 )
             );
-
         } catch (error) {
-            console.error(
-                'Erro ao carregar ofertas:',
-                error
-            );
-
+            console.error('Erro ao carregar ofertas:', error);
             setOffers([]);
-
         } finally {
             setLoading(false);
         }
     }
 
     function handleAddToCart(offer: Offer) {
-        console.log(
-            '🛒 OFERTA ADICIONADA:',
-            offer.name_offer
-        );
-
         addToCart({
-            id_product:
-                offer.id_product ?? offer.id_offer,
-
+            id_product: offer.id_product ?? offer.id_offer,
             name: offer.name_offer,
-
-            price: Number(
-                offer.price_offer
-            ),
-
+            price: Number(offer.price_offer),
             image: offer.image,
         });
 
-        // AVISA A HOME
-        onProductAdded?.(
-            offer.name_offer
-        );
+        onProductAdded?.(offer.name_offer);
     }
 
     return (
         <View style={styles.container}>
-
             <View style={styles.header}>
                 <Text style={styles.title}>
                     Ofertas Especiais
@@ -113,7 +129,7 @@ export function OfferSection({
                 <View style={styles.loading}>
                     <ActivityIndicator
                         size="small"
-                        color="#ED1765"
+                        color={colors.primary}
                     />
                 </View>
             ) : (
@@ -128,11 +144,9 @@ export function OfferSection({
 
                             const cardWidth = 352;
 
-                            const index =
-                                Math.round(
-                                    offsetX /
-                                        cardWidth
-                                );
+                            const index = Math.round(
+                                offsetX / cardWidth
+                            );
 
                             setActiveIndex(index);
                         }}
@@ -140,52 +154,30 @@ export function OfferSection({
                     >
                         {offers.map((offer) => (
                             <OfferCard
-                                key={
-                                    offer.id_offer
-                                }
-                                name={
-                                    offer.name_offer
-                                }
-                                description={
-                                    offer.description
-                                }
-                                price={Number(
-                                    offer.price_offer
-                                )}
-                                image={
-                                    offer.image
-                                }
+                                key={offer.id_offer}
+                                name={offer.name_offer}
+                                description={offer.description}
+                                price={Number(offer.price_offer)}
+                                image={offer.image}
                                 onAdd={() =>
-                                    handleAddToCart(
-                                        offer
-                                    )
+                                    handleAddToCart(offer)
                                 }
                             />
                         ))}
                     </ScrollView>
 
                     {offers.length > 0 && (
-                        <View
-                            style={styles.dots}
-                        >
-                            {offers.map(
-                                (
-                                    offer,
-                                    index
-                                ) => (
-                                    <View
-                                        key={
-                                            offer.id_offer
-                                        }
-                                        style={[
-                                            styles.dot,
-                                            index ===
-                                                activeIndex &&
-                                                styles.activeDot,
-                                        ]}
-                                    />
-                                )
-                            )}
+                        <View style={styles.dots}>
+                            {offers.map((offer, index) => (
+                                <View
+                                    key={offer.id_offer}
+                                    style={[
+                                        styles.dot,
+                                        index === activeIndex &&
+                                            styles.activeDot,
+                                    ]}
+                                />
+                            ))}
                         </View>
                     )}
                 </>
@@ -193,54 +185,3 @@ export function OfferSection({
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        width: '100%',
-        height: 260,
-        marginTop: 28,
-    },
-
-    header: {
-        alignItems: 'center',
-    },
-
-    title: {
-        fontFamily: Fonts.semibold,
-        fontSize: 24,
-        color: '#DD2E8A',
-        marginBottom: 20,
-    },
-
-    list: {
-        paddingHorizontal: 20,
-    },
-
-    loading: {
-        height: 118,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    dots: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 8,
-        gap: 6,
-    },
-
-    dot: {
-        width: 10,
-        height: 10,
-        borderRadius: 10,
-        backgroundColor: '#E5E5E5',
-    },
-
-    activeDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 10,
-        backgroundColor: '#DD2E8A',
-    },
-});

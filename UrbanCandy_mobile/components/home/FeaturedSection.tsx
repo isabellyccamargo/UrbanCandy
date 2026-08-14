@@ -7,10 +7,11 @@ import {
     View,
 } from 'react-native';
 
-import api from '@/services/api';
-import { Fonts } from '@/constants/fonts';
-import { FeaturedCard } from './FeaturedCard';
 import { useCart } from '@/context/CartContext';
+import { useTheme } from '@/context/Theme';
+import api from '@/services/api';
+
+import { FeaturedCard } from './FeaturedCard';
 
 type Product = {
     id_product: number;
@@ -29,9 +30,47 @@ export function FeaturedSection({
     onProductAdded,
 }: FeaturedSectionProps) {
     const { addToCart } = useCart();
+    const { colors, font, fontSize, space } = useTheme();
 
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const styles = StyleSheet.create({
+        container: {
+            width: '100%',
+            marginTop: 30,
+        },
+        header: {
+            alignItems: 'center',
+            marginBottom: space.xl,
+        },
+        title: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.xxl,
+            color: colors.primary,
+        },
+        subtitle: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.textSecondary,
+            marginTop: 3,
+        },
+        list: {
+            paddingHorizontal: space.sm,
+            gap: space.md,
+        },
+        loading: {
+            height: 180,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        empty: {
+            textAlign: 'center',
+            color: colors.textSecondary,
+            fontFamily: font.regular,
+            fontSize: fontSize.sm,
+        },
+    });
 
     useEffect(() => {
         loadFeaturedProducts();
@@ -47,9 +86,6 @@ export function FeaturedSection({
             });
 
             const data = response.data?.data;
-
-            console.log('========== DESTAQUES ==========');
-            console.log(data);
 
             if (Array.isArray(data)) {
                 setProducts(data);
@@ -69,11 +105,6 @@ export function FeaturedSection({
     }
 
     function handleAddToCart(product: Product) {
-        console.log(
-            '🛒 ADICIONANDO AO CARRINHO:',
-            product.name
-        );
-
         addToCart({
             id_product: product.id_product,
             name: product.name,
@@ -81,13 +112,11 @@ export function FeaturedSection({
             image: product.image,
         });
 
-        // Avisa a Home que o produto foi adicionado
         onProductAdded?.(product.name);
     }
 
     return (
         <View style={styles.container}>
-
             <View style={styles.header}>
                 <Text style={styles.title}>
                     Destaques da Casa
@@ -102,7 +131,7 @@ export function FeaturedSection({
                 <View style={styles.loading}>
                     <ActivityIndicator
                         size="small"
-                        color="#DD2E8A"
+                        color={colors.primary}
                     />
                 </View>
             ) : products.length === 0 ? (
@@ -127,9 +156,7 @@ export function FeaturedSection({
                                     product.id_product
                                 );
                             }}
-                            onAdd={() => {
-                                handleAddToCart(product);
-                            }}
+                            onAdd={() => handleAddToCart(product)}
                         />
                     ))}
                 </ScrollView>
@@ -137,45 +164,3 @@ export function FeaturedSection({
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        width: '100%',
-        marginTop: 30,
-    },
-
-    header: {
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-
-    title: {
-        fontFamily: Fonts.semibold,
-        fontSize: 24,
-        color: '#DD2E8A',
-    },
-
-    subtitle: {
-        fontFamily: Fonts.regular,
-        fontSize: 16,
-        color: '#777777',
-        marginTop: 3,
-    },
-
-    list: {
-        paddingHorizontal: 8,
-        gap: 12,
-    },
-
-    loading: {
-        height: 180,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    empty: {
-        textAlign: 'center',
-        color: '#777777',
-        fontSize: 14,
-    },
-});

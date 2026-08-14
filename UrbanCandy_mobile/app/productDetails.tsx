@@ -12,10 +12,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { Fonts } from '@/constants/fonts';
 import { API_BASE_URL } from '@/services/api';
 import { getProductById } from '@/services/products';
 import { useCart } from '@/context/CartContext';
+import { useTheme } from '@/context/Theme';
 
 import { Menu } from '@/components/home/Menu';
 import { CartToast } from '@/components/cart/CartToats';
@@ -36,6 +36,175 @@ export default function ProdutoScreen() {
     const router = useRouter();
     const { id } = useLocalSearchParams<{ id?: string }>();
     const { addToCart } = useCart();
+    const { colors, font, fontSize, space, radius } = useTheme();
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.background,
+        },
+
+        scrollContent: {
+            paddingBottom: 100,
+        },
+
+        topSection: {
+            height: 400,
+            backgroundColor: colors.secondary,
+            borderBottomLeftRadius: radius.xxl,
+            borderBottomRightRadius: radius.xxl,
+        },
+
+        header: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingTop: 70,
+            paddingHorizontal: 18,
+        },
+
+        backButton: {
+            width: 38,
+            height: 38,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        headerTitle: {
+            fontFamily: font.regular,
+            fontSize: fontSize.xxl,
+            color: colors.white,
+            marginLeft: 5,
+        },
+
+        imageContainer: {
+            position: 'absolute',
+            top: 120,
+            left: 15,
+            right: 15,
+            height: 375,
+            borderRadius: radius.md,
+            overflow: 'hidden',
+        },
+
+        productImage: {
+            width: '100%',
+            height: '100%',
+        },
+
+        imagePlaceholder: {
+            flex: 1,
+            backgroundColor: colors.border,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        placeholderText: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.textTertiary,
+        },
+
+        infoContainer: {
+            paddingHorizontal: space.xxl,
+            paddingTop: 130,
+        },
+
+        nameRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+        },
+
+        nameContainer: {
+            flex: 1,
+            paddingRight: 10,
+        },
+
+        productName: {
+            fontFamily: font.regular,
+            fontSize: fontSize.title,
+            color: colors.text,
+        },
+
+        price: {
+            fontFamily: font.bold,
+            fontSize: fontSize.xl,
+            color: colors.primary,
+            marginTop: 10,
+        },
+
+        sectionTitle: {
+            fontFamily: font.regular,
+            fontSize: fontSize.lg,
+            color: colors.text,
+            marginTop: 28,
+            marginBottom: space.md,
+        },
+
+        description: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            lineHeight: 29,
+            color: colors.textSecondary,
+        },
+
+        ingredientsTitle: {
+            fontFamily: font.regular,
+            fontSize: fontSize.lg,
+            color: colors.text,
+            marginTop: 14,
+            marginBottom: 5,
+        },
+
+        ingredient: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            lineHeight: 30,
+            color: colors.textSecondary,
+        },
+
+        noIngredients: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.textTertiary,
+        },
+
+        loading: {
+            flex: 1,
+            backgroundColor: colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 30,
+        },
+
+        loadingText: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.textSecondary,
+            marginTop: space.md,
+        },
+
+        error: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.primary,
+            textAlign: 'center',
+            marginBottom: space.xl,
+        },
+
+        backErrorButton: {
+            backgroundColor: colors.primary,
+            paddingHorizontal: 30,
+            paddingVertical: 10,
+            borderRadius: radius.xl,
+        },
+
+        backErrorText: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.white,
+        },
+    });
 
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
@@ -101,7 +270,10 @@ export default function ProdutoScreen() {
         return (
             <View style={styles.loading}>
                 <StatusBar style="dark" />
-                <ActivityIndicator size="large" color="#DD2E8A" />
+                <ActivityIndicator
+                    size="large"
+                    color={colors.primary}
+                />
                 <Text style={styles.loadingText}>
                     Carregando produto...
                 </Text>
@@ -153,7 +325,7 @@ export default function ProdutoScreen() {
                             <Ionicons
                                 name="arrow-back"
                                 size={26}
-                                color="#FFFFFF"
+                                color={colors.white}
                             />
                         </Pressable>
 
@@ -193,9 +365,8 @@ export default function ProdutoScreen() {
 
                         <SmallButton
                             title="Adicionar"
-                             onPress={handleAddToCart}
+                            onPress={handleAddToCart}
                         />
-
                     </View>
 
                     <Text style={styles.sectionTitle}>
@@ -236,171 +407,3 @@ export default function ProdutoScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#F7F7F7',
-    },
-
-    scrollContent: {
-        paddingBottom: 100,
-    },
-
-    topSection: {
-        height: 400,
-        backgroundColor: '#E7C9DA',
-        borderBottomLeftRadius: 28,
-        borderBottomRightRadius: 28,
-    },
-
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingTop: 70,
-        paddingHorizontal: 18,
-    },
-
-    backButton: {
-        width: 38,
-        height: 38,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    headerTitle: {
-        fontFamily: Fonts.regular,
-        fontSize: 24,
-        color: '#FFFFFF',
-        marginLeft: 5,
-    },
-
-    imageContainer: {
-        position: 'absolute',
-        top: 120,
-        left: 15,
-        right: 15,
-        height: 375,
-        borderRadius: 14,
-        overflow: 'hidden',
-    },
-
-    productImage: {
-        width: '100%',
-        height: '100%',
-    },
-
-    imagePlaceholder: {
-        flex: 1,
-        backgroundColor: '#EDEDED',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    placeholderText: {
-        fontFamily: Fonts.regular,
-        fontSize: 16,
-        color: '#777777',
-    },
-
-    infoContainer: {
-        paddingHorizontal: 24,
-        paddingTop: 130,
-    },
-
-    nameRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-
-    nameContainer: {
-        flex: 1,
-        paddingRight: 10,
-    },
-
-    productName: {
-        fontFamily: Fonts.regular,
-        fontSize: 29,
-        color: '#111111',
-    },
-
-    price: {
-        fontFamily: Fonts.bold,
-        fontSize: 22,
-        color: '#DD2E8A',
-        marginTop: 10,
-    },
-
-    sectionTitle: {
-        fontFamily: Fonts.regular,
-        fontSize: 21,
-        color: '#111111',
-        marginTop: 28,
-        marginBottom: 12,
-    },
-
-    description: {
-        fontFamily: Fonts.regular,
-        fontSize: 17,
-        lineHeight: 29,
-        color: '#666666',
-    },
-
-    ingredientsTitle: {
-        fontFamily: Fonts.regular,
-        fontSize: 21,
-        color: '#111111',
-        marginTop: 14,
-        marginBottom: 5,
-    },
-
-    ingredient: {
-        fontFamily: Fonts.regular,
-        fontSize: 17,
-        lineHeight: 30,
-        color: '#666666',
-    },
-
-    noIngredients: {
-        fontFamily: Fonts.regular,
-        fontSize: 17,
-        color: '#777777',
-    },
-
-    loading: {
-        flex: 1,
-        backgroundColor: '#F7F7F7',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 30,
-    },
-
-    loadingText: {
-        fontFamily: Fonts.regular,
-        fontSize: 16,
-        color: '#666666',
-        marginTop: 12,
-    },
-
-    error: {
-        fontFamily: Fonts.regular,
-        fontSize: 17,
-        color: '#DD2E8A',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-
-    backErrorButton: {
-        backgroundColor: '#DD2E8A',
-        paddingHorizontal: 30,
-        paddingVertical: 10,
-        borderRadius: 20,
-    },
-
-    backErrorText: {
-        fontFamily: Fonts.regular,
-        fontSize: 16,
-        color: '#FFFFFF',
-    },
-});

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Fonts } from '@/constants/fonts';
+
+import { useTheme } from '@/context/Theme';
 
 type CartToastProps = {
     visible: boolean;
@@ -11,28 +12,66 @@ export function CartToast({
     visible,
     productName,
 }: CartToastProps) {
+    const { colors, font, fontSize, space, radius } = useTheme();
+
     if (!visible) {
         return null;
     }
 
     return (
-        <View style={styles.container}>
-            <View style={styles.iconContainer}>
+        <View
+            style={[
+                styles.container,
+                {
+                    backgroundColor: '#ddf1d8',
+                    borderColor: colors.success,
+                    borderRadius: radius.lg,
+                    paddingVertical: space.md,
+                    paddingHorizontal: space.md,
+                },
+            ]}
+        >
+            <View
+                style={[
+                    styles.iconContainer,
+                    {
+                        backgroundColor: colors.success,
+                        marginRight: space.md,
+                    },
+                ]}
+            >
                 <Ionicons
                     name="checkmark"
                     size={18}
-                    color="#FFFFFF"
+                    color={colors.white}
                 />
             </View>
 
             <View style={styles.textContainer}>
-                <Text style={styles.title}>
+                <Text
+                    style={[
+                        styles.title,
+                        {
+                            color: colors.success,
+                            fontFamily: font.bold,
+                            fontSize: fontSize.base,
+                        },
+                    ]}
+                >
                     Produto adicionado!
                 </Text>
 
                 {productName && (
                     <Text
-                        style={styles.productName}
+                        style={[
+                            styles.productName,
+                            {
+                                color: colors.text,
+                                fontFamily: font.regular,
+                                fontSize: fontSize.sm,
+                                marginTop: space.xs,
+                            },
+                        ]}
                         numberOfLines={1}
                     >
                         {productName}
@@ -49,18 +88,10 @@ const styles = StyleSheet.create({
         top: 110,
         left: 20,
         right: 20,
-
         zIndex: 999,
-
-        backgroundColor: '#ddf1d8',
-        borderRadius: 14,
-
-        paddingVertical: 12,
-        paddingHorizontal: 14,
-
         flexDirection: 'row',
         alignItems: 'center',
-
+        borderWidth: 1,
         shadowColor: '#000000',
         shadowOffset: {
             width: 0,
@@ -69,37 +100,21 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.18,
         shadowRadius: 5,
         elevation: 6,
-
-        borderWidth: 1,
-        borderColor: '#3caf62',
     },
+
     iconContainer: {
         width: 30,
         height: 30,
         borderRadius: 15,
-
-        backgroundColor: '#3caf62',
-
         justifyContent: 'center',
         alignItems: 'center',
-
-        marginRight: 10,
     },
 
     textContainer: {
         flex: 1,
     },
 
-    title: {
-        fontFamily: Fonts.bold,
-        fontSize: 14,
-        color: '#3caf62',
-    },
+    title: {},
 
-    productName: {
-        fontFamily: Fonts.regular,
-        fontSize: 12,
-        color: '#000000',
-        marginTop: 2,
-    },
+    productName: {},
 });

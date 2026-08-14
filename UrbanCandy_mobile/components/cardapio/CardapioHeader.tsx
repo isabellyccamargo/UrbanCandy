@@ -9,9 +9,42 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
-export default function CardapioHeader() {
+import { useTheme } from '@/context/Theme';
 
+export default function CardapioHeader() {
     const router = useRouter();
+
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+        radius,
+    } = useTheme();
+
+    const styles = StyleSheet.create({
+        container: {
+            height: 120,
+            backgroundColor: colors.secondary,
+            borderBottomLeftRadius: radius.xxl,
+            borderBottomRightRadius: radius.xxl,
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: space.xl,
+        },
+
+        backButton: {
+            marginRight: 18,
+            marginTop: 50,
+        },
+
+        title: {
+            fontSize: fontSize.xxl,
+            color: colors.white,
+            fontFamily: font.regular,
+            marginTop: 50,
+        },
+    });
 
     function handleBack() {
         router.replace('/home');
@@ -19,7 +52,6 @@ export default function CardapioHeader() {
 
     return (
         <View style={styles.container}>
-
             <Pressable
                 onPress={handleBack}
                 style={styles.backButton}
@@ -27,40 +59,13 @@ export default function CardapioHeader() {
                 <Ionicons
                     name="arrow-back"
                     size={26}
-                    color="#FFFFFF"
+                    color={colors.white}
                 />
             </Pressable>
 
             <Text style={styles.title}>
                 Cardápio
             </Text>
-
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-
-    container: {
-        height: 120,
-        backgroundColor: '#E7C9DA',
-        borderBottomLeftRadius: 28,
-        borderBottomRightRadius: 28,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-    },
-
-    backButton: {
-        marginRight: 18,
-        marginTop: 50,
-    },
-
-    title: {
-        fontSize: 24,
-        color: '#FFFFFF',
-        fontFamily: 'serif',
-        marginTop: 50,
-    },
-
-});

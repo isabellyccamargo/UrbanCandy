@@ -7,6 +7,7 @@ import Products from './Products.js';
 import TypeOfPayment from './TypeOfPayment.js';
 import Offers from './Offers.js';
 import OfferProducts from './OfferProducts.js';
+import TypeOfDelivery from './TypeOfDelivery.js';
 
 const setupAssociations = () => {
   Users.hasOne(People, { foreignKey: 'id_user', as: 'people' });
@@ -18,6 +19,11 @@ const setupAssociations = () => {
   Orders.belongsTo(TypeOfPayment, {
     foreignKey: 'id_payment',
     as: 'paymentType',
+  });
+
+  Orders.belongsTo(TypeOfDelivery, {
+    foreignKey: 'id_delivery',
+    as: 'deliveryType',
   });
 
   Orders.belongsTo(People, {

@@ -9,6 +9,7 @@ import {
 } from '@expo-google-fonts/quicksand';
 
 import { CartProvider } from '@/context/CartContext';
+import { ThemeProvider } from '@/context/Theme';
 
 export default function RootLayout() {
     const [fontsLoaded] = useFonts({
@@ -23,12 +24,14 @@ export default function RootLayout() {
     }
 
     return (
-        <CartProvider>
-            <Stack
-                screenOptions={{
-                    headerShown: false,
-                }}
-            />
-        </CartProvider>
+        <ThemeProvider>
+            <CartProvider>
+                <Stack
+                    screenOptions={{
+                        headerShown: false,
+                    }}
+                />
+            </CartProvider>
+        </ThemeProvider>
     );
 }

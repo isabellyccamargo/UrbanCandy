@@ -7,6 +7,7 @@ import PeopleController from '../controllers/PeopleController.js';
 import OrderController from '../controllers/OrderController.js';
 import AddressController from '../controllers/AddressController.js';
 import TypeOfPaymentController from '../controllers/TypeOfPaymentController.js';
+import TypeOfDeliveryController from '../controllers/TypeOfDeliveryController.js';
 import multer from 'multer';
 
 const privateRoutes = Router();
@@ -47,15 +48,15 @@ privateRoutes.put('/endereco/atualizar/:id_address', AddressController.updateAdd
 privateRoutes.post('/pedido/checkout', OrderController.store);
 privateRoutes.get('/pedido/listar', OrderController.findAllOrders);
 privateRoutes.get('/pedido/usuario/:id_people', OrderController.findByUserId);
+privateRoutes.put('/entrega/atualizar/:id_delivery', TypeOfDeliveryController.update);
+privateRoutes.delete('/entrega/excluir/:id_delivery', TypeOfDeliveryController.delete);
+privateRoutes.get('/entrega/listarPorId/:id_delivery', TypeOfDeliveryController.findById);
 
 // --- TIPOS DE PAGAMENTO ---
 privateRoutes.post('/pagamento/salvar', TypeOfPaymentController.createTypeOfPayment);
 privateRoutes.put('/pagamento/atualizar/:id_payment', TypeOfPaymentController.updateTypeOfPayment);
 privateRoutes.delete('/pagamento/excluir/:id_payment', TypeOfPaymentController.deleteTypeOfPayment);
 privateRoutes.get('/pagamento/listar', TypeOfPaymentController.findAllTypeOfPayment);
-privateRoutes.get(
-  '/pagamento/listarPorId/:id_payment',
-  TypeOfPaymentController.findByIdTypeOfPayment
-);
+privateRoutes.post('/entrega/salvar', TypeOfDeliveryController.create);
 
 export default privateRoutes;
