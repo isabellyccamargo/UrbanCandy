@@ -11,7 +11,19 @@ import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/Theme';
 import { getAllOffers } from '@/services/offers';
 
-import { OfferCard } from './OfferCard';
+import {OfferCard} from './OfferCard';
+
+type OfferProduct = {
+    id_product: number;
+    quantity: number;
+    product: {
+        id_product: number;
+        name: string;
+        description?: string;
+        price: number | string;
+        image?: string;
+    };
+};
 
 type Offer = {
     id_offer: number;
@@ -21,16 +33,23 @@ type Offer = {
     price_offer: number | string;
     image?: string;
     active: boolean;
-    id_product?: number;
+    products: OfferProduct[];
 };
 
 type OfferSectionProps = {
     onProductAdded?: (productName: string) => void;
 };
 
-export function OfferSection({ onProductAdded }: OfferSectionProps) {
+function OfferSection({
+    onProductAdded,
+}: OfferSectionProps) {
     const { addToCart } = useCart();
-    const { colors, font, fontSize, space } = useTheme();
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+    } = useTheme();
 
     const [offers, setOffers] = useState<Offer[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,23 +61,28 @@ export function OfferSection({ onProductAdded }: OfferSectionProps) {
             height: 260,
             marginTop: 28,
         },
+
         header: {
             alignItems: 'center',
         },
+
         title: {
             fontFamily: font.semibold,
             fontSize: fontSize.xxl,
             color: colors.primary,
             marginBottom: space.xl,
         },
+
         list: {
             paddingHorizontal: space.xl,
         },
+
         loading: {
             height: 118,
             justifyContent: 'center',
             alignItems: 'center',
         },
+
         dots: {
             flexDirection: 'row',
             justifyContent: 'center',
@@ -66,12 +90,14 @@ export function OfferSection({ onProductAdded }: OfferSectionProps) {
             marginTop: space.sm,
             gap: 6,
         },
+
         dot: {
             width: 10,
             height: 10,
             borderRadius: 10,
             backgroundColor: '#E5E5E5',
         },
+
         activeDot: {
             width: 10,
             height: 10,
@@ -93,13 +119,17 @@ export function OfferSection({ onProductAdded }: OfferSectionProps) {
                 return;
             }
 
-            setOffers(
-                response.data.filter(
-                    (offer: Offer) => offer.active
-                )
+            const activeOffers = response.data.filter(
+                (offer: Offer) => offer.active
             );
+
+            setOffers(activeOffers);
         } catch (error) {
-            console.error('Erro ao carregar ofertas:', error);
+            console.error(
+                'Erro ao carregar ofertas:',
+                error
+            );
+
             setOffers([]);
         } finally {
             setLoading(false);
@@ -107,14 +137,66 @@ export function OfferSection({ onProductAdded }: OfferSectionProps) {
     }
 
     function handleAddToCart(offer: Offer) {
+        if (!offer.products?.length) {
+            console.error(
+                'Oferta sem produtos:',
+                offer
+            );
+
+            return;
+        }
+
+        const offerProducts = offer.products.map(
+            (item) => ({
+                id_product: Number(
+                    item.product.id_product
+                ),
+
+                quantity: Number(
+                    item.quantity
+                ),
+
+                product: {
+                    id_product: Number(
+                        item.product.id_product
+                    ),
+
+                    name: item.product.name,
+
+                    description:
+                        item.product.description,
+
+                    price: Number(
+                        item.product.price
+                    ),
+
+                    image: item.product.image,
+                },
+            })
+        );
+
         addToCart({
-            id_product: offer.id_product ?? offer.id_offer,
+            id_product:
+                offer.products[0].product.id_product,
+
             name: offer.name_offer,
-            price: Number(offer.price_offer),
+
+            price: Number(
+                offer.price_offer
+            ),
+
             image: offer.image,
+
+            isOffer: true,
+
+            id_offer: offer.id_offer,
+
+            offerProducts,
         });
 
-        onProductAdded?.(offer.name_offer);
+        onProductAdded?.(
+            offer.name_offer
+        );
     }
 
     return (
@@ -140,7 +222,8 @@ export function OfferSection({ onProductAdded }: OfferSectionProps) {
                         contentContainerStyle={styles.list}
                         onScroll={(event) => {
                             const offsetX =
-                                event.nativeEvent.contentOffset.x;
+                                event.nativeEvent
+                                    .contentOffset.x;
 
                             const cardWidth = 352;
 
@@ -156,11 +239,17 @@ export function OfferSection({ onProductAdded }: OfferSectionProps) {
                             <OfferCard
                                 key={offer.id_offer}
                                 name={offer.name_offer}
-                                description={offer.description}
-                                price={Number(offer.price_offer)}
+                                description={
+                                    offer.description
+                                }
+                                price={Number(
+                                    offer.price_offer
+                                )}
                                 image={offer.image}
                                 onAdd={() =>
-                                    handleAddToCart(offer)
+                                    handleAddToCart(
+                                        offer
+                                    )
                                 }
                             />
                         ))}
@@ -168,16 +257,21 @@ export function OfferSection({ onProductAdded }: OfferSectionProps) {
 
                     {offers.length > 0 && (
                         <View style={styles.dots}>
-                            {offers.map((offer, index) => (
-                                <View
-                                    key={offer.id_offer}
-                                    style={[
-                                        styles.dot,
-                                        index === activeIndex &&
+                            {offers.map(
+                                (offer, index) => (
+                                    <View
+                                        key={
+                                            offer.id_offer
+                                        }
+                                        style={[
+                                            styles.dot,
+                                            index ===
+                                            activeIndex &&
                                             styles.activeDot,
-                                    ]}
-                                />
-                            ))}
+                                        ]}
+                                    />
+                                )
+                            )}
                         </View>
                     )}
                 </>
@@ -185,3 +279,5 @@ export function OfferSection({ onProductAdded }: OfferSectionProps) {
         </View>
     );
 }
+
+export default OfferSection;

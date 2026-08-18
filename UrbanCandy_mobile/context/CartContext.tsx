@@ -14,19 +14,39 @@ type Product = {
     image?: string;
 };
 
-type CartItem = {
+export type OfferProduct = {
+    id_product: number;
+    quantity: number;
+    product: Product;
+};
+
+export type CartItem = {
     id_product: number;
     product: Product;
     quantity: number;
+
+    // Dados da oferta
+    isOffer?: boolean;
+    id_offer?: number;
+    offerProducts?: OfferProduct[];
 };
 
 type CartContextType = {
     items: CartItem[];
     total: number;
-    addToCart: (product: Product) => void;
-    removeFromCart: (id_product: number) => void;
-    increaseQuantity: (id_product: number) => void;
-    decreaseQuantity: (id_product: number) => void;
+
+    addToCart: (
+        product: Product & {
+            isOffer?: boolean;
+            id_offer?: number;
+            offerProducts?: OfferProduct[];
+        }
+    ) => void;
+
+    removeFromCart: (itemId: string) => void;
+    increaseQuantity: (itemId: string) => void;
+    decreaseQuantity: (itemId: string) => void;
+
     clearCart: () => void;
 };
 
@@ -81,24 +101,50 @@ export function CartProvider({
         }
     }
 
-    function addToCart(product: Product) {
+    /**
+     * Identificador único do item do carrinho.
+     *
+     * Produto:
+     * product-5
+     *
+     * Oferta:
+     * offer-2
+     */
+    function getItemId(item: CartItem): string {
+        if (item.isOffer && item.id_offer) {
+            return `offer-${item.id_offer}`;
+        }
+
+        return `product-${item.id_product}`;
+    }
+
+    function addToCart(
+        product: Product & {
+            isOffer?: boolean;
+            id_offer?: number;
+            offerProducts?: OfferProduct[];
+        }
+    ) {
         setItems((currentItems) => {
+            const newItemId =
+                product.isOffer && product.id_offer
+                    ? `offer-${product.id_offer}`
+                    : `product-${product.id_product}`;
+
             const existingItem =
                 currentItems.find(
                     (item) =>
-                        item.id_product ===
-                        product.id_product
+                        getItemId(item) === newItemId
                 );
 
             if (existingItem) {
                 return currentItems.map((item) =>
-                    item.id_product ===
-                        product.id_product
+                    getItemId(item) === newItemId
                         ? {
-                            ...item,
-                            quantity:
-                                item.quantity + 1,
-                        }
+                              ...item,
+                              quantity:
+                                  item.quantity + 1,
+                          }
                         : item
                 );
             }
@@ -106,57 +152,58 @@ export function CartProvider({
             return [
                 ...currentItems,
                 {
-                    id_product:
-                        product.id_product,
-                    product,
+                    id_product: product.id_product,
+                    product: {
+                        id_product:
+                            product.id_product,
+                        name: product.name,
+                        price: Number(product.price),
+                        image: product.image,
+                    },
                     quantity: 1,
+
+                    isOffer: product.isOffer,
+                    id_offer: product.id_offer,
+                    offerProducts:
+                        product.offerProducts,
                 },
             ];
         });
     }
 
-    function removeFromCart(
-        id_product: number
-    ) {
+    function removeFromCart(itemId: string) {
         setItems((currentItems) =>
             currentItems.filter(
                 (item) =>
-                    item.id_product !==
-                    id_product
+                    getItemId(item) !== itemId
             )
         );
     }
 
-    function increaseQuantity(
-        id_product: number
-    ) {
+    function increaseQuantity(itemId: string) {
         setItems((currentItems) =>
             currentItems.map((item) =>
-                item.id_product ===
-                    id_product
+                getItemId(item) === itemId
                     ? {
-                        ...item,
-                        quantity:
-                            item.quantity + 1,
-                    }
+                          ...item,
+                          quantity:
+                              item.quantity + 1,
+                      }
                     : item
             )
         );
     }
 
-    function decreaseQuantity(
-        id_product: number
-    ) {
+    function decreaseQuantity(itemId: string) {
         setItems((currentItems) =>
             currentItems
                 .map((item) =>
-                    item.id_product ===
-                        id_product
+                    getItemId(item) === itemId
                         ? {
-                            ...item,
-                            quantity:
-                                item.quantity - 1,
-                        }
+                              ...item,
+                              quantity:
+                                  item.quantity - 1,
+                          }
                         : item
                 )
                 .filter(
@@ -174,7 +221,7 @@ export function CartProvider({
         (sum, item) =>
             sum +
             Number(item.product.price) *
-            item.quantity,
+                item.quantity,
         0
     );
 

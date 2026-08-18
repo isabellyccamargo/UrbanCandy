@@ -1,5 +1,11 @@
 import React from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import {
+    FlatList,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
+
 import { StatusBar } from 'expo-status-bar';
 
 import { useCart } from '@/context/CartContext';
@@ -11,7 +17,13 @@ import CartSummary from '@/components/cart/CartSumary';
 import { Menu } from '@/components/home/Menu';
 
 export default function CartScreen() {
-    const { colors, font, fontSize, space, radius } = useTheme();
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+        radius,
+    } = useTheme();
 
     const {
         items,
@@ -26,26 +38,31 @@ export default function CartScreen() {
             flex: 1,
             backgroundColor: colors.background,
         },
+
         topSection: {
             height: 125,
             backgroundColor: colors.secondary,
             borderBottomLeftRadius: radius.xxl,
             borderBottomRightRadius: radius.xxl,
         },
+
         list: {
             paddingTop: space.xl,
             paddingBottom: space.xl,
         },
+
         empty: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
             paddingHorizontal: space.xxxl,
         },
+
         emptyIcon: {
             fontSize: 70,
             marginBottom: space.md,
         },
+
         emptyTitle: {
             fontFamily: font.semibold,
             fontSize: fontSize.xl,
@@ -53,6 +70,7 @@ export default function CartScreen() {
             marginBottom: space.sm,
             textAlign: 'center',
         },
+
         emptyText: {
             fontFamily: font.regular,
             fontSize: fontSize.md,
@@ -60,6 +78,23 @@ export default function CartScreen() {
             textAlign: 'center',
         },
     });
+
+    /*
+     * Cria um identificador único para o item.
+     *
+     * Produto:
+     * product-5
+     *
+     * Oferta:
+     * offer-2
+     */
+    function getItemId(item: (typeof items)[number]) {
+        if (item.isOffer && item.id_offer) {
+            return `offer-${item.id_offer}`;
+        }
+
+        return `product-${item.id_product}`;
+    }
 
     return (
         <View style={styles.container}>
@@ -71,7 +106,9 @@ export default function CartScreen() {
 
             {items.length === 0 ? (
                 <View style={styles.empty}>
-                    <Text style={styles.emptyIcon}>🛒</Text>
+                    <Text style={styles.emptyIcon}>
+                        🛒
+                    </Text>
 
                     <Text style={styles.emptyTitle}>
                         Seu carrinho está vazio
@@ -84,24 +121,38 @@ export default function CartScreen() {
             ) : (
                 <FlatList
                     data={items}
-                    keyExtractor={item => String(item.id_product)}
+                    keyExtractor={getItemId}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.list}
-                    renderItem={({ item }) => (
-                        <CartItem
-                            product={item.product}
-                            quantity={item.quantity}
-                            onIncrease={() =>
-                                increaseQuantity(item.id_product)
-                            }
-                            onDecrease={() =>
-                                decreaseQuantity(item.id_product)
-                            }
-                            onRemove={() =>
-                                removeFromCart(item.id_product)
-                            }
-                        />
-                    )}
+                    renderItem={({ item }) => {
+                        const itemId =
+                            getItemId(item);
+
+                        return (
+                            <CartItem
+                                product={item.product}
+                                quantity={item.quantity}
+
+                                onIncrease={() =>
+                                    increaseQuantity(
+                                        itemId
+                                    )
+                                }
+
+                                onDecrease={() =>
+                                    decreaseQuantity(
+                                        itemId
+                                    )
+                                }
+
+                                onRemove={() =>
+                                    removeFromCart(
+                                        itemId
+                                    )
+                                }
+                            />
+                        );
+                    }}
                 />
             )}
 

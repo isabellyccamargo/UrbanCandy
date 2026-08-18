@@ -15,7 +15,7 @@ import { HomeHeader } from '@/components/home/Header';
 import { Menu } from '@/components/home/Menu';
 import { CategorySection } from '@/components/home/CategorySection';
 import { FeaturedSection } from '@/components/home/FeaturedSection';
-import { OfferSection } from '@/components/home/OfferSection';
+import OfferSection  from '@/components/home/OfferSection';
 import { CartToast } from '@/components/cart/CartToats';
 
 export default function HomeScreen() {
