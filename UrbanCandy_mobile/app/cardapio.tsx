@@ -1,16 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    View,
-} from 'react-native';
-
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useTheme } from '@/context/Theme';
+import { useCart } from '@/context/CartContext';
 
 import CardapioHeader from '@/components/cardapio/CardapioHeader';
 import CategoryTabs from '@/components/cardapio/CategoryTabs';
@@ -20,7 +14,6 @@ import { CartToast } from '@/components/cart/CartToats';
 
 import { getProductsByCategory } from '@/services/products';
 import { getAllCategories } from '@/services/categories';
-import { useCart } from '@/context/CartContext';
 
 type Category = {
     id_category: number;
@@ -36,48 +29,25 @@ type Product = {
 
 export default function CardapioScreen() {
     const router = useRouter();
-
-    const {
-        colors,
-        font,
-        fontSize,
-        space,
-    } = useTheme();
-
+    const { colors, font, fontSize, space } = useTheme();
     const { addToCart } = useCart();
-
-    const { category } =
-        useLocalSearchParams<{ category?: string }>();
+    const { category } = useLocalSearchParams<{ category?: string }>();
 
     const [categories, setCategories] = useState<Category[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
-
-    const [selectedCategory, setSelectedCategory] =
-        useState<string | null>(null);
-
-    const [loadingCategories, setLoadingCategories] =
-        useState(true);
-
-    const [loadingProducts, setLoadingProducts] =
-        useState(false);
-
-    const [error, setError] =
-        useState<string | null>(null);
-
-    const [showToast, setShowToast] =
-        useState(false);
-
-    const [toastProduct, setToastProduct] =
-        useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [loadingCategories, setLoadingCategories] = useState(true);
+    const [loadingProducts, setLoadingProducts] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [showToast, setShowToast] = useState(false);
+    const [toastProduct, setToastProduct] = useState('');
 
     useEffect(() => {
         loadCategories();
     }, []);
 
     useEffect(() => {
-        if (selectedCategory) {
-            loadProducts(selectedCategory);
-        }
+        if (selectedCategory) loadProducts(selectedCategory);
     }, [selectedCategory]);
 
     async function loadCategories() {
@@ -85,36 +55,22 @@ export default function CardapioScreen() {
             setLoadingCategories(true);
 
             const response = await getAllCategories();
-
             const data = response?.data ?? [];
 
-            if (!Array.isArray(data)) {
-                return;
-            }
+            if (!Array.isArray(data)) return;
 
             setCategories(data);
 
             const selected =
                 typeof category === 'string'
-                    ? data.find(
-                        (item: Category) =>
-                            item.name_category === category
-                    )
+                    ? data.find(item => item.name_category === category)
                     : null;
 
             setSelectedCategory(
-                selected?.name_category ??
-                data[0]?.name_category ??
-                null
+                selected?.name_category ?? data[0]?.name_category ?? null
             );
-
-        } catch (err) {
-            console.error(err);
-
-            setError(
-                'Não foi possível carregar as categorias.'
-            );
-
+        } catch {
+            setError('Não foi possível carregar as categorias.');
         } finally {
             setLoadingCategories(false);
         }
@@ -125,24 +81,12 @@ export default function CardapioScreen() {
             setLoadingProducts(true);
             setError(null);
 
-            const response =
-                await getProductsByCategory(categoryName);
+            const response = await getProductsByCategory(categoryName);
 
-            setProducts(
-                Array.isArray(response?.data)
-                    ? response.data
-                    : []
-            );
-
-        } catch (err) {
-            console.error(err);
-
+            setProducts(Array.isArray(response?.data) ? response.data : []);
+        } catch {
             setProducts([]);
-
-            setError(
-                'Não foi possível carregar os produtos.'
-            );
-
+            setError('Não foi possível carregar os produtos.');
         } finally {
             setLoadingProducts(false);
         }
@@ -159,9 +103,7 @@ export default function CardapioScreen() {
         setToastProduct(product.name);
         setShowToast(true);
 
-        setTimeout(() => {
-            setShowToast(false);
-        }, 2000);
+        setTimeout(() => setShowToast(false), 2000);
     }
 
     const styles = StyleSheet.create({
@@ -169,36 +111,30 @@ export default function CardapioScreen() {
             flex: 1,
             backgroundColor: colors.background,
         },
-
         loadingCategories: {
             height: 58,
             justifyContent: 'center',
             alignItems: 'center',
         },
-
         productsContainer: {
             paddingHorizontal: space.md,
             paddingTop: space.lg,
             paddingBottom: 110,
         },
-
         productRow: {
             justifyContent: 'space-between',
         },
-
         loading: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
         },
-
         loadingText: {
             marginTop: space.sm,
             fontFamily: font.regular,
             fontSize: fontSize.base,
             color: colors.textSecondary,
         },
-
         error: {
             textAlign: 'center',
             margin: space.sm,
@@ -206,12 +142,10 @@ export default function CardapioScreen() {
             fontSize: fontSize.base,
             color: colors.primary,
         },
-
         emptyContainer: {
             alignItems: 'center',
             paddingTop: space.huge,
         },
-
         emptyText: {
             fontFamily: font.regular,
             fontSize: fontSize.md,
@@ -221,17 +155,13 @@ export default function CardapioScreen() {
 
     return (
         <View style={styles.container}>
-
             <StatusBar style="dark" />
 
             <CardapioHeader />
 
             {loadingCategories ? (
                 <View style={styles.loadingCategories}>
-                    <ActivityIndicator
-                        size="small"
-                        color={colors.primary}
-                    />
+                    <ActivityIndicator size="small" color={colors.primary} />
                 </View>
             ) : (
                 <CategoryTabs
@@ -241,39 +171,23 @@ export default function CardapioScreen() {
                 />
             )}
 
-            {error && (
-                <Text style={styles.error}>
-                    {error}
-                </Text>
-            )}
+            {error && <Text style={styles.error}>{error}</Text>}
 
             {loadingProducts ? (
                 <View style={styles.loading}>
-
-                    <ActivityIndicator
-                        size="large"
-                        color={colors.primary}
-                    />
-
+                    <ActivityIndicator size="large" color={colors.primary} />
                     <Text style={styles.loadingText}>
                         Carregando produtos...
                     </Text>
-
                 </View>
             ) : (
                 <FlatList
                     data={products}
-                    keyExtractor={(item) =>
-                        String(item.id_product)
-                    }
+                    keyExtractor={item => String(item.id_product)}
                     numColumns={2}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={
-                        styles.productsContainer
-                    }
-                    columnWrapperStyle={
-                        styles.productRow
-                    }
+                    contentContainerStyle={styles.productsContainer}
+                    columnWrapperStyle={styles.productRow}
                     renderItem={({ item }) => (
                         <ProductCard
                             id_product={item.id_product}
@@ -282,39 +196,25 @@ export default function CardapioScreen() {
                             image={item.image}
                             onPress={() =>
                                 router.push({
-                                    pathname:
-                                        '/productDetails',
-                                    params: {
-                                        id: String(
-                                            item.id_product
-                                        ),
-                                    },
+                                    pathname: '/productDetails',
+                                    params: { id: String(item.id_product) },
                                 })
                             }
-                            onAdd={() =>
-                                handleAddProduct(item)
-                            }
+                            onAdd={() => handleAddProduct(item)}
                         />
                     )}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
-
                             <Text style={styles.emptyText}>
                                 Nenhum produto encontrado.
                             </Text>
-
                         </View>
                     }
                 />
             )}
 
-            <CartToast
-                visible={showToast}
-                productName={toastProduct}
-            />
-
+            <CartToast visible={showToast} productName={toastProduct} />
             <Menu />
-
         </View>
     );
 }

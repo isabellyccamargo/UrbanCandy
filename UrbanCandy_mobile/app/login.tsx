@@ -9,26 +9,22 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    Alert,
     ActivityIndicator,
 } from 'react-native';
+
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useTheme } from '@/context/Theme';
 import { loginUser } from '@/services/auth';
+import api from '@/services/api';
+import { useAppAlert } from '@/components/common/AppAlert';
 
 export default function LoginScreen() {
     const router = useRouter();
-
-    const {
-        colors,
-        font,
-        fontSize,
-        space,
-        radius,
-        sizes,
-    } = useTheme();
+    const { colors, font, fontSize, space, radius, sizes } = useTheme();
+    const { showMessage } = useAppAlert();
 
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
@@ -39,18 +35,15 @@ export default function LoginScreen() {
             flex: 1,
             backgroundColor: colors.background,
         },
-
         scrollContent: {
             flexGrow: 1,
         },
-
         container: {
             flex: 1,
             minHeight: 850,
             backgroundColor: colors.background,
             alignItems: 'center',
         },
-
         topDecoration: {
             position: 'absolute',
             top: 0,
@@ -61,7 +54,6 @@ export default function LoginScreen() {
             borderBottomLeftRadius: radius.xxl,
             borderBottomRightRadius: radius.xxl,
         },
-
         content: {
             width: '100%',
             maxWidth: 520,
@@ -69,25 +61,21 @@ export default function LoginScreen() {
             paddingTop: 165,
             alignItems: 'center',
         },
-
         logo: {
             width: 125,
             height: 155,
             marginBottom: space.xxl,
         },
-
         fieldContainer: {
             width: '100%',
             marginBottom: 25,
         },
-
         label: {
             fontSize: fontSize.lg,
             color: colors.text,
             marginBottom: 14,
             fontFamily: font.medium,
         },
-
         input: {
             width: '100%',
             height: sizes.inputHeight,
@@ -97,15 +85,11 @@ export default function LoginScreen() {
             fontSize: fontSize.lg,
             color: colors.text,
             shadowColor: colors.text,
-            shadowOffset: {
-                width: 0,
-                height: 4,
-            },
+            shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.18,
             shadowRadius: 6,
             elevation: 5,
         },
-
         loginButton: {
             width: 290,
             height: 54,
@@ -115,24 +99,18 @@ export default function LoginScreen() {
             justifyContent: 'center',
             alignItems: 'center',
             shadowColor: colors.text,
-            shadowOffset: {
-                width: 0,
-                height: 3,
-            },
+            shadowOffset: { width: 0, height: 3 },
             shadowOpacity: 0.18,
             shadowRadius: 5,
             elevation: 4,
         },
-
         loginButtonPressed: {
             opacity: 0.75,
             transform: [{ scale: 0.98 }],
         },
-
         loginButtonLoading: {
             opacity: 0.7,
         },
-
         loginButtonText: {
             fontSize: fontSize.lg,
             color: colors.white,
@@ -142,9 +120,11 @@ export default function LoginScreen() {
 
     async function handleLogin() {
         if (!email.trim() || !senha.trim()) {
-            Alert.alert(
+            showMessage(
                 'Atenção',
-                'Preencha o email e a senha.'
+                'Preencha o email e a senha.',
+                undefined,
+                'warning'
             );
             return;
         }
@@ -152,20 +132,32 @@ export default function LoginScreen() {
         try {
             setLoading(true);
 
-            const data = await loginUser(
-                email.trim(),
-                senha
-            );
+            const data = await loginUser(email.trim(), senha);
 
-            console.log('Login realizado:', data);
+            const token =
+                data?.token ??
+                data?.accessToken ??
+                data?.access_token;
+
+            if (token) {
+                await AsyncStorage.setItem('@UrbanCandy:token', token);
+                api.defaults.headers.Authorization = `Bearer ${token}`;
+            }
+
+            const user = data?.user ?? data?.usuario ?? data;
+
+            await AsyncStorage.setItem(
+                '@UrbanCandy:user',
+                JSON.stringify(user)
+            );
 
             router.replace('/home');
         } catch (error: any) {
-            console.error('Erro no login:', error);
-
-            Alert.alert(
+            showMessage(
                 'Não foi possível entrar',
-                error.message || 'Verifique seu email e senha.'
+                error?.message || 'Verifique seu email e senha.',
+                undefined,
+                'error'
             );
         } finally {
             setLoading(false);
@@ -175,11 +167,7 @@ export default function LoginScreen() {
     return (
         <KeyboardAvoidingView
             style={styles.screen}
-            behavior={
-                Platform.OS === 'ios'
-                    ? 'padding'
-                    : undefined
-            }
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
             <StatusBar style="dark" />
 
@@ -189,11 +177,9 @@ export default function LoginScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.container}>
-
                     <View style={styles.topDecoration} />
 
                     <View style={styles.content}>
-
                         <Image
                             source={require('@/assets/images/logo.png')}
                             style={styles.logo}
@@ -201,9 +187,7 @@ export default function LoginScreen() {
                         />
 
                         <View style={styles.fieldContainer}>
-                            <Text style={styles.label}>
-                                Email
-                            </Text>
+                            <Text style={styles.label}>Email</Text>
 
                             <TextInput
                                 style={styles.input}
@@ -219,9 +203,7 @@ export default function LoginScreen() {
                         </View>
 
                         <View style={styles.fieldContainer}>
-                            <Text style={styles.label}>
-                                Senha
-                            </Text>
+                            <Text style={styles.label}>Senha</Text>
 
                             <TextInput
                                 style={styles.input}
@@ -239,11 +221,8 @@ export default function LoginScreen() {
                         <Pressable
                             style={({ pressed }) => [
                                 styles.loginButton,
-                                pressed &&
-                                    !loading &&
-                                    styles.loginButtonPressed,
-                                loading &&
-                                    styles.loginButtonLoading,
+                                pressed && !loading && styles.loginButtonPressed,
+                                loading && styles.loginButtonLoading,
                             ]}
                             onPress={handleLogin}
                             disabled={loading}
@@ -259,7 +238,6 @@ export default function LoginScreen() {
                                 </Text>
                             )}
                         </Pressable>
-
                     </View>
                 </View>
             </ScrollView>

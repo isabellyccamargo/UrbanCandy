@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-    Image,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
-} from 'react-native';
-
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { useTheme } from '@/context/Theme';
@@ -34,13 +27,7 @@ export default function CartItem({
     onDecrease,
     onRemove,
 }: CartItemProps) {
-    const {
-        colors,
-        font,
-        fontSize,
-        space,
-        radius,
-    } = useTheme();
+    const { colors, font, fontSize, space, radius } = useTheme();
 
     const styles = StyleSheet.create({
         container: {
@@ -52,43 +39,36 @@ export default function CartItem({
             borderRadius: radius.lg,
             minHeight: 125,
         },
-
         imageContainer: {
             width: 95,
             height: 100,
             borderRadius: radius.md,
             overflow: 'hidden',
         },
-
         image: {
             width: '100%',
             height: '100%',
         },
-
         imagePlaceholder: {
             flex: 1,
             backgroundColor: colors.border,
             justifyContent: 'center',
             alignItems: 'center',
         },
-
         placeholderText: {
             fontFamily: font.regular,
             fontSize: fontSize.sm,
             color: colors.textTertiary,
         },
-
         info: {
             flex: 1,
             marginLeft: space.md,
         },
-
         nameRow: {
             flexDirection: 'row',
             alignItems: 'flex-start',
             justifyContent: 'space-between',
         },
-
         name: {
             flex: 1,
             fontFamily: font.semibold,
@@ -96,23 +76,19 @@ export default function CartItem({
             color: colors.text,
             paddingRight: 6,
         },
-
         removeButton: {
             padding: 2,
             marginLeft: 4,
         },
-
         price: {
             fontFamily: font.bold,
             fontSize: fontSize.md,
             color: colors.primary,
             marginTop: 5,
         },
-
         bottomRow: {
             marginTop: space.md,
         },
-
         quantity: {
             flexDirection: 'row',
             alignItems: 'center',
@@ -122,20 +98,17 @@ export default function CartItem({
             overflow: 'hidden',
             alignSelf: 'flex-start',
         },
-
         qtyButton: {
             width: 30,
             height: 30,
             justifyContent: 'center',
             alignItems: 'center',
         },
-
         qtyText: {
             fontFamily: font.bold,
             fontSize: fontSize.lg,
             color: colors.primary,
         },
-
         quantityText: {
             fontFamily: font.semibold,
             fontSize: fontSize.md,
@@ -143,7 +116,6 @@ export default function CartItem({
             minWidth: 25,
             textAlign: 'center',
         },
-
         subtotal: {
             position: 'absolute',
             right: space.md,
@@ -171,19 +143,14 @@ export default function CartItem({
                     />
                 ) : (
                     <View style={styles.imagePlaceholder}>
-                        <Text style={styles.placeholderText}>
-                            Sem imagem
-                        </Text>
+                        <Text style={styles.placeholderText}>Sem imagem</Text>
                     </View>
                 )}
             </View>
 
             <View style={styles.info}>
                 <View style={styles.nameRow}>
-                    <Text
-                        style={styles.name}
-                        numberOfLines={2}
-                    >
+                    <Text style={styles.name} numberOfLines={2}>
                         {product.name}
                     </Text>
 
@@ -200,9 +167,7 @@ export default function CartItem({
                 </View>
 
                 <Text style={styles.price}>
-                    R$ {Number(product.price)
-                        .toFixed(2)
-                        .replace('.', ',')}
+                    R$ {Number(product.price).toFixed(2).replace('.', ',')}
                 </Text>
 
                 <View style={styles.bottomRow}>
@@ -211,22 +176,16 @@ export default function CartItem({
                             onPress={onDecrease}
                             style={styles.qtyButton}
                         >
-                            <Text style={styles.qtyText}>
-                                −
-                            </Text>
+                            <Text style={styles.qtyText}>−</Text>
                         </Pressable>
 
-                        <Text style={styles.quantityText}>
-                            {quantity}
-                        </Text>
+                        <Text style={styles.quantityText}>{quantity}</Text>
 
                         <Pressable
                             onPress={onIncrease}
                             style={styles.qtyButton}
                         >
-                            <Text style={styles.qtyText}>
-                                +
-                            </Text>
+                            <Text style={styles.qtyText}>+</Text>
                         </Pressable>
                     </View>
                 </View>

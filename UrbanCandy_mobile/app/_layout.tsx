@@ -10,6 +10,7 @@ import {
 
 import { CartProvider } from '@/context/CartContext';
 import { ThemeProvider } from '@/context/Theme';
+import { AppAlertProvider } from '@/components/common/AppAlert';
 
 export default function RootLayout() {
     const [fontsLoaded] = useFonts({
@@ -19,18 +20,18 @@ export default function RootLayout() {
         Quicksand_700Bold,
     });
 
-    if (!fontsLoaded) {
-        return null;
-    }
+    if (!fontsLoaded) return null;
 
     return (
         <ThemeProvider>
             <CartProvider>
-                <Stack
-                    screenOptions={{
-                        headerShown: false,
-                    }}
-                />
+                <AppAlertProvider>
+                    <Stack
+                        screenOptions={{
+                            headerShown: false,
+                        }}
+                    />
+                </AppAlertProvider>
             </CartProvider>
         </ThemeProvider>
     );

@@ -7,6 +7,7 @@ class Orders extends Model {
   declare order_date: Date;
   declare total: number;
   declare id_payment: number;
+  declare id_type_delivery: number;
 }
 
 Orders.init(
@@ -36,6 +37,14 @@ Orders.init(
       references: {
         model: 'type_of_payment',
         key: 'id_payment',
+      },
+    },
+    id_type_delivery: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
+      references: {
+        model: 'type_of_delivery',
+        key: 'id_type_delivery',
       },
     },
   },
