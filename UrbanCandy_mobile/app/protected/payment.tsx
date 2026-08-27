@@ -117,7 +117,7 @@ export default function PaymentScreen() {
             showMessage(
                 'Pedido realizado!',
                 'Seu pedido foi realizado com sucesso.',
-                () => router.replace('/home'),
+                () => router.replace('/protected/home'),
                 'success'
             );
         } catch (err) {

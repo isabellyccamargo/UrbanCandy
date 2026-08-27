@@ -51,6 +51,7 @@ export function OfferCard({
             shadowOpacity: 0.12,
             shadowRadius: 4,
             elevation: 3,
+            
         },
         content: {
             flex: 1,

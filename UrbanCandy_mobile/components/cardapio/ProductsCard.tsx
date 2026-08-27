@@ -42,14 +42,11 @@ export function ProductCard({
             borderRadius: radius.md,
             padding: 5,
             marginBottom: space.md,
-            shadowColor: colors.text,
-            shadowOffset: {
-                width: 0,
-                height: 2,
-            },
-            shadowOpacity: 0.2,
-            shadowRadius: 3,
-            elevation: 4,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.12,
+            shadowRadius: 8,
+            elevation: 8,
         },
 
         image: {

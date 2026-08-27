@@ -32,6 +32,7 @@ export default function PaymentHeader({
             paddingVertical: space.md,
             borderBottomLeftRadius: radius.xxl,
             borderBottomRightRadius: radius.xxl,
+            
         },
 
         content: {

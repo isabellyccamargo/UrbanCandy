@@ -80,6 +80,25 @@ class OrderController {
       next(error);
     }
   }
+
+  static async findItemsByOrder(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id_order } = req.params;
+
+      const result =
+        await OrderService.findItemsByOrder(
+          Number(id_order)
+        );
+
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default OrderController;

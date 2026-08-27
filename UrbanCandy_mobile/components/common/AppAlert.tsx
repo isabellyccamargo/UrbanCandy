@@ -1,5 +1,18 @@
-import React, { createContext, useContext, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+
+import React, {
+    createContext,
+    useContext,
+    useRef,
+    useState,
+} from 'react';
+
+import {
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 
 type AlertType = 'success' | 'error' | 'warning';
 
@@ -19,10 +32,18 @@ type AlertContextType = {
     ) => void;
 };
 
-const AlertContext = createContext<AlertContextType | null>(null);
+const AlertContext =
+    createContext<AlertContextType | null>(null);
 
-export function AppAlertProvider({ children }: { children: React.ReactNode }) {
-    const [alert, setAlert] = useState<AlertData | null>(null);
+export function AppAlertProvider({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const [alert, setAlert] =
+        useState<AlertData | null>(null);
+
+    const closing = useRef(false);
 
     function showMessage(
         title: string,
@@ -30,13 +51,36 @@ export function AppAlertProvider({ children }: { children: React.ReactNode }) {
         onClose?: () => void,
         type: AlertType = 'error'
     ) {
-        setAlert({ title, message, onClose, type });
+        if (closing.current) {
+            return;
+        }
+
+        setAlert({
+            title,
+            message,
+            type,
+            onClose,
+        });
     }
 
-    function close() {
-        const callback = alert?.onClose;
+    function closeAlert() {
+        if (!alert || closing.current) {
+            return;
+        }
+
+        closing.current = true;
+
+        const callback = alert.onClose;
+
         setAlert(null);
-        callback?.();
+
+        setTimeout(() => {
+            closing.current = false;
+
+            if (callback) {
+                callback();
+            }
+        }, 150);
     }
 
     const color =
@@ -47,43 +91,72 @@ export function AppAlertProvider({ children }: { children: React.ReactNode }) {
                 : '#EF4444';
 
     return (
-        <AlertContext.Provider value={{ showMessage }}>
+        <AlertContext.Provider
+            value={{
+                showMessage,
+            }}
+        >
             {children}
 
-            <Modal transparent visible={!!alert} animationType="fade">
+            <Modal
+                transparent
+                visible={alert !== null}
+                animationType="fade"
+                onRequestClose={closeAlert}
+            >
                 <View style={styles.overlay}>
-                    <View style={styles.container}>
-                        <View
-                            style={[
-                                styles.icon,
-                                { backgroundColor: color },
-                            ]}
-                        >
-                            <Text style={styles.iconText}>
-                                {alert?.type === 'success' ? '✓' : '!'}
+                    {alert && (
+                        <View style={styles.container}>
+                            <View
+                                style={[
+                                    styles.icon,
+                                    {
+                                        backgroundColor:
+                                            color,
+                                    },
+                                ]}
+                            >
+                                <Text
+                                    style={styles.iconText}
+                                >
+                                    {alert.type ===
+                                        'success'
+                                        ? '✓'
+                                        : alert.type ===
+                                            'warning'
+                                            ? '!'
+                                            : '×'}
+                                </Text>
+                            </View>
+
+                            <Text style={styles.title}>
+                                {alert.title}
                             </Text>
+
+                            <Text style={styles.message}>
+                                {alert.message}
+                            </Text>
+
+                            <Pressable
+                                style={[
+                                    styles.button,
+                                    {
+                                        backgroundColor:
+                                            color,
+                                    },
+                                ]}
+                                onPress={closeAlert}
+                            >
+                                <Text
+                                    style={
+                                        styles.buttonText
+                                    }
+                                >
+                                    OK
+                                </Text>
+                            </Pressable>
                         </View>
-
-                        <Text style={styles.title}>
-                            {alert?.title}
-                        </Text>
-
-                        <Text style={styles.message}>
-                            {alert?.message}
-                        </Text>
-
-                        <Pressable
-                            style={[
-                                styles.button,
-                                { backgroundColor: color },
-                            ]}
-                            onPress={close}
-                        >
-                            <Text style={styles.buttonText}>
-                                OK
-                            </Text>
-                        </Pressable>
-                    </View>
+                    )}
                 </View>
             </Modal>
         </AlertContext.Provider>
@@ -91,7 +164,8 @@ export function AppAlertProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useAppAlert() {
-    const context = useContext(AlertContext);
+    const context =
+        useContext(AlertContext);
 
     if (!context) {
         throw new Error(
@@ -105,17 +179,20 @@ export function useAppAlert() {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.45)',
+        backgroundColor:
+            'rgba(0,0,0,0.45)',
         justifyContent: 'center',
         alignItems: 'center',
     },
+
     container: {
         width: '82%',
-        backgroundColor: '#FFF',
+        backgroundColor: '#FFFFFF',
         borderRadius: 22,
         padding: 25,
         alignItems: 'center',
     },
+
     icon: {
         width: 58,
         height: 58,
@@ -124,25 +201,29 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 15,
     },
+
     iconText: {
-        color: '#FFF',
+        color: '#FFFFFF',
         fontSize: 30,
         fontWeight: 'bold',
     },
+
     title: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#333333',
         marginBottom: 8,
         textAlign: 'center',
     },
+
     message: {
         fontSize: 15,
-        color: '#666',
+        color: '#666666',
         textAlign: 'center',
         lineHeight: 21,
         marginBottom: 22,
     },
+
     button: {
         width: '100%',
         height: 45,
@@ -150,8 +231,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+
     buttonText: {
-        color: '#FFF',
+        color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
     },

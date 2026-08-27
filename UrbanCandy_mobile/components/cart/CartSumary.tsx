@@ -65,7 +65,7 @@ export default function CartSummary({ subtotal, onCheckout }: CartSummaryProps) 
         onCheckout(selectedDelivery.id_type_delivery);
 
         router.push({
-            pathname: '/payment',
+            pathname: '/protected/payment',
             params: {
                 id_delivery: String(selectedDelivery.id_type_delivery),
             },

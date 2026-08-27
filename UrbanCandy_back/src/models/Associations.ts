@@ -9,12 +9,31 @@ import Offers from './Offers.js';
 import OfferProducts from './OfferProducts.js';
 import TypeOfDelivery from './TypeOfDelivery.js';
 
-const setupAssociations = () => {
-  Users.hasOne(People, { foreignKey: 'id_user', as: 'people' });
-  People.belongsTo(Users, { foreignKey: 'id_user', as: 'user' });
+import Role from './Role.js';
+import Permission from './Permission.js';
+import UserRole from './UserRole.js';
+import RolePermission from './RolePermission.js';
 
-  People.belongsTo(Address, { foreignKey: 'id_address', as: 'address' });
-  Address.hasMany(People, { foreignKey: 'id_address', as: 'residents' });
+const setupAssociations = () => {
+  Users.hasOne(People, {
+    foreignKey: 'id_user',
+    as: 'people',
+  });
+
+  People.belongsTo(Users, {
+    foreignKey: 'id_user',
+    as: 'user',
+  });
+
+  People.belongsTo(Address, {
+    foreignKey: 'id_address',
+    as: 'address',
+  });
+
+  Address.hasMany(People, {
+    foreignKey: 'id_address',
+    as: 'residents',
+  });
 
   Orders.belongsTo(TypeOfPayment, {
     foreignKey: 'id_payment',
@@ -22,7 +41,7 @@ const setupAssociations = () => {
   });
 
   Orders.belongsTo(TypeOfDelivery, {
-    foreignKey: 'id_delivery',
+    foreignKey: 'id_type_delivery',
     as: 'deliveryType',
   });
 
@@ -64,6 +83,54 @@ const setupAssociations = () => {
   Products.hasMany(OfferProducts, {
     foreignKey: 'id_product',
     as: 'offers',
+  });
+
+  Users.belongsToMany(Role, {
+    through: UserRole,
+    foreignKey: 'id_user',
+    otherKey: 'id_role',
+    as: 'roles',
+  });
+
+  Role.belongsToMany(Users, {
+    through: UserRole,
+    foreignKey: 'id_role',
+    otherKey: 'id_user',
+    as: 'users',
+  });
+
+  Role.belongsToMany(Permission, {
+    through: RolePermission,
+    foreignKey: 'id_role',
+    otherKey: 'id_permission',
+    as: 'permissions',
+  });
+
+  Permission.belongsToMany(Role, {
+    through: RolePermission,
+    foreignKey: 'id_permission',
+    otherKey: 'id_role',
+    as: 'roles',
+  });
+
+  UserRole.belongsTo(Users, {
+    foreignKey: 'id_user',
+    as: 'user',
+  });
+
+  UserRole.belongsTo(Role, {
+    foreignKey: 'id_role',
+    as: 'role',
+  });
+
+  RolePermission.belongsTo(Role, {
+    foreignKey: 'id_role',
+    as: 'role',
+  });
+
+  RolePermission.belongsTo(Permission, {
+    foreignKey: 'id_permission',
+    as: 'permission',
   });
 };
 

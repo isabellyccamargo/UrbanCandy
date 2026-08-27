@@ -1,6 +1,7 @@
 import { ApiException } from '../exception/ApiException.js';
 import OrderRepository from '../repositories/OrderRepository.js';
 import { type ICart } from '../@types/OrdersTypes.js';
+import OrderItemRepository from '../repositories/OrderItemRepository.js';
 
 class OrderService {
   static async checkout(
@@ -87,6 +88,12 @@ class OrderService {
       id_people,
       size,
       offset
+    );
+  }
+
+  static async findItemsByOrder(id_order: number) {
+    return await OrderItemRepository.findItemsByOrder(
+      id_order
     );
   }
 }

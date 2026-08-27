@@ -41,14 +41,11 @@ export default function CategoryTabs({
             backgroundColor: colors.background,
             borderRadius: radius.md,
 
-            shadowColor: '#000000',
-            shadowOffset: {
-                width: 0,
-                height: 2,
-            },
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.12,
-            shadowRadius: 4,
-            elevation: 3,
+            shadowRadius: 8,
+            elevation: 8,
         },
 
         content: {

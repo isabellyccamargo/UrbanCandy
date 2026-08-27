@@ -151,7 +151,7 @@ export default function LoginScreen() {
                 JSON.stringify(user)
             );
 
-            router.replace('/home');
+            router.replace('/protected/home');
         } catch (error: any) {
             showMessage(
                 'Não foi possível entrar',

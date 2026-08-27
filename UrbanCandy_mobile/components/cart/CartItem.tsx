@@ -38,6 +38,11 @@ export default function CartItem({
             padding: space.md,
             borderRadius: radius.lg,
             minHeight: 125,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.12,
+            shadowRadius: 8,
+            elevation: 8,
         },
         imageContainer: {
             width: 95,

@@ -196,7 +196,7 @@ export default function CardapioScreen() {
                             image={item.image}
                             onPress={() =>
                                 router.push({
-                                    pathname: '/productDetails',
+                                    pathname: '/protected/productDetails',
                                     params: { id: String(item.id_product) },
                                 })
                             }

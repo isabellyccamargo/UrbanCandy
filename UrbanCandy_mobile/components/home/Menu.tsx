@@ -115,7 +115,7 @@ export function Menu() {
 
             <Pressable
                 style={styles.item}
-                onPress={() => router.replace('/home')}
+                onPress={() => router.replace('/protected/home')}
             >
                 <Ionicons
                     name="home-outline"
@@ -130,9 +130,7 @@ export function Menu() {
 
             <Pressable
                 style={styles.item}
-                onPress={() => {
-                    console.log('Pedidos');
-                }}
+                onPress={() => router.push('/protected/orders')}
             >
                 <Ionicons
                     name="bag-handle-outline"
@@ -147,7 +145,7 @@ export function Menu() {
 
             <Pressable
                 style={styles.item}
-                onPress={() => router.replace('/cardapio')}
+                onPress={() => router.replace('/protected/cardapio')}
             >
                 <View style={styles.menuButton}>
 
@@ -172,7 +170,7 @@ export function Menu() {
                         '🛒 Abrindo carrinho...'
                     );
 
-                    router.push('/cart');
+                    router.push('/protected/cart');
                 }}
             >
                 <View style={styles.iconContainer}>
@@ -202,9 +200,7 @@ export function Menu() {
 
             <Pressable
                 style={styles.item}
-                onPress={() => {
-                    console.log('Perfil');
-                }}
+                onPress={() => router.push('/cadastro')}
             >
                 <Ionicons
                     name="person-outline"
