@@ -25,7 +25,6 @@ interface IUserRegistration {
   road: string;
   number: number;
   complement: string;
-  administrator?: string;
 }
 
 class UserService {
@@ -106,7 +105,6 @@ class UserService {
     const userData: Partial<Users> = {
       email: allData.email,
       password: hashedPassword,
-      administrator: allData.administrator || '0',
     };
 
     const addressData: Partial<Address> = {

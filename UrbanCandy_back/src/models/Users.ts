@@ -5,7 +5,6 @@ class Users extends Model {
   declare id_user: number;
   declare email: string;
   declare password: string;
-  declare administrator: string;
 }
 
 Users.init(
@@ -23,11 +22,6 @@ Users.init(
     password: {
       type: DataTypes.STRING(100),
       allowNull: false,
-    },
-    administrator: {
-      type: DataTypes.ENUM('0', '1'),
-      allowNull: true,
-      defaultValue: '0',
     },
   },
   {

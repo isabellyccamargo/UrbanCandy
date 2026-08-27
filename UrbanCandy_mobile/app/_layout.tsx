@@ -1,28 +1,38 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { useFonts } from 'expo-font';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import {
+    Quicksand_400Regular,
+    Quicksand_500Medium,
+    Quicksand_600SemiBold,
+    Quicksand_700Bold,
+} from '@expo-google-fonts/quicksand';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import { CartProvider } from '@/context/CartContext';
+import { ThemeProvider } from '@/context/Theme';
+import { AppAlertProvider } from '@/components/common/AppAlert';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+    const [fontsLoaded] = useFonts({
+        Quicksand_400Regular,
+        Quicksand_500Medium,
+        Quicksand_600SemiBold,
+        Quicksand_700Bold,
+    });
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="welcome" />
-        <Stack.Screen name="login" />
-        <Stack.Screen name="signup" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+    if (!fontsLoaded) return null;
+
+    return (
+        <ThemeProvider>
+            <CartProvider>
+                <AppAlertProvider>
+                    <Stack
+                        screenOptions={{
+                            headerShown: false,
+                        }}
+                    />
+                </AppAlertProvider>
+            </CartProvider>
+        </ThemeProvider>
+    );
 }

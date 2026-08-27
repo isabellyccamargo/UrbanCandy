@@ -17,13 +17,19 @@ class OrderController {
   static async store(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const body = req.body as IOrderCheckout;
-      const { id_people, cart, id_payment } = body;
+      const { id_people, cart, id_payment, id_type_delivery } = body;
 
       OrderController.validateRequest(id_people, cart);
 
       const finalPaymentId = id_payment || 0;
+      const finalDeliveryId = id_type_delivery || 0;
 
-      const result = await OrderService.checkout(id_people, cart, finalPaymentId);
+      const result = await OrderService.checkout(
+        id_people,
+        cart,
+        finalPaymentId,
+        finalDeliveryId
+      );
 
       res.status(201).json({
         message: 'Pedido realizado com sucesso!',
@@ -40,7 +46,11 @@ class OrderController {
       const page = req.query.page ? Number(req.query.page) : 1;
       const size = req.query.size ? Number(req.query.size) : 6;
 
-      const result = await OrderService.findByUserId(Number(id_people), page, size);
+      const result = await OrderService.findByUserId(
+        Number(id_people),
+        page,
+        size
+      );
 
       res.status(200).json({
         totalItems: result.count,
@@ -66,6 +76,25 @@ class OrderController {
         currentPage: page,
         data: result.rows,
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async findItemsByOrder(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id_order } = req.params;
+
+      const result =
+        await OrderService.findItemsByOrder(
+          Number(id_order)
+        );
+
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }

@@ -18,8 +18,8 @@ export default defineConfig({
     headless: false,
 
     launchOptions: {
-      slowMo: 500
-    }
+      slowMo: 500,
+    },
   },
   webServer: {
     command: 'npm run dev',

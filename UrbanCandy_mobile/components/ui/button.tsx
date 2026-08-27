@@ -1,17 +1,44 @@
-import { type PressableProps, Pressable, StyleSheet, Text } from 'react-native';
+import {
+    Pressable,
+    StyleSheet,
+    Text,
+    type PressableProps,
+    type StyleProp,
+    type ViewStyle,
+} from 'react-native';
+import { Fonts } from '@/constants/fonts';
+
+type ButtonProps = PressableProps & {
+    title: string;
+    variant?: 'primary' | 'secondary';
+    style?: StyleProp<ViewStyle>;
+};
 
 export function Button({
     title,
     style,
     variant = 'primary',
     ...props
-}: PressableProps & { title: string; variant?: 'primary' | 'secondary' }) {
+}: ButtonProps) {
     return (
         <Pressable
-            style={[styles.button, variant === 'secondary' ? styles.secondary : styles.primary, style]}
             {...props}
+            style={[
+                styles.button,
+                variant === 'secondary'
+                    ? styles.secondary
+                    : styles.primary,
+                style,
+            ]}
         >
-            <Text style={[styles.text, variant === 'secondary' ? styles.secondaryText : styles.primaryText]}>
+            <Text
+                style={[
+                    styles.text,
+                    variant === 'secondary'
+                        ? styles.secondaryText
+                        : styles.primaryText,
+                ]}
+            >
                 {title}
             </Text>
         </Pressable>
@@ -20,26 +47,32 @@ export function Button({
 
 const styles = StyleSheet.create({
     button: {
+        width: '100%',
         height: 52,
         borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
     },
+
     primary: {
         backgroundColor: '#DD2E8A',
     },
+
     secondary: {
         backgroundColor: '#FFFFFF',
         borderWidth: 1,
         borderColor: '#DD2E8A',
     },
+
     text: {
         fontSize: 16,
-        fontWeight: '700',
+        fontFamily: Fonts.bold,
     },
+
     primaryText: {
         color: '#FFFFFF',
     },
+
     secondaryText: {
         color: '#DD2E8A',
     },

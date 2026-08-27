@@ -1,80 +1,105 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Image, StyleSheet } from 'react-native';
+import {
+    Animated,
+    Dimensions,
+    Image,
+    StyleSheet,
+    View,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { useTheme } from '@/context/Theme';
+
+const { height } = Dimensions.get('window');
 
 export default function IndexScreen() {
     const router = useRouter();
-    const opacity = useRef(new Animated.Value(0)).current;
-    const scale = useRef(new Animated.Value(0.8)).current;
+
+    const { colors } = useTheme();
+
+    const translateY = useRef(
+        new Animated.Value(height * 0.5)
+    ).current;
+
+    const opacity = useRef(
+        new Animated.Value(0)
+    ).current;
+
+    const scale = useRef(
+        new Animated.Value(0.85)
+    ).current;
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: colors.secondary,
+        },
+
+        logoWrapper: {
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+
+        logo: {
+            width: 260,
+            height: 260,
+        },
+    });
 
     useEffect(() => {
         Animated.parallel([
+            Animated.timing(translateY, {
+                toValue: 0,
+                duration: 900,
+                useNativeDriver: true,
+            }),
+
             Animated.timing(opacity, {
                 toValue: 1,
                 duration: 700,
                 useNativeDriver: true,
             }),
+
             Animated.spring(scale, {
                 toValue: 1,
-                friction: 6,
-                tension: 100,
+                friction: 7,
+                tension: 80,
                 useNativeDriver: true,
             }),
         ]).start();
 
         const timer = setTimeout(() => {
             router.replace('/welcome');
-        }, 1800);
+        }, 2000);
 
-        return () => {
-            clearTimeout(timer);
-        };
-    }, [opacity, router, scale]);
+        return () => clearTimeout(timer);
+    }, [router, opacity, scale, translateY]);
 
     return (
-        <ThemedView style={styles.container}>
-            <Animated.Image
-                source={require('@/assets/images/icon.png')}
-                style={[styles.logo, { opacity, transform: [{ scale }] }]}
-            />
-            <Animated.View style={{ opacity, transform: [{ scale }] }}>
-                <ThemedText type="title" style={styles.title}>
-                    UrbanCandy
-                </ThemedText>
-                <ThemedText style={styles.subtitle}>Doces que conquistam corações</ThemedText>
+        <View style={styles.container}>
+            <Animated.View
+                style={[
+                    styles.logoWrapper,
+                    {
+                        opacity,
+                        transform: [
+                            { translateY },
+                            { scale },
+                        ],
+                    },
+                ]}
+            >
+                <Image
+                    source={require('@/assets/images/logo.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
+                />
             </Animated.View>
-            <StatusBar style="auto" />
-        </ThemedView>
+
+            <StatusBar style="dark" />
+        </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
-        backgroundColor: '#FDE8F0',
-    },
-    logo: {
-        width: 160,
-        height: 160,
-        marginBottom: 24,
-        borderRadius: 100,
-    },
-    title: {
-        marginBottom: 12,
-        textAlign: 'center',
-        color: '#3B1E36',
-    },
-    subtitle: {
-        textAlign: 'center',
-        fontSize: 18,
-        lineHeight: 26,
-        color: '#5F2B4F',
-    },
-});
