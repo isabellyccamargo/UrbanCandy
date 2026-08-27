@@ -64,7 +64,6 @@ class ProductRepository {
         image: product.image,
         id_category: product.id_category,
         featured: product.featured,
-        ingredients: product.ingredients,
       },
       {
         where: { id_product: product.id_product },

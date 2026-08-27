@@ -9,7 +9,6 @@ class Products extends Model {
   declare image: string;
   declare id_category: bigint;
   declare featured: boolean;
-  declare ingredients: string;
 }
 
 Products.init(
@@ -42,10 +41,6 @@ Products.init(
     featured: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-    },
-    ingredients: {
-      type: DataTypes.TEXT,
-      allowNull: true,
     },
   },
   {

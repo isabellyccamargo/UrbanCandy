@@ -3,7 +3,6 @@ import { Router } from 'express';
 import ProductController from '../controllers/ProductController.js';
 import CategoryController from '../controllers/CategoryController.js';
 import UserController from '../controllers/UserController.js';
-import OfferController from '../controllers/OfferController.js';
 import privateRoutes from './Private.js';
 const routes = Router();
 
@@ -16,8 +15,6 @@ routes.get('/produto/listar', ProductController.findAllProduct);
 routes.get('/produto/destaque', ProductController.findFeaturedProducts);
 routes.get('/produto/listarPorId/:id_product', ProductController.findByIdProduct);
 routes.get('/produto/categoria/:categoryName', ProductController.findByCategory);
-routes.get('/oferta/listar', OfferController.findActiveOffers);
-routes.get('/oferta/listarPorId/:id_offer', OfferController.findByIdOffer);
 
 // --- CATEGORIA---
 routes.get('/categoria/listar', CategoryController.findAllCategory);
