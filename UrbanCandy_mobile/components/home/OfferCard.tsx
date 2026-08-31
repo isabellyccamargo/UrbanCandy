@@ -6,8 +6,8 @@ import {
     View,
 } from 'react-native';
 
-import { SmallButton } from '@/components/';
-import { useTheme } from '../../context/Theme';
+import { SmallButton } from '@/components/ui/smallButton';
+import { useTheme } from '@/context/Theme';
 import { API_BASE_URL } from '@/services/api';
 
 type OfferCardProps = {
