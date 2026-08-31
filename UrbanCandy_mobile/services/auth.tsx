@@ -1,4 +1,5 @@
 import api from './api';
+import { saveTokens, saveUser } from './authStorage';
 
 export type UserProfile = {
     id_user?: number;
@@ -62,7 +63,16 @@ export async function loginUser(
             password,
         });
 
-        return response.data;
+        const data = response.data;
+
+        await saveTokens(
+            data.accessToken,
+            data.refreshToken
+        );
+
+        await saveUser(data.user);
+
+        return data;
     } catch (error: any) {
         const data = error.response?.data || {};
 
