@@ -1,38 +1,26 @@
 import { Stack } from 'expo-router';
-import { useFonts } from 'expo-font';
 
-import {
-    Quicksand_400Regular,
-    Quicksand_500Medium,
-    Quicksand_600SemiBold,
-    Quicksand_700Bold,
-} from '@expo-google-fonts/quicksand';
-
-import { CartProvider } from '@/context/CartContext';
 import { ThemeProvider } from '@/context/Theme';
 import { AppAlertProvider } from '@/components/common/AppAlert';
+import { CartProvider } from '@/context/CartContext';
+import { AuthProvider } from '@/context/AuthContext';
 
 export default function RootLayout() {
-    const [fontsLoaded] = useFonts({
-        Quicksand_400Regular,
-        Quicksand_500Medium,
-        Quicksand_600SemiBold,
-        Quicksand_700Bold,
-    });
-
-    if (!fontsLoaded) return null;
-
     return (
-        <ThemeProvider>
-            <CartProvider>
+        <AuthProvider>
+            <ThemeProvider>
                 <AppAlertProvider>
-                    <Stack
-                        screenOptions={{
-                            headerShown: false,
-                        }}
-                    />
+                    <CartProvider>
+                        <Stack screenOptions={{ headerShown: false }}>
+                            <Stack.Screen name="index" />
+                            <Stack.Screen name="login" />
+                            <Stack.Screen name="welcome" />
+                            <Stack.Screen name="cadastro" />
+                            <Stack.Screen name="protected" />
+                        </Stack>
+                    </CartProvider>
                 </AppAlertProvider>
-            </CartProvider>
-        </ThemeProvider>
+            </ThemeProvider>
+        </AuthProvider>
     );
 }

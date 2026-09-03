@@ -11,6 +11,9 @@ interface UserWithProfile extends Users {
   people?: {
     name: string;
   };
+  roles?: {
+    name: string;
+  }[];
 }
 
 interface IUserRegistration {
@@ -29,7 +32,8 @@ interface IUserRegistration {
 
 class UserService {
   private validateEmail(email: string) {
-    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/;
+    // Permite .com, .com.br, .io, .org, etc.
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
     if (!regex.test(email)) {
       throw new ApiException('INVALID_EMAIL', 400);
@@ -68,11 +72,11 @@ class UserService {
 
     return {
       message: 'Usuário autenticado',
-      //Envia a string longa e criptografada que o Front-end deve guardar, no LocalStorage
       token,
       user: {
         id_user: user.id_user,
         nome: user.people?.name || 'Usuário',
+        roles: user.roles?.map((role) => role.name) || [],
       },
     };
   }

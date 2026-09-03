@@ -57,11 +57,12 @@ export default function AccountHeader({
         backButton: {
             position: 'absolute',
             left: space.xl,
-            top: 50,
+            top: 60, 
             width: 40,
             height: 40,
             justifyContent: 'center',
             alignItems: 'center',
+            zIndex: 10, // Garante que a seta fique sobre o fundo rosa
         },
 
         title: {
@@ -81,12 +82,13 @@ export default function AccountHeader({
 
         normalHeader: {
             width: '100%',
-            height: 125,
+            height: 125, 
             backgroundColor: colors.secondary,
             borderBottomLeftRadius: radius.xxl,
             borderBottomRightRadius: radius.xxl,
-            justifyContent: 'center',
-            paddingLeft: space.xl,
+            justifyContent: 'flex-start', 
+            paddingTop: 65, 
+            paddingLeft: space.md,
         },
 
         normalTitle: {
@@ -101,6 +103,18 @@ export default function AccountHeader({
         return (
             <View style={styles.header}>
                 <View style={styles.pinkTop} />
+
+                {/* Seta de voltar adicionada para a tela de cadastro */}
+                <Pressable
+                    onPress={() => router.back()}
+                    style={styles.backButton}
+                >
+                    <Ionicons
+                        name="arrow-back"
+                        size={26}
+                        color={colors.white}
+                    />
+                </Pressable>
 
                 <Image
                     source={require('@/assets/images/logo.png')}

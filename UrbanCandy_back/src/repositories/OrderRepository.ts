@@ -4,6 +4,7 @@ import OrderItem from '../models/OrderItem.js';
 import Products from '../models/Products.js';
 import TypeOfPayment from '../models/TypeOfPayment.js';
 import TypeOfDelivery from '../models/TypeOfDelivery.js';
+import OrderStatus from '../models/OrderStatus.js'; // <-- IMPORT ADICIONADO
 import sequelize from '../config/Config.js';
 import {
   type Order as SequelizeOrder,
@@ -51,7 +52,8 @@ class OrderRepository {
     items: ICartItem[],
     total: number,
     id_payment: number,
-    id_type_delivery: number
+    id_type_delivery: number,
+    status_id: number = 1 // Recebe o status_id inicial (default: 1)
   ): Promise<Orders> {
     const t = await sequelize.transaction();
 
@@ -62,6 +64,7 @@ class OrderRepository {
           total: Number(total),
           id_payment: Number(id_payment),
           id_type_delivery: Number(id_type_delivery),
+          status_id: Number(status_id), // Mapeado para a coluna status_id
         },
         { transaction: t }
       );
@@ -109,6 +112,11 @@ class OrderRepository {
           attributes: ['name'],
         },
         {
+          model: OrderStatus,
+          as: 'status',
+          attributes: ['id', 'name', 'label'], // Atributos ajustados
+        },
+        {
           model: OrderItem,
           as: 'items',
           include: [
@@ -150,19 +158,29 @@ class OrderRepository {
           model: TypeOfPayment,
           as: 'paymentType',
           attributes: ['name_payment'],
+          required: false,
         },
         {
           model: TypeOfDelivery,
           as: 'deliveryType',
           attributes: ['name'],
+          required: false,
+        },
+        {
+          model: OrderStatus,
+          as: 'status',
+          attributes: ['id', 'name', 'label'], // Ajustado 'id_order_status' para 'id'
+          required: false,
         },
         {
           model: OrderItem,
           as: 'items',
+          required: false,
           include: [
             {
               model: Products,
               as: 'products',
+              required: false,
             },
           ],
         },
@@ -178,29 +196,16 @@ class OrderRepository {
     return await Orders.findAndCountAll(options);
   }
 
-  async findOpenOrderByPeople(
-    id_people: number
-  ): Promise<Orders | null> {
-    return await Orders.findOne({
-      where: { id_people },
-    });
+  async findAllStatuses(): Promise<OrderStatus[]> {
+    return await OrderStatus.findAll();
   }
 
-  async createOrder(
-    id_people: number
-  ): Promise<Orders> {
-    return await Orders.create({
-      id_people,
-      total: 0,
-    });
-  }
-
-  async updateTotal(
+  async updateOrderStatus(
     id_orders: number,
-    total: number
+    status_id: number
   ): Promise<[number]> {
     return await Orders.update(
-      { total },
+      { status_id },
       { where: { id_orders } }
     );
   }

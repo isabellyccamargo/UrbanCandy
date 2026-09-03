@@ -2,14 +2,17 @@ import { useEffect, useState } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
+    Pressable,
     ScrollView,
     StyleSheet,
+    Text,
     View,
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '@/context/Theme';
 import { useAppAlert } from '@/components/common/AppAlert';
@@ -27,7 +30,7 @@ import AccountForm from '@/components/account/AccountForm';
 
 export default function CadastroScreen() {
     const router = useRouter();
-    const { colors, space } = useTheme();
+    const { colors, font, fontSize, space, radius } = useTheme();
     const { showMessage } = useAppAlert();
     const { mode } = useLocalSearchParams<{ mode?: string }>();
 
@@ -63,10 +66,7 @@ export default function CadastroScreen() {
         initialize();
     }, [mode]);
 
-    const change = (
-        field: keyof typeof form,
-        value: string
-    ) => {
+    const change = (field: keyof typeof form, value: string) => {
         setForm(prev => ({
             ...prev,
             [field]: value,
@@ -82,18 +82,17 @@ export default function CadastroScreen() {
         }
 
         try {
-            const token = await AsyncStorage.getItem(
-                '@UrbanCandy:token'
-            );
+            const token = await AsyncStorage.getItem('@UrbanCandy:token') || await AsyncStorage.getItem('token');
 
             if (!token) {
                 setAuthenticated(false);
+                setChecking(false);
                 return;
             }
 
-            setAuthenticated(true);
             await loadAccount();
-        } catch {
+        } catch (error) {
+            console.error('Erro na inicialização:', error);
             setAuthenticated(false);
         } finally {
             setChecking(false);
@@ -102,9 +101,9 @@ export default function CadastroScreen() {
 
     async function loadAccount() {
         try {
-            const stored = await AsyncStorage.getItem(
-                '@UrbanCandy:user'
-            );
+            const stored =
+                await AsyncStorage.getItem('@UrbanCandy:user') ||
+                await AsyncStorage.getItem('user');
 
             if (!stored) {
                 setAuthenticated(false);
@@ -112,52 +111,74 @@ export default function CadastroScreen() {
             }
 
             const user = JSON.parse(stored);
+            const userId = user?.id_user || user?.id_people || user?.id;
 
-            if (!user?.id_user) {
+            if (!userId) {
                 setAuthenticated(false);
                 return;
             }
 
-            const profile = await getUserProfile(user.id_user);
-
-            const people = profile.people ?? profile;
-            const address =
-                people.address ??
-                profile.address ??
-                people.address?.[0];
-
             setEditing(true);
 
-            setIds({
-                user: user.id_user,
-                people: people.id_people ?? null,
-                address: address?.id_address ?? null,
-            });
+            try {
+                const profile = await getUserProfile(userId);
+                const people = profile?.people ?? profile ?? {};
+                const address = people?.address ?? profile?.address ?? {};
 
-            setForm({
-                name: people.name ?? '',
-                cpf: people.cpf ?? '',
-                telephone:
-                    people.telephone ??
-                    people.phone ??
-                    '',
-                email: profile.email ?? '',
-                password: '',
-                confirmPassword: '',
-                cep: address?.cep ?? '',
-                city: address?.city ?? '',
-                neighborhood: address?.neighborhood ?? '',
-                road: address?.road ?? '',
-                number:
-                    address?.number != null
-                        ? String(address.number)
-                        : '',
-                complement: address?.complement ?? '',
-            });
-        } catch {
+                setIds({
+                    user: userId,
+                    people: people?.id_people ?? user?.id_people ?? null,
+                    address: address?.id_address ?? null,
+                });
+
+                setForm({
+                    name: people?.name ?? user?.name ?? user?.nome ?? '',
+                    cpf: people?.cpf ?? user?.cpf ?? '',
+                    telephone: people?.telephone ?? user?.telephone ?? '',
+                    email: profile?.email ?? user?.email ?? '',
+                    password: '',
+                    confirmPassword: '',
+                    cep: address?.cep ?? '',
+                    city: address?.city ?? '',
+                    neighborhood: address?.neighborhood ?? '',
+                    road: address?.road ?? '',
+                    number: address?.number != null ? String(address.number) : '',
+                    complement: address?.complement ?? '',
+                });
+
+                setAuthenticated(true);
+            } catch (apiError: any) {
+                console.warn('[PERFIL] Falha na API, usando dados locais:', apiError?.message);
+
+                setForm(prev => ({
+                    ...prev,
+                    name: user?.name || user?.nome || '',
+                    email: user?.email || '',
+                    cpf: user?.cpf || '',
+                    telephone: user?.telephone || '',
+                }));
+
+                setAuthenticated(true);
+            }
+        } catch (error) {
+            console.error('Erro crítico no loadAccount:', error);
+            setAuthenticated(false);
+        }
+    }
+    
+    async function handleLogout() {
+        try {
+            await AsyncStorage.multiRemove([
+                '@UrbanCandy:token',
+                'token',
+                '@UrbanCandy:user',
+                'user'
+            ]);
+            router.replace('/welcome' as any);
+        } catch (error) {
             showMessage(
                 'Erro',
-                'Não foi possível carregar seus dados.',
+                'Não foi possível sair da conta.',
                 undefined,
                 'error'
             );
@@ -247,7 +268,7 @@ export default function CadastroScreen() {
                 );
 
                 setTimeout(() => {
-                    router.replace('/login');
+                    router.replace('/login' as any);
                 }, 1500);
 
                 return;
@@ -284,9 +305,7 @@ export default function CadastroScreen() {
                 });
             }
 
-            const stored = await AsyncStorage.getItem(
-                '@UrbanCandy:user'
-            );
+            const stored = await AsyncStorage.getItem('@UrbanCandy:user');
 
             if (stored) {
                 const user = JSON.parse(stored);
@@ -314,8 +333,8 @@ export default function CadastroScreen() {
             showMessage(
                 'Erro',
                 error?.response?.data?.message ??
-                    error?.message ??
-                    'Não foi possível salvar seus dados.',
+                error?.message ??
+                'Não foi possível salvar seus dados.',
                 undefined,
                 'error'
             );
@@ -330,6 +349,8 @@ export default function CadastroScreen() {
         return <Redirect href="/login" />;
     }
 
+    const errorColor = (colors as any).error || '#E53935';
+
     const styles = StyleSheet.create({
         container: {
             flex: 1,
@@ -338,6 +359,23 @@ export default function CadastroScreen() {
         content: {
             padding: space.lg,
             paddingBottom: 120,
+        },
+        logoutButton: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: space.lg,
+            paddingVertical: space.md,
+            borderRadius: radius.md,
+            borderWidth: 1,
+            borderColor: errorColor,
+            backgroundColor: 'transparent',
+            gap: space.xs,
+        },
+        logoutText: {
+            fontFamily: font.medium,
+            fontSize: fontSize.md,
+            color: errorColor,
         },
     });
 
@@ -393,10 +431,17 @@ export default function CadastroScreen() {
                         }
                         onSubmit={save}
                     />
+
+                    {editing && (
+                        <Pressable style={styles.logoutButton} onPress={handleLogout}>
+                            <Ionicons name="log-out-outline" size={22} color={colors.error ?? '#E53935'} />
+                            <Text style={styles.logoutText}>Sair da Conta</Text>
+                        </Pressable>
+                    )}
                 </ScrollView>
 
                 {editing && <Menu />}
             </KeyboardAvoidingView>
         </View>
     );
-}  
+}

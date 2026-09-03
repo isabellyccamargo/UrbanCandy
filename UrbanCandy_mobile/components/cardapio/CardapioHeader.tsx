@@ -47,7 +47,7 @@ export default function CardapioHeader() {
     });
 
     function handleBack() {
-        router.replace('/home');
+        router.replace('/protected/home');
     }
 
     return (

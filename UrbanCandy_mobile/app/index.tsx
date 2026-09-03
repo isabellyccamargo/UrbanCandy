@@ -1,34 +1,18 @@
 import { useEffect, useRef } from 'react';
-import {
-    Animated,
-    Dimensions,
-    Image,
-    StyleSheet,
-    View,
-} from 'react-native';
+import { Animated, Dimensions, Image, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-
 import { useTheme } from '@/context/Theme';
 
 const { height } = Dimensions.get('window');
 
 export default function IndexScreen() {
     const router = useRouter();
-
     const { colors } = useTheme();
 
-    const translateY = useRef(
-        new Animated.Value(height * 0.5)
-    ).current;
-
-    const opacity = useRef(
-        new Animated.Value(0)
-    ).current;
-
-    const scale = useRef(
-        new Animated.Value(0.85)
-    ).current;
+    const translateY = useRef(new Animated.Value(height * 0.5)).current;
+    const opacity = useRef(new Animated.Value(0)).current;
+    const scale = useRef(new Animated.Value(0.85)).current;
 
     const styles = StyleSheet.create({
         container: {
@@ -37,12 +21,10 @@ export default function IndexScreen() {
             alignItems: 'center',
             backgroundColor: colors.secondary,
         },
-
         logoWrapper: {
             justifyContent: 'center',
             alignItems: 'center',
         },
-
         logo: {
             width: 260,
             height: 260,
@@ -50,19 +32,18 @@ export default function IndexScreen() {
     });
 
     useEffect(() => {
+        // Animação de entrada da Logo
         Animated.parallel([
             Animated.timing(translateY, {
                 toValue: 0,
                 duration: 900,
                 useNativeDriver: true,
             }),
-
             Animated.timing(opacity, {
                 toValue: 1,
                 duration: 700,
                 useNativeDriver: true,
             }),
-
             Animated.spring(scale, {
                 toValue: 1,
                 friction: 7,
@@ -71,9 +52,10 @@ export default function IndexScreen() {
             }),
         ]).start();
 
+        // Sempre direciona para a tela de Boas-Vindas/Login após a animação
         const timer = setTimeout(() => {
             router.replace('/welcome');
-        }, 2000);
+        }, 1500);
 
         return () => clearTimeout(timer);
     }, [router, opacity, scale, translateY]);
@@ -85,10 +67,7 @@ export default function IndexScreen() {
                     styles.logoWrapper,
                     {
                         opacity,
-                        transform: [
-                            { translateY },
-                            { scale },
-                        ],
+                        transform: [{ translateY }, { scale }],
                     },
                 ]}
             >

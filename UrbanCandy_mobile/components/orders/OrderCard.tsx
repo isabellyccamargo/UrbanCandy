@@ -1,4 +1,3 @@
-
 import {
     Pressable,
     StyleSheet,
@@ -186,7 +185,7 @@ export default function OrderCard({
 
                 <View style={styles.status}>
                     <Text style={styles.statusText}>
-                        Realizado
+                        {order.status?.label ?? order.status?.name ?? 'Pendente'}
                     </Text>
                 </View>
             </View>

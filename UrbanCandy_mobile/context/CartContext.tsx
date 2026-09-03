@@ -1,11 +1,6 @@
-import React, {
-    createContext,
-    useContext,
-    useEffect,
-    useState,
-} from 'react';
-
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/context/AuthContext'; // Importe seu contexto de autenticação
 
 type Product = {
     id_product: number;
@@ -24,8 +19,6 @@ export type CartItem = {
     id_product: number;
     product: Product;
     quantity: number;
-
-    // Dados da oferta
     isOffer?: boolean;
     id_offer?: number;
     offerProducts?: OfferProduct[];
@@ -34,7 +27,6 @@ export type CartItem = {
 type CartContextType = {
     items: CartItem[];
     total: number;
-
     addToCart: (
         product: Product & {
             isOffer?: boolean;
@@ -42,79 +34,71 @@ type CartContextType = {
             offerProducts?: OfferProduct[];
         }
     ) => void;
-
     removeFromCart: (itemId: string) => void;
     increaseQuantity: (itemId: string) => void;
     decreaseQuantity: (itemId: string) => void;
-
     clearCart: () => void;
 };
 
-const CartContext = createContext<CartContextType | undefined>(
-    undefined
-);
+const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+export function CartProvider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = useState<CartItem[]>([]);
+    
+    // Obtém o usuário ativo (ajuste a propriedade 'user.id' ou 'user.id_user' conforme o seu AuthContext)
+    const { user } = useAuth();
+    
+    const userId = user?.id || user?.id_user;
+    const CART_STORAGE_KEY = userId ? `@UrbanCandy:cart:${userId}` : '@UrbanCandy:cart:guest';
 
+    // Recarrega o carrinho sempre que o usuário ativo mudar
     useEffect(() => {
         loadCart();
-    }, []);
+    }, [userId]);
 
+    // Salva as alterações do carrinho na chave específica do usuário atual
     useEffect(() => {
-        saveCart();
-    }, [items]);
+        if (items.length > 0) {
+            saveCart(items);
+        } else {
+            removeCartStorage();
+        }
+    }, [items, userId]);
 
     async function loadCart() {
         try {
-            const savedCart =
-                await AsyncStorage.getItem(
-                    '@UrbanCandy:cart'
-                );
-
+            const savedCart = await AsyncStorage.getItem(CART_STORAGE_KEY);
             if (savedCart) {
                 setItems(JSON.parse(savedCart));
+            } else {
+                setItems([]);
             }
         } catch (error) {
-            console.log(
-                'Erro ao carregar carrinho:',
-                error
-            );
+            console.log('Erro ao carregar carrinho:', error);
+            setItems([]);
         }
     }
 
-    async function saveCart() {
+    async function saveCart(currentItems: CartItem[]) {
         try {
-            await AsyncStorage.setItem(
-                '@UrbanCandy:cart',
-                JSON.stringify(items)
-            );
+            await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(currentItems));
         } catch (error) {
-            console.log(
-                'Erro ao salvar carrinho:',
-                error
-            );
+            console.log('Erro ao salvar carrinho:', error);
         }
     }
 
-    /**
-     * Identificador único do item do carrinho.
-     *
-     * Produto:
-     * product-5
-     *
-     * Oferta:
-     * offer-2
-     */
+    async function removeCartStorage() {
+        try {
+            await AsyncStorage.removeItem(CART_STORAGE_KEY);
+        } catch (error) {
+            console.log('Erro ao remover carrinho do storage:', error);
+        }
+    }
+
     function getItemId(item: CartItem): string {
         if (item.isOffer && item.id_offer) {
             return `offer-${item.id_offer}`;
         }
-
         return `product-${item.id_product}`;
     }
 
@@ -131,20 +115,14 @@ export function CartProvider({
                     ? `offer-${product.id_offer}`
                     : `product-${product.id_product}`;
 
-            const existingItem =
-                currentItems.find(
-                    (item) =>
-                        getItemId(item) === newItemId
-                );
+            const existingItem = currentItems.find(
+                (item) => getItemId(item) === newItemId
+            );
 
             if (existingItem) {
                 return currentItems.map((item) =>
                     getItemId(item) === newItemId
-                        ? {
-                              ...item,
-                              quantity:
-                                  item.quantity + 1,
-                          }
+                        ? { ...item, quantity: item.quantity + 1 }
                         : item
                 );
             }
@@ -154,18 +132,15 @@ export function CartProvider({
                 {
                     id_product: product.id_product,
                     product: {
-                        id_product:
-                            product.id_product,
+                        id_product: product.id_product,
                         name: product.name,
                         price: Number(product.price),
                         image: product.image,
                     },
                     quantity: 1,
-
                     isOffer: product.isOffer,
                     id_offer: product.id_offer,
-                    offerProducts:
-                        product.offerProducts,
+                    offerProducts: product.offerProducts,
                 },
             ];
         });
@@ -173,10 +148,7 @@ export function CartProvider({
 
     function removeFromCart(itemId: string) {
         setItems((currentItems) =>
-            currentItems.filter(
-                (item) =>
-                    getItemId(item) !== itemId
-            )
+            currentItems.filter((item) => getItemId(item) !== itemId)
         );
     }
 
@@ -184,11 +156,7 @@ export function CartProvider({
         setItems((currentItems) =>
             currentItems.map((item) =>
                 getItemId(item) === itemId
-                    ? {
-                          ...item,
-                          quantity:
-                              item.quantity + 1,
-                      }
+                    ? { ...item, quantity: item.quantity + 1 }
                     : item
             )
         );
@@ -199,29 +167,20 @@ export function CartProvider({
             currentItems
                 .map((item) =>
                     getItemId(item) === itemId
-                        ? {
-                              ...item,
-                              quantity:
-                                  item.quantity - 1,
-                          }
+                        ? { ...item, quantity: item.quantity - 1 }
                         : item
                 )
-                .filter(
-                    (item) =>
-                        item.quantity > 0
-                )
+                .filter((item) => item.quantity > 0)
         );
     }
 
     function clearCart() {
         setItems([]);
+        removeCartStorage();
     }
 
     const total = items.reduce(
-        (sum, item) =>
-            sum +
-            Number(item.product.price) *
-                item.quantity,
+        (sum, item) => sum + Number(item.product.price) * item.quantity,
         0
     );
 
@@ -243,15 +202,9 @@ export function CartProvider({
 }
 
 export function useCart() {
-    const context = useContext(
-        CartContext
-    );
-
+    const context = useContext(CartContext);
     if (!context) {
-        throw new Error(
-            'useCart deve ser usado dentro do CartProvider'
-        );
+        throw new Error('useCart deve ser usado dentro do CartProvider');
     }
-
     return context;
 }

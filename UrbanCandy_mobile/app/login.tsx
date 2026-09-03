@@ -11,184 +11,134 @@ import {
     ScrollView,
     ActivityIndicator,
 } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons'; // Importado para a seta de voltar
 
 import { useTheme } from '@/context/Theme';
 import { loginUser } from '@/services/auth';
-import api from '@/services/api';
 import { useAppAlert } from '@/components/common/AppAlert';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginScreen() {
     const router = useRouter();
     const { colors, font, fontSize, space, radius, sizes } = useTheme();
     const { showMessage } = useAppAlert();
+    const { setUser } = useAuth();
 
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [loading, setLoading] = useState(false);
 
     const styles = StyleSheet.create({
-        screen: {
-            flex: 1,
-            backgroundColor: colors.background,
-        },
-        scrollContent: {
-            flexGrow: 1,
-        },
-        container: {
-            flex: 1,
-            minHeight: 850,
-            backgroundColor: colors.background,
-            alignItems: 'center',
-        },
+        screen: { flex: 1, backgroundColor: colors.background },
+        scrollContent: { flexGrow: 1 },
+        container: { flex: 1, minHeight: 850, backgroundColor: colors.background, alignItems: 'center' },
         topDecoration: {
+            position: 'absolute', top: 0, left: 0, right: 0, height: 225,
+            backgroundColor: colors.secondary, borderBottomLeftRadius: radius.xxl, borderBottomRightRadius: radius.xxl,
+        },
+        backButton: {
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 225,
-            backgroundColor: colors.secondary,
-            borderBottomLeftRadius: radius.xxl,
-            borderBottomRightRadius: radius.xxl,
-        },
-        content: {
-            width: '100%',
-            maxWidth: 520,
-            paddingHorizontal: 72,
-            paddingTop: 165,
-            alignItems: 'center',
-        },
-        logo: {
-            width: 125,
-            height: 155,
-            marginBottom: space.xxl,
-        },
-        fieldContainer: {
-            width: '100%',
-            marginBottom: 25,
-        },
-        label: {
-            fontSize: fontSize.lg,
-            color: colors.text,
-            marginBottom: 14,
-            fontFamily: font.medium,
-        },
-        input: {
-            width: '100%',
-            height: sizes.inputHeight,
-            backgroundColor: colors.white,
-            borderRadius: radius.lg,
-            paddingHorizontal: 18,
-            fontSize: fontSize.lg,
-            color: colors.text,
-            shadowColor: colors.text,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.18,
-            shadowRadius: 6,
-            elevation: 5,
-        },
-        loginButton: {
-            width: 290,
-            height: 54,
-            marginTop: 65,
-            backgroundColor: colors.primary,
-            borderRadius: radius.lg,
+            left: space.xl,
+            top: 60,
+            width: 40,
+            height: 40,
             justifyContent: 'center',
             alignItems: 'center',
-            shadowColor: colors.text,
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.18,
-            shadowRadius: 5,
-            elevation: 4,
+            zIndex: 10, // Garante que fique clicável sobre a barra
         },
-        loginButtonPressed: {
-            opacity: 0.75,
-            transform: [{ scale: 0.98 }],
+        content: { width: '100%', maxWidth: 520, paddingHorizontal: 72, paddingTop: 165, alignItems: 'center' },
+        logo: { width: 125, height: 155, marginBottom: space.xxl },
+        fieldContainer: { width: '100%', marginBottom: 25 },
+        label: { fontSize: fontSize.lg, color: colors.text, marginBottom: 14, fontFamily: font.medium },
+        input: {
+            width: '100%', height: sizes.inputHeight, backgroundColor: colors.white,
+            borderRadius: radius.lg, paddingHorizontal: 18, fontSize: fontSize.lg,
+            color: colors.text, elevation: 5,
         },
-        loginButtonLoading: {
-            opacity: 0.7,
+        loginButton: {
+            width: 290, height: 54, marginTop: 65, backgroundColor: colors.primary,
+            borderRadius: radius.lg, justifyContent: 'center', alignItems: 'center', elevation: 4,
         },
-        loginButtonText: {
-            fontSize: fontSize.lg,
-            color: colors.white,
-            fontFamily: font.semibold,
-        },
+        loginButtonPressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
+        loginButtonLoading: { opacity: 0.7 },
+        loginButtonText: { fontSize: fontSize.lg, color: colors.white, fontFamily: font.semibold },
     });
 
-    async function handleLogin() {
+    const handleLogin = async () => {
         if (!email.trim() || !senha.trim()) {
-            showMessage(
-                'Atenção',
-                'Preencha o email e a senha.',
-                undefined,
-                'warning'
-            );
+            showMessage({
+                title: 'Atenção',
+                message: 'Preencha todos os campos para continuar.',
+                type: 'warning',
+            });
             return;
         }
 
+        setLoading(true);
+
         try {
-            setLoading(true);
+            const response = await loginUser(email, senha);
 
-            const data = await loginUser(email.trim(), senha);
-
-            const token =
-                data?.token ??
-                data?.accessToken ??
-                data?.access_token;
+            const token = response?.token || response?.accessToken;
+            const userObj = response?.user || response?.usuario || response;
 
             if (token) {
                 await AsyncStorage.setItem('@UrbanCandy:token', token);
-                api.defaults.headers.Authorization = `Bearer ${token}`;
+                await AsyncStorage.setItem('token', token);
+                
+                if (userObj) {
+                    await AsyncStorage.setItem('@UrbanCandy:user', JSON.stringify(userObj));
+                    await AsyncStorage.setItem('user', JSON.stringify(userObj));
+                    setUser(userObj);
+                }
+
+                router.replace('/protected/home');
+            } else {
+                showMessage({
+                    title: 'Erro de Autenticação',
+                    message: response?.message || 'Email ou senha inválidos.',
+                    type: 'error',
+                });
             }
-
-            const user = data?.user ?? data?.usuario ?? data;
-
-            await AsyncStorage.setItem(
-                '@UrbanCandy:user',
-                JSON.stringify(user)
-            );
-
-            router.replace('/protected/home');
         } catch (error: any) {
-            showMessage(
-                'Não foi possível entrar',
-                error?.message || 'Verifique seu email e senha.',
-                undefined,
-                'error'
-            );
+            console.error('Erro ao efetuar login:', error);
+            showMessage({
+                title: 'Erro de Conexão',
+                message: error?.message || error?.response?.data?.message || 'Não foi possível se conectar ao servidor.',
+                type: 'error',
+            });
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     return (
-        <KeyboardAvoidingView
-            style={styles.screen}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
+        <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <StatusBar style="dark" />
-
-            <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-            >
+            <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                 <View style={styles.container}>
                     <View style={styles.topDecoration} />
 
-                    <View style={styles.content}>
-                        <Image
-                            source={require('@/assets/images/logo.png')}
-                            style={styles.logo}
-                            resizeMode="contain"
+                    {/* Botão de voltar adicionado */}
+                    <Pressable
+                        onPress={() => router.back()}
+                        style={styles.backButton}
+                    >
+                        <Ionicons
+                            name="arrow-back"
+                            size={26}
+                            color={colors.white}
                         />
+                    </Pressable>
+
+                    <View style={styles.content}>
+                        <Image source={require('@/assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
 
                         <View style={styles.fieldContainer}>
                             <Text style={styles.label}>Email</Text>
-
                             <TextInput
                                 style={styles.input}
                                 value={email}
@@ -204,7 +154,6 @@ export default function LoginScreen() {
 
                         <View style={styles.fieldContainer}>
                             <Text style={styles.label}>Senha</Text>
-
                             <TextInput
                                 style={styles.input}
                                 value={senha}
@@ -228,14 +177,9 @@ export default function LoginScreen() {
                             disabled={loading}
                         >
                             {loading ? (
-                                <ActivityIndicator
-                                    size="small"
-                                    color={colors.white}
-                                />
+                                <ActivityIndicator size="small" color={colors.white} />
                             ) : (
-                                <Text style={styles.loginButtonText}>
-                                    Entrar
-                                </Text>
+                                <Text style={styles.loginButtonText}>Entrar</Text>
                             )}
                         </Pressable>
                     </View>

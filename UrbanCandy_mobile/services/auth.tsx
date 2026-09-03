@@ -8,40 +8,12 @@ export type UserProfile = {
     cpf?: string;
     phone?: string;
     telephone?: string;
-
-    people?: {
-        id_people?: number;
-        name?: string;
-        cpf?: string;
-        telephone?: string;
-        phone?: string;
-
-        address?: {
-            id_address?: number;
-            cep?: string;
-            city?: string;
-            neighborhood?: string;
-            road?: string;
-            number?: string | number;
-            complement?: string;
-        };
-    };
-
-    address?: {
-        id_address?: number;
-        cep?: string;
-        city?: string;
-        neighborhood?: string;
-        road?: string;
-        number?: string | number;
-        complement?: string;
-    };
 };
 
 export type CreateUserData = {
-    email: string;
-    password: string;
     name: string;
+    email: string;  
+    password?: string;
     cpf: string;
     telephone: string;
     cep: string;
@@ -49,74 +21,91 @@ export type CreateUserData = {
     neighborhood: string;
     road: string;
     number: number;
-    complement: string;
+    complement?: string;
 };
 
 export async function loginUser(
     email: string,
     password: string
 ) {
+    console.log('[AUTH.TSX] Iniciando loginUser para o e-mail:', email);
+
     try {
         const response = await api.post('/login', {
             email,
             password,
         });
 
+        console.log('[AUTH.TSX] Resposta recebida com sucesso:', response.status);
         return response.data;
     } catch (error: any) {
-        const data = error.response?.data || {};
+        console.log('--------------------------------------------------');
+        console.log('[AUTH.TSX ERRO DETALHADO]');
+        console.log('Tem resposta do servidor? (error.response):', !!error.response);
 
-        const err = new Error(
+        if (error.response) {
+            console.log('Status HTTP:', error.response.status);
+            console.log('Corpo da resposta:', error.response.data);
+        } else if (error.request) {
+            console.log('A requisição saiu, mas não obteve resposta do servidor.');
+        } else {
+            console.log('Erro de configuração do Axios/JS:', error.message);
+        }
+        console.log('--------------------------------------------------');
+
+        const data = error.response?.data || {};
+        const message =
             data.message ||
             data.mensagem ||
-            'Erro ao conectar ao servidor'
-        );
+            (error.response ? `Servidor respondeu com código ${error.response.status}` : 'Falha na conexão física com a API');
 
-        (err as any).response = error.response;
-
-        throw err;
+        throw new Error(message);
     }
 }
 
-export async function getUserProfile(
-    id_user: number
-): Promise<UserProfile> {
-    const response = await api.get(
-        `/usuario/listarPorId/${id_user}`
-    );
-
-    return response.data;
+export async function getUserProfile(id_user: number) {
+    try {
+        const response = await api.get(`/usuario/listarPorId/${id_user}`);
+        const data = response.data;
+        
+        return data?.data || data;
+    } catch (error: any) {
+        console.log('[AUTH.TSX] Erro ao buscar perfil:', error?.response?.status || error.message);
+        throw error;
+    }
 }
 
-export async function createUser(
-    userData: CreateUserData
-) {
-    const response = await api.post(
-        '/usuario/salvar',
-        userData
-    );
-
-    return response.data;
+/**
+ * Cria um novo usuário na API
+ */
+export async function createUser(userData: CreateUserData) {
+    try {
+        const response = await api.post('/usuario/criar', userData);
+        return response.data;
+    } catch (error: any) {
+        console.log('[AUTH.TSX] Erro no createUser:', error?.response?.data || error.message);
+        throw error;
+    }
 }
 
+/**
+ * Atualiza os dados de um usuário existente na API
+ */
 export async function updateUser(
     id_user: number,
-    userData: {
-        password?: string;
-    },
-    personData: {
-        id_people?: number;
-        name?: string;
-        telephone?: string;
-    }
+    userData: Partial<UserProfile> = {},
+    peopleData: Record<string, any> = {}
 ) {
-    const response = await api.put(
-        `/usuario/atualizar/${id_user}`,
-        {
-            userData,
-            personData,
-        }
-    );
+    try {
+        const payload = {
+            ...userData,
+            ...peopleData,
+        };
 
-    return response.data;
+        const response = await api.put(`/usuario/atualizar/${id_user}`, payload);
+        return response.data;
+    } catch (error: any) {
+        console.log('[AUTH.TSX] Erro no updateUser:', error?.response?.data || error.message);
+        throw error;
+    }
 }

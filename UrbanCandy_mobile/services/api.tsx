@@ -1,44 +1,31 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+// Exportação explícita para evitar o valor 'undefined'
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://172.20.10.3:3000';
+export const API_BASE_URL = BASE_URL;
+
+const API_URL = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
 
 const api = axios.create({
-    baseURL: `${API_BASE_URL}/api`,
-    timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+  baseURL: API_URL,
+  timeout: 10000,
 });
 
-api.interceptors.request.use(async (config) => {
-    const token = await AsyncStorage.getItem('@UrbanCandy:token');
+api.interceptors.request.use(
+  async (config) => {
+    const token =
+      (await AsyncStorage.getItem('@UrbanCandy:token')) ||
+      (await AsyncStorage.getItem('token'));
 
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const cleanToken = token.replace(/^"(.*)"$/, '$1');
+      config.headers.Authorization = `Bearer ${cleanToken}`;
     }
 
     return config;
-});
-
-export function setAuthToken(token: string | null) {
-    if (token) {
-        api.defaults.headers.common.Authorization = `Bearer ${token}`;
-    } else {
-        delete api.defaults.headers.common.Authorization;
-    }
-}
-
-export function getApiErrorMessage(
-    error: any,
-    fallback = 'Ocorreu um erro. Tente novamente.'
-) {
-    return (
-        error?.response?.data?.message ||
-        error?.response?.data?.mensagem ||
-        error?.message ||
-        fallback
-    );
-}
+  },
+  (error) => Promise.reject(error)
+);
 
 export default api;

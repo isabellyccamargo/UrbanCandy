@@ -100,8 +100,6 @@ privateRoutes.put(
   AddressController.updateAddress
 );
 
-// --- PEDIDOS ---
-
 privateRoutes.post(
   '/pedido/checkout',
   authorizePermission('criar_pedido'),
@@ -124,6 +122,18 @@ privateRoutes.get(
   '/pedido/:id_order/itens',
   authorizePermission('visualizar_pedido'),
   OrderController.findItemsByOrder
+);
+
+privateRoutes.get(
+  '/pedido/status/listar',
+  authorizePermission('visualizar_pedidos'),
+  OrderController.findAllStatuses
+);
+
+privateRoutes.patch(
+  '/pedido/:id_order/status',
+  authorizePermission('alterar_status_pedido'),
+  OrderController.updateStatus
 );
 
 // --- TIPOS DE PAGAMENTO ---
@@ -178,4 +188,15 @@ privateRoutes.get(
   TypeOfDeliveryController.findById
 );
 
+privateRoutes.stack.forEach((layer) => {
+  if (layer.route) {
+    const routePath = layer.route.path;
+    const handlers = layer.route.stack;
+    handlers.forEach((h: any, index: number) => {
+      if (!h.handle) {
+        console.error(`[ERRO DE ROTA] Handler indefinido na rota: ${routePath} (índice ${index})`);
+      }
+    });
+  }
+});
 export default privateRoutes;

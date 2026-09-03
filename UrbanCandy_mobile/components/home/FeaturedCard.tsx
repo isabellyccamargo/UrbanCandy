@@ -8,6 +8,7 @@ import {
 
 import { SmallButton } from '@/components/ui/smallButton';
 import { useTheme } from '@/context/Theme';
+// Importação corrigida com chaves { }
 import { API_BASE_URL } from '@/services/api';
 
 type FeaturedCardProps = {

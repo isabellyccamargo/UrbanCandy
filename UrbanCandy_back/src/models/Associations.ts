@@ -8,6 +8,7 @@ import TypeOfPayment from './TypeOfPayment.js';
 import Offers from './Offers.js';
 import OfferProducts from './OfferProducts.js';
 import TypeOfDelivery from './TypeOfDelivery.js';
+import OrderStatus from './OrderStatus.js';
 
 import Role from './Role.js';
 import Permission from './Permission.js';
@@ -33,6 +34,18 @@ const setupAssociations = () => {
   Address.hasMany(People, {
     foreignKey: 'id_address',
     as: 'residents',
+  });
+
+  Orders.belongsTo(OrderStatus, {
+    foreignKey: 'status_id',
+    targetKey: 'id',
+    as: 'status',
+  });
+
+  OrderStatus.hasMany(Orders, {
+    foreignKey: 'status_id',
+    sourceKey: 'id',
+    as: 'orders',
   });
 
   Orders.belongsTo(TypeOfPayment, {

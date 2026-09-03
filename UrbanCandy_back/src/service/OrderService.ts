@@ -22,7 +22,8 @@ class OrderService {
       cart.items,
       cart.total,
       id_payment,
-      id_type_delivery
+      id_type_delivery,
+      1 // Inicia sempre com o id_order_status = 1 ("Recebido")
     );
   }
 
@@ -95,6 +96,27 @@ class OrderService {
     return await OrderItemRepository.findItemsByOrder(
       id_order
     );
+  }
+
+  static async findAllStatuses() {
+    return await OrderRepository.findAllStatuses();
+  }
+
+  static async updateOrderStatus(id_order: number, status_id: number) {
+    if (!id_order || id_order <= 0) {
+      throw new ApiException('INVALID_ORDER_ID', 400, 'ID do pedido inválido.');
+    }
+    if (!status_id || status_id <= 0) {
+      throw new ApiException('INVALID_STATUS_ID', 400, 'ID de status inválido.');
+    }
+
+    const [affectedRows] = await OrderRepository.updateOrderStatus(id_order, status_id);
+
+    if (affectedRows === 0) {
+      throw new ApiException('ORDER_NOT_FOUND', 404, 'Pedido não encontrado.');
+    }
+
+    return { message: 'Status do pedido atualizado com sucesso.' };
   }
 }
 
