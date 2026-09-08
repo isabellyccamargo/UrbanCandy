@@ -99,11 +99,13 @@ export default function EmployeeOrderCard({
             color: colors.text,
         },
         clientName: {
+            width:140,
             fontFamily: font.medium,
             fontSize: fontSize.base,
             color: colors.textSecondary,
         },
         timeText: {
+            marginTop: space.xs,
             fontFamily: font.regular,
             fontSize: fontSize.sm,
             color: colors.textTertiary,
@@ -126,7 +128,7 @@ export default function EmployeeOrderCard({
             fontFamily: font.medium,
             fontSize: fontSize.sm,
             color: colors.textSecondary,
-            marginTop: space.sm,
+            marginTop: space.md,
         },
         footerRow: {
             flexDirection: 'row',
@@ -183,7 +185,6 @@ export default function EmployeeOrderCard({
                     <Text style={styles.detailsLink}>Ver detalhes &gt;</Text>
                 </Pressable>
 
-                {/* Apenas o botão recebe a cor dinâmica do status */}
                 <Pressable
                     style={styles.actionButton}
                     disabled={isUpdating}

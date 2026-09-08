@@ -39,35 +39,35 @@ export default function PaymentScreen() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        loadData();
-    }, []);
+        async function loadData() {
+            try {
+                const storedUser = await AsyncStorage.getItem('@UrbanCandy:user');
+                if (!storedUser) throw new Error('Usuário não encontrado.');
 
-    async function loadData() {
-        try {
-            const storedUser = await AsyncStorage.getItem('@UrbanCandy:user');
-            if (!storedUser) throw new Error('Usuário não encontrado.');
+                const user = JSON.parse(storedUser);
+                if (!user.id_user) throw new Error('ID do usuário não encontrado.');
 
-            const user = JSON.parse(storedUser);
-            if (!user.id_user) throw new Error('ID do usuário não encontrado.');
+                const data = await getUserProfile(user.id_user);
+                setProfile(data);
 
-            const data = await getUserProfile(user.id_user);
-            setProfile(data);
-
-            if (id_delivery) {
-                const response = await getAllDeliveryTypes();
-                const selected = (response?.data ?? []).find(
-                    (type: DeliveryType) => type.id_type_delivery === Number(id_delivery)
-                );
-                setDelivery(selected ?? null);
+                if (id_delivery) {
+                    const response = await getAllDeliveryTypes();
+                    const selected = (response?.data ?? []).find(
+                        (type: DeliveryType) => type.id_type_delivery === Number(id_delivery)
+                    );
+                    setDelivery(selected ?? null);
+                }
+            } catch (err) {
+                const message = getApiErrorMessage(err, 'Não foi possível carregar seus dados.');
+                setError(message);
+                showMessage('Atenção', message, undefined, 'warning');
+            } finally {
+                setLoading(false);
             }
-        } catch (err) {
-            const message = getApiErrorMessage(err, 'Não foi possível carregar seus dados.');
-            setError(message);
-            showMessage('Atenção', message, undefined, 'warning');
-        } finally {
-            setLoading(false);
         }
-    }
+
+        loadData();
+    }, [id_delivery, showMessage]);
 
     async function handleFinishPayment() {
         if (!id_delivery) {
@@ -85,8 +85,9 @@ export default function PaymentScreen() {
             return;
         }
 
-        const people = profile?.people ?? (profile as any)?.People ?? profile;
-        const id_people = people?.id_people ?? (profile as any)?.id_people;
+        const profileAny = profile as any;
+        const people = profileAny?.people ?? profileAny?.People ?? profileAny;
+        const id_people = people?.id_people ?? profileAny?.id_people;
 
         if (!id_people) {
             showMessage('Erro', 'Não foi possível identificar o usuário.');
@@ -99,6 +100,7 @@ export default function PaymentScreen() {
             const orderData = {
                 id_people: Number(id_people),
                 id_payment: Number(selectedPayment.id_payment),
+                id_delivery: Number(id_delivery),
                 id_type_delivery: Number(id_delivery),
                 cart: {
                     items: items.map(item => ({
@@ -111,7 +113,7 @@ export default function PaymentScreen() {
                 },
             };
 
-            await createOrder(orderData);
+            await createOrder(orderData as any);
             clearCart();
 
             showMessage(
@@ -197,17 +199,18 @@ export default function PaymentScreen() {
         );
     }
 
-    const people = profile.people ?? (profile as any).People ?? profile;
+    const profileAny = profile as any;
+    const people = profileAny?.people ?? profileAny?.People ?? profileAny;
     const address =
-        people.address ??
-        (people as any).Address ??
-        profile.address ??
-        (profile as any).Address;
+        people?.address ??
+        people?.Address ??
+        profileAny?.address ??
+        profileAny?.Address;
 
     const customerData: CustomerData = {
-        name: people.name ?? profile.name ?? '',
-        cpf: people.cpf ?? profile.cpf ?? '',
-        phone: people.phone ?? people.telephone ?? profile.phone ?? '',
+        name: people?.name ?? profileAny?.name ?? '',
+        cpf: people?.cpf ?? profileAny?.cpf ?? '',
+        phone: people?.phone ?? people?.telephone ?? profileAny?.phone ?? '',
     };
 
     const addressData: AddressData = {

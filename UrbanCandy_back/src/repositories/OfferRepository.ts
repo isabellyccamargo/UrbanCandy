@@ -17,13 +17,7 @@ class OfferRepository {
             {
               model: Products,
               as: 'product',
-              attributes: [
-                'id_product',
-                'name',
-                'description',
-                'price',
-                'image',
-              ],
+              attributes: ['id_product', 'name', 'description', 'price', 'image'],
             },
           ],
         },
@@ -43,13 +37,7 @@ class OfferRepository {
             {
               model: Products,
               as: 'product',
-              attributes: [
-                'id_product',
-                'name',
-                'description',
-                'price',
-                'image',
-              ],
+              attributes: ['id_product', 'name', 'description', 'price', 'image'],
             },
           ],
         },

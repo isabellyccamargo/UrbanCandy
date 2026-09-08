@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/Theme';
 
 type Props = {
-    employeeName: string;
+    employeeName?: string;
 };
 
 export default function EmployeeHeader({ employeeName }: Props) {
@@ -13,7 +13,7 @@ export default function EmployeeHeader({ employeeName }: Props) {
     const styles = StyleSheet.create({
         container: {
             backgroundColor: colors.secondary,
-            paddingTop: 70,
+            paddingTop: 60,
             paddingBottom: space.lg,
             paddingHorizontal: space.lg,
             borderBottomLeftRadius: radius.xxl,
@@ -35,16 +35,18 @@ export default function EmployeeHeader({ employeeName }: Props) {
             fontFamily: font.semibold,
             fontSize: fontSize.xl,
             color: colors.primary,
-             marginBottom: space.sm,
+            marginBottom: space.sm,
         },
     });
+
+    const displayName = employeeName || 'Gerente';
 
     return (
         <View style={styles.container}>
             <View style={styles.logoCircle}>
                 <Ionicons name="storefront-outline" size={20} color={colors.white} />
             </View>
-            <Text style={styles.title}>Olá, {employeeName}</Text>
+            <Text style={styles.title}>Olá, {displayName}</Text>
         </View>
     );
 }

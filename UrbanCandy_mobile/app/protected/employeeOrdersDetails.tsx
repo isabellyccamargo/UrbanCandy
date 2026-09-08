@@ -255,7 +255,7 @@ export default function EmployeeOrdersDetails() {
                     <View style={[styles.row, { marginTop: space.sm }]}>
                         <Ionicons name="call-outline" size={20} color={colors.text} />
                         <Text style={styles.infoText}>
-                            {orderData?.people?.phone || orderData?.user?.phone || '(00) 00000-0000'}
+                            {orderData?.people?.telephone || orderData?.user?.telephone || '(00) 00000-0000'}
                         </Text>
                     </View>
                 </View>

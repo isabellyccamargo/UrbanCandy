@@ -18,8 +18,7 @@ const privateRoutes = Router();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) =>
-    cb(null, Date.now() + '-' + file.originalname),
+  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
 });
 
 const upload = multer({ storage });
@@ -70,41 +69,19 @@ privateRoutes.delete(
 
 // --- USUÁRIO E PESSOA ---
 
-privateRoutes.get(
-  '/usuario/listar',
-  UserController.findAllUsers
-);
+privateRoutes.get('/usuario/listar', UserController.findAllUsers);
 
-privateRoutes.get(
-  '/usuario/listarPorId/:id_user',
-  UserController.findByIdUser
-);
+privateRoutes.get('/usuario/listarPorId/:id_user', UserController.findByIdUser);
 
-privateRoutes.put(
-  '/usuario/atualizar/:id_user',
-  UserController.updateUser
-);
+privateRoutes.put('/usuario/atualizar/:id_user', UserController.updateUser);
 
-privateRoutes.get(
-  '/pessoa/listar',
-  PeopleController.findAllPeople
-);
+privateRoutes.get('/pessoa/listar', PeopleController.findAllPeople);
 
-privateRoutes.put(
-  '/pessoa/atualizar/:id_people',
-  PeopleController.updatePeople
-);
+privateRoutes.put('/pessoa/atualizar/:id_people', PeopleController.updatePeople);
 
-privateRoutes.put(
-  '/endereco/atualizar/:id_address',
-  AddressController.updateAddress
-);
+privateRoutes.put('/endereco/atualizar/:id_address', AddressController.updateAddress);
 
-privateRoutes.post(
-  '/pedido/checkout',
-  authorizePermission('criar_pedido'),
-  OrderController.store
-);
+privateRoutes.post('/pedido/checkout', authorizePermission('criar_pedido'), OrderController.store);
 
 privateRoutes.get(
   '/pedido/listar',
@@ -156,12 +133,7 @@ privateRoutes.delete(
   TypeOfPaymentController.deleteTypeOfPayment
 );
 
-privateRoutes.get(
-  '/pagamento/listar',
-  authorizePermission('listar_tipos_pagamento'),
-  TypeOfPaymentController.findAllTypeOfPayment
-);
-
+privateRoutes.get('/pagamento/listar', TypeOfPaymentController.findAllTypeOfPayment);
 // --- TIPOS DE DELIVERY ---
 
 privateRoutes.post(

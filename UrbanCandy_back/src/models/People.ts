@@ -27,7 +27,7 @@ People.init(
       unique: true,
     },
     telephone: {
-      type: DataTypes.CHAR(13),
+      type: DataTypes.STRING(20),
       allowNull: true,
     },
     id_user: {

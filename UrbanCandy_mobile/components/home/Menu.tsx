@@ -26,8 +26,8 @@ export function Menu() {
         String(r).toLowerCase().replace(/^role_/, '').trim()
     );
 
-    const isGerente = normalizedRoles.some((r) => r === 'gerente' || r === 'admin');
-    const isFuncionario = normalizedRoles.some((r) => r === 'funcionario' || r === 'atendente');
+    const isGerente = normalizedRoles.some((r) => r === 'gerente' || r === 'admin' || r === '3');
+    const isFuncionario = normalizedRoles.some((r) => r === 'funcionario' || r === 'atendente' || r === '2');
     const isStaff = isGerente || isFuncionario;
 
     const handleProfileNav = () => {
@@ -151,7 +151,7 @@ export function Menu() {
                     <Text style={styles.label}>Início</Text>
                 </Pressable>
 
-                <Pressable style={styles.item} onPress={() => router.push('/protected/cart')}>
+                <Pressable style={styles.item} onPress={() => router.push('/cart')}>
                     <View style={styles.iconContainer}>
                         <Ionicons name="cart-outline" size={25} color={colors.text} />
                         {totalItems > 0 && (
@@ -170,7 +170,16 @@ export function Menu() {
                     <Text style={styles.label}>Cardápio</Text>
                 </Pressable>
 
-                {isStaff ? (
+                {/* Direcionamento exclusivo por perfil */}
+                {isGerente ? (
+                    <Pressable
+                        style={styles.item}
+                        onPress={() => router.push('/protected/dashboard' as any)}
+                    >
+                        <Ionicons name="bar-chart-outline" size={25} color={colors.text} />
+                        <Text style={styles.label}>Dashboard</Text>
+                    </Pressable>
+                ) : isFuncionario ? (
                     <Pressable
                         style={styles.item}
                         onPress={() => router.push('/protected/employeeOrders' as any)}

@@ -24,12 +24,7 @@ class OrderController {
       const finalPaymentId = id_payment || 0;
       const finalDeliveryId = id_type_delivery || 0;
 
-      const result = await OrderService.checkout(
-        id_people,
-        cart,
-        finalPaymentId,
-        finalDeliveryId
-      );
+      const result = await OrderService.checkout(id_people, cart, finalPaymentId, finalDeliveryId);
 
       res.status(201).json({
         message: 'Pedido realizado com sucesso!',
@@ -46,14 +41,11 @@ class OrderController {
 
       // Suporta tanto req.query.limit quanto req.query.size (enviado pelo frontend)
       const page = req.query.page ? Number(req.query.page) : 1;
-      const limit = req.query.limit || req.query.size ? Number(req.query.limit || req.query.size) : 20;
+      const limit =
+        req.query.limit || req.query.size ? Number(req.query.limit || req.query.size) : 20;
       const offset = (page - 1) * limit;
 
-      const result = await OrderRepository.findByUserId(
-        Number(id_people),
-        limit,
-        offset
-      );
+      const result = await OrderRepository.findByUserId(Number(id_people), limit, offset);
 
       // Retorna a estrutura com a propriedade data (array de pedidos) e metadados
       return res.status(200).json({
@@ -70,7 +62,7 @@ class OrderController {
       });
     }
   }
-  
+
   static async findAllOrders(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const page = req.query.page ? Number(req.query.page) : 1;
@@ -89,17 +81,11 @@ class OrderController {
     }
   }
 
-  static async findItemsByOrder(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
+  static async findItemsByOrder(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id_order } = req.params;
 
-      const result = await OrderService.findItemsByOrder(
-        Number(id_order)
-      );
+      const result = await OrderService.findItemsByOrder(Number(id_order));
 
       res.status(200).json(result);
     } catch (error) {

@@ -52,7 +52,7 @@ Orders.init(
       type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 1,
-      field: 'status_id', 
+      field: 'status_id',
       references: {
         model: 'order_status',
         key: 'id',
