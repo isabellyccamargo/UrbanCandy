@@ -85,7 +85,7 @@ privateRoutes.patch(
   '/pessoa/upload-foto/:id_people',
   upload.single('image'),
   PeopleController.uploadImage
-); 
+);
 
 privateRoutes.get(
   '/pedido/usuario/:id_people',
