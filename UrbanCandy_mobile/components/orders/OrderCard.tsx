@@ -16,6 +16,22 @@ type Props = {
     onPress: () => void;
 };
 
+// Temas de cores para os status
+const STATUS_THEMES: Record<string, { bg: string; text: string; border: string }> = {
+    preparando: { bg: '#E3F2FD', text: '#1976D2', border: '#BBDEFB' },
+    pronto: { bg: '#F3E5F5', text: '#7B1FA2', border: '#E1BEE7' },
+    entregue: { bg: '#E8F5E9', text: '#2E7D32', border: '#C8E6C9' },
+    default: { bg: '#FFF8E1', text: '#F57F17', border: '#FFE082' },
+};
+
+function getStatusStyle(statusName?: string) {
+    const s = String(statusName || '').toLowerCase();
+    if (s.includes('preparando')) return STATUS_THEMES.preparando;
+    if (s.includes('pronto')) return STATUS_THEMES.pronto;
+    if (s.includes('entregue') || s.includes('concluido')) return STATUS_THEMES.entregue;
+    return STATUS_THEMES.default;
+}
+
 function formatPrice(value: number | string | undefined) {
     return `R$ ${Number(value ?? 0)
         .toFixed(2)
@@ -45,6 +61,15 @@ export default function OrderCard({
         radius,
     } = useTheme();
 
+    // 1. Proteção de segurança caso o pedido venha nulo/indefinido
+    if (!order) {
+        return null;
+    }
+
+    // 2. Extração segura de propriedades com fallback
+    const statusLabel = order?.status?.label ?? order?.status?.name ?? 'Pendente';
+    const statusStyle = getStatusStyle(statusLabel);
+
     const styles = StyleSheet.create({
         card: {
             backgroundColor: colors.white,
@@ -71,7 +96,9 @@ export default function OrderCard({
         },
 
         status: {
-            backgroundColor: colors.secondary,
+            backgroundColor: statusStyle.bg,
+            borderColor: statusStyle.border,
+            borderWidth: 1,
             borderRadius: radius.pill,
             paddingHorizontal: space.md,
             paddingVertical: space.xs,
@@ -80,7 +107,7 @@ export default function OrderCard({
         statusText: {
             fontFamily: font.semibold,
             fontSize: fontSize.sm,
-            color: colors.primary,
+            color: statusStyle.text,
         },
 
         date: {
@@ -185,7 +212,7 @@ export default function OrderCard({
 
                 <View style={styles.status}>
                     <Text style={styles.statusText}>
-                        {order.status?.label ?? order.status?.name ?? 'Pendente'}
+                        {statusLabel}
                     </Text>
                 </View>
             </View>

@@ -1,97 +1,111 @@
-
-import {
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
-} from 'react-native';
-
+import { StyleSheet, Text, View, TextInput, Pressable, TextInputProps } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/Theme';
 
-type Props = {
+interface Props extends TextInputProps {
     label: string;
-    value: string;
-    onChangeText: (value: string) => void;
-    placeholder?: string;
-    keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
-    secureTextEntry?: boolean;
-    editable?: boolean;
-    autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-};
+    isPassword?: boolean;
+    showPassword?: boolean;
+    onToggleShowPassword?: () => void;
+}
 
 export default function AccountInput({
     label,
-    value,
-    onChangeText,
-    placeholder,
-    keyboardType = 'default',
-    secureTextEntry = false,
-    editable = true,
-    autoCapitalize = 'sentences',
+    isPassword,
+    showPassword,
+    onToggleShowPassword,
+    style,
+    ...rest
 }: Props) {
-    const {
-        colors,
-        font,
-        fontSize,
-        space,
-        radius,
-    } = useTheme();
+    const { colors, font, fontSize, radius, sizes, space } = useTheme();
 
     const styles = StyleSheet.create({
         container: {
-            marginBottom: space.md,
+            marginBottom: space.sm,
+            width: '100%',
         },
 
         label: {
-            fontFamily: font.regular,
-            fontSize: fontSize.md,
+            fontFamily: font.medium,
+            fontSize: fontSize.sm,
             color: colors.text,
             marginBottom: space.xs,
         },
 
+        inputWrapper: {
+            position: 'relative',
+            width: '100%',
+            justifyContent: 'center',
+        },
+
         input: {
-            height: 48,
+            height: sizes.inputHeight,
             backgroundColor: colors.white,
-            borderWidth: 1,
-            borderColor: colors.border,
             borderRadius: radius.md,
             paddingHorizontal: space.md,
             fontFamily: font.regular,
             fontSize: fontSize.md,
             color: colors.text,
+            elevation: 2,
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: -3 },
-            shadowOpacity: 0.12,
-            shadowRadius: 8,
-            elevation: 8,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 2,
         },
 
-        disabled: {
+        inputDisabled: {
             backgroundColor: colors.background,
-            color: colors.textTertiary,
+            color: colors.textSecondary,
+            elevation: 0,
+            shadowOpacity: 0,
+        },
+
+        inputWithIcon: {
+            paddingRight: 48,
+        },
+
+        eyeButton: {
+            position: 'absolute',
+            right: 12,
+            height: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 6,
         },
     });
 
+    const isEditable = rest.editable !== false;
+
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>
-                {label}
-            </Text>
+            <Text style={styles.label}>{label}</Text>
 
-            <TextInput
-                value={value}
-                onChangeText={onChangeText}
-                placeholder={placeholder}
-                placeholderTextColor={colors.textTertiary}
-                keyboardType={keyboardType}
-                secureTextEntry={secureTextEntry}
-                editable={editable}
-                autoCapitalize={autoCapitalize}
-                style={[
-                    styles.input,
-                    !editable && styles.disabled,
-                ]}
-            />
+            <View style={styles.inputWrapper}>
+                <TextInput
+                    style={[
+                        styles.input,
+                        !isEditable && styles.inputDisabled,
+                        isPassword && styles.inputWithIcon,
+                        style,
+                    ]}
+                    placeholderTextColor={colors.textTertiary}
+                    {...rest}
+                />
+
+                {isPassword && (
+                    <Pressable
+                        onPress={onToggleShowPassword}
+                        style={styles.eyeButton}
+                        hitSlop={10}
+                    >
+                        <Ionicons
+                            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                            size={22}
+                            color={colors.textSecondary}
+                        />
+                    </Pressable>
+                )}
+            </View>
         </View>
     );
 }

@@ -2,7 +2,7 @@ import multer from 'multer';
 import path from 'path';
 import { ApiException } from '../exception/ApiException.js';
 
-// Prevenção de colisão de nomes com timestamp + sufixo aleatório
+// Onde salvar e  como renomear evitando colisão de nomes
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => {
@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
     },
 });
 
-// Validação de extensão de arquivo (MIME Type)
+// Validação de extensão (filtro de tipo de arquivo)
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
@@ -23,7 +23,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
     }
 };
 
-// Limite de tamanho máximo (exemplo: 2MB)
+// Limite de tamanho
 export const upload = multer({
     storage,
     fileFilter,

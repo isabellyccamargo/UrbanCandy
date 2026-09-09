@@ -14,7 +14,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons'; // Importado para a seta de voltar
+import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '@/context/Theme';
 import { loginUser } from '@/services/auth';
@@ -29,6 +29,7 @@ export default function LoginScreen() {
 
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
+    const [showPassword, setShowPassword] = useState(false); // Estado para alternar o olho
     const [loading, setLoading] = useState(false);
 
     const styles = StyleSheet.create({
@@ -47,7 +48,7 @@ export default function LoginScreen() {
             height: 40,
             justifyContent: 'center',
             alignItems: 'center',
-            zIndex: 10, // Garante que fique clicável sobre a barra
+            zIndex: 10,
         },
         content: { width: '100%', maxWidth: 520, paddingHorizontal: 72, paddingTop: 165, alignItems: 'center' },
         logo: { width: 125, height: 155, marginBottom: space.xxl },
@@ -57,6 +58,22 @@ export default function LoginScreen() {
             width: '100%', height: sizes.inputHeight, backgroundColor: colors.white,
             borderRadius: radius.lg, paddingHorizontal: 18, fontSize: fontSize.lg,
             color: colors.text, elevation: 5,
+        },
+        passwordContainer: {
+            position: 'relative',
+            width: '100%',
+            justifyContent: 'center',
+        },
+        passwordInput: {
+            paddingRight: 50, // Espaço para não sobrepor o texto ao ícone do olho
+        },
+        eyeButton: {
+            position: 'absolute',
+            right: 15,
+            height: '100%',
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 5,
         },
         loginButton: {
             width: 290, height: 54, marginTop: 65, backgroundColor: colors.primary,
@@ -122,7 +139,6 @@ export default function LoginScreen() {
                 <View style={styles.container}>
                     <View style={styles.topDecoration} />
 
-                    {/* Botão de voltar adicionado */}
                     <Pressable
                         onPress={() => router.back()}
                         style={styles.backButton}
@@ -154,17 +170,30 @@ export default function LoginScreen() {
 
                         <View style={styles.fieldContainer}>
                             <Text style={styles.label}>Senha</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={senha}
-                                onChangeText={setSenha}
-                                placeholder="Digite sua senha"
-                                placeholderTextColor={colors.textTertiary}
-                                secureTextEntry
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                                editable={!loading}
-                            />
+                            <View style={styles.passwordContainer}>
+                                <TextInput
+                                    style={[styles.input, styles.passwordInput]}
+                                    value={senha}
+                                    onChangeText={setSenha}
+                                    placeholder="Digite sua senha"
+                                    placeholderTextColor={colors.textTertiary}
+                                    secureTextEntry={!showPassword}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                    editable={!loading}
+                                />
+                                <Pressable
+                                    onPress={() => setShowPassword((prev) => !prev)}
+                                    style={styles.eyeButton}
+                                    hitSlop={10}
+                                >
+                                    <Ionicons
+                                        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                                        size={24}
+                                        color={colors.textTertiary}
+                                    />
+                                </Pressable>
+                            </View>
                         </View>
 
                         <Pressable

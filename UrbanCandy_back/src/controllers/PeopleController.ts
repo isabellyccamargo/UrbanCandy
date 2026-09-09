@@ -65,7 +65,6 @@ class PeopleController {
     }
   }
 
-  // Adicione no PeopleController:
   static async uploadImage(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id_people } = req.params;

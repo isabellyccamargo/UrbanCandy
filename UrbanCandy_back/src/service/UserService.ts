@@ -123,7 +123,7 @@ class UserService {
       name: allData.name,
       cpf: allData.cpf,
       telephone: allData.telephone,
-      image: allData.image || null, // Atribui o caminho gerado pelo Multer
+      image: allData.image || null,
     };
 
     return await UserRepository.createUser(userData, personData, addressData);

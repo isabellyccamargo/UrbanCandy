@@ -160,7 +160,7 @@ export function HomeHeader() {
     });
 
     const handleProfilePress = () => {
-        router.push('/(tabs)/account' as any);
+        router.push('/cadastro' as any);
     };
 
     return (

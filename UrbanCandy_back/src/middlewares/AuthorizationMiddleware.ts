@@ -1,9 +1,9 @@
-// middlewares/authorizePermission.ts
 import { type NextFunction, type Request, type Response } from 'express';
 import Users from '../models/Users.js';
 import Role from '../models/Role.js';
 import Permission from '../models/Permission.js';
 
+// Recebe o nome da permissão necessária (ex: 'cadastrar_produto') e devolve um middleware do Express para validar o acesso dinamicamente em cada rota.
 export function authorizePermission(permissionName: string) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -30,7 +30,7 @@ export function authorizePermission(permissionName: string) {
         return res.status(404).json({ message: 'Usuário não encontrado' });
       }
 
-      // Consolida todas as permissões do usuário em um único array
+      // Consolida todas as permissões do usuário em um único array de strings
       const userPermissions =
         user.roles?.flatMap((role: any) => role.permissions?.map((p: any) => p.name) || []) || [];
 

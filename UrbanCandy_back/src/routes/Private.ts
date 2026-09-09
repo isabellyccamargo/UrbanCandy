@@ -73,7 +73,7 @@ privateRoutes.put('/pessoa/atualizar/:id_people', PeopleController.updatePeople)
 
 privateRoutes.put('/endereco/atualizar/:id_address', AddressController.updateAddress);
 
-privateRoutes.post('/pedido/checkout', authorizePermission('criar_pedido'), OrderController.store);
+privateRoutes.post('/pedido/checkout', OrderController.store);
 
 privateRoutes.get(
   '/pedido/listar',
@@ -85,11 +85,11 @@ privateRoutes.patch(
   '/pessoa/upload-foto/:id_people',
   upload.single('image'),
   PeopleController.uploadImage
-);
+); 
 
 privateRoutes.get(
   '/pedido/usuario/:id_people',
-  authorizePermission('visualizar_pedidos_proprios'),
+  //authorizePermission('visualizar_pedidos'),
   OrderController.findByUserId
 );
 

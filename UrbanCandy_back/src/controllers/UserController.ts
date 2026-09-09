@@ -86,7 +86,6 @@ class UserController {
         throw new ApiException('INVALID_ID', 400, id_user);
       }
 
-      // Tratamento caso atualize a foto junto na requisição
       const imagePath = req.file ? `uploads/${req.file.filename}` : undefined;
       const personData = {
         ...req.body.personData,
