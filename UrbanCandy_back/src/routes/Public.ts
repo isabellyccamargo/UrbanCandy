@@ -5,6 +5,7 @@ import CategoryController from '../controllers/CategoryController.js';
 import UserController from '../controllers/UserController.js';
 import OfferController from '../controllers/OfferController.js';
 import TypeOfDeliveryController from '../controllers/TypeOfDeliveryController.js';
+import { upload } from '../config/MulterConfig.js';
 
 import privateRoutes from './Private.js';
 
@@ -13,7 +14,7 @@ const routes = Router();
 // --- LOGIN E CADASTRO ---
 
 routes.post('/login', UserController.login);
-routes.post('/usuario/salvar', UserController.createUser);
+routes.post('/usuario/salvar', upload.single('image'), UserController.createUser);
 
 // --- PRODUTO ---
 

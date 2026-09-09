@@ -13,6 +13,9 @@ import AccountButton from './AccountButton';
 type Props = {
     isEditing: boolean;
 
+    imageUri?: string | null;
+    onPickImage?: () => void;
+
     name: string;
     cpf: string;
     telephone: string;
@@ -50,6 +53,9 @@ type Props = {
 
 export default function AccountForm({
     isEditing,
+
+    imageUri,
+    onPickImage,
 
     name,
     cpf,
@@ -114,6 +120,9 @@ export default function AccountForm({
 
                 <PersonalDataForm
                     isEditing={isEditing}
+
+                    imageUri={imageUri}
+                    onPickImage={onPickImage}
 
                     name={name}
                     cpf={cpf}

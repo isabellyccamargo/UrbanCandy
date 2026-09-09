@@ -11,17 +11,9 @@ import OrderController from '../controllers/OrderController.js';
 import AddressController from '../controllers/AddressController.js';
 import TypeOfPaymentController from '../controllers/TypeOfPaymentController.js';
 import TypeOfDeliveryController from '../controllers/TypeOfDeliveryController.js';
-
-import multer from 'multer';
+import { upload } from '../config/MulterConfig.js';
 
 const privateRoutes = Router();
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
-});
-
-const upload = multer({ storage });
 
 privateRoutes.use(authMiddleware);
 
@@ -89,6 +81,12 @@ privateRoutes.get(
   OrderController.findAllOrders
 );
 
+privateRoutes.patch(
+  '/pessoa/upload-foto/:id_people',
+  upload.single('image'),
+  PeopleController.uploadImage
+);
+
 privateRoutes.get(
   '/pedido/usuario/:id_people',
   authorizePermission('visualizar_pedidos_proprios'),
@@ -134,6 +132,7 @@ privateRoutes.delete(
 );
 
 privateRoutes.get('/pagamento/listar', TypeOfPaymentController.findAllTypeOfPayment);
+
 // --- TIPOS DE DELIVERY ---
 
 privateRoutes.post(
@@ -171,4 +170,5 @@ privateRoutes.stack.forEach((layer) => {
     });
   }
 });
+
 export default privateRoutes;

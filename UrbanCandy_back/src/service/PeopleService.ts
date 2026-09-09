@@ -40,6 +40,15 @@ class PeopleService {
     await this.findByIdPeople(id_people);
     return await PeopleRepository.deletePeople(id_people);
   }
+
+  // Adicione este método dentro de PeopleService:
+  async updatePeopleImage(idPeople: number, imagePath: string): Promise<[number]> {
+    if (!idPeople) throw new ApiException('REQUIRED_ID', 400);
+
+    await this.findByIdPeople(idPeople); // Garante que a pessoa existe
+
+    return await PeopleRepository.updatePeople(idPeople, { image: imagePath });
+  }
 }
 
 export default new PeopleService();

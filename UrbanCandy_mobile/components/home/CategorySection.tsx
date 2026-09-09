@@ -126,7 +126,7 @@ export function CategorySection() {
                                     image={image}
                                     onPress={() => {
                                         router.push({
-                                            pathname: '/cardapio',
+                                            pathname: '/protected/cardapio',
                                             params: {
                                                 category:
                                                     category.name_category,

@@ -6,6 +6,7 @@ class People extends Model {
   declare name: string;
   declare cpf: string;
   declare telephone: string;
+  declare image: string | null;
   declare id_user: number;
   declare id_address: number;
 }
@@ -28,6 +29,10 @@ People.init(
     },
     telephone: {
       type: DataTypes.STRING(20),
+      allowNull: true,
+    },
+    image: {
+      type: DataTypes.STRING(255),
       allowNull: true,
     },
     id_user: {

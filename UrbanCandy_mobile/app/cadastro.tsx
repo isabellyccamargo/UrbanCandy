@@ -13,6 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 import { useTheme } from '@/context/Theme';
 import { useAppAlert } from '@/components/common/AppAlert';
@@ -24,9 +25,33 @@ import {
     updateUser,
 } from '@/services/auth';
 import { updateAddress } from '@/services/address';
+import api from '@/services/api';
 
 import AccountHeader from '@/components/account/AccountHeader';
 import AccountForm from '@/components/account/AccountForm';
+
+function getFullImageUrl(imagePath?: string | null) {
+    if (!imagePath) return null;
+
+    if (imagePath.startsWith('file://') || imagePath.startsWith('content://')) {
+        return imagePath;
+    }
+
+    // Pega o baseURL ex: http://192.168.1.101:3000/api ou http://192.168.1.101:3000
+    const rawBaseURL = api.defaults.baseURL || 'http://192.168.1.101:3000';
+
+    // Remove o sufixo '/api' do final da URL se ele existir, pois imagens estáticas ficam na raiz do Express
+    const cleanBaseURL = rawBaseURL.replace(/\/api\/?$/, '').replace(/\/$/, '');
+
+    // Garante que o caminho da imagem comece com '/'
+    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+
+    const fullUrl = `${cleanBaseURL}${cleanPath}`;
+
+    console.log('URL RESTRUTURADA DA FOTO:', fullUrl);
+
+    return `${fullUrl}?t=${Date.now()}`;
+}
 
 export default function CadastroScreen() {
     const router = useRouter();
@@ -40,6 +65,9 @@ export default function CadastroScreen() {
     const [authenticated, setAuthenticated] = useState(isCreating);
     const [editing, setEditing] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    // Guardar a URI local/remota da imagem
+    const [imageUri, setImageUri] = useState<string | null>(null);
 
     const [ids, setIds] = useState({
         user: null as number | null,
@@ -73,7 +101,33 @@ export default function CadastroScreen() {
         }));
     };
 
+    async function handlePickImage() {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permission.granted) {
+            showMessage(
+                'Permissão necessária',
+                'Precisamos de permissão para acessar sua galeria.',
+                undefined,
+                'warning'
+            );
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets[0]?.uri) {
+            setImageUri(result.assets[0].uri);
+        }
+    }
+
     async function initialize() {
+        setImageUri(null);
+
         if (isCreating) {
             setEditing(false);
             setAuthenticated(true);
@@ -82,7 +136,9 @@ export default function CadastroScreen() {
         }
 
         try {
-            const token = await AsyncStorage.getItem('@UrbanCandy:token') || await AsyncStorage.getItem('token');
+            const token =
+                (await AsyncStorage.getItem('@UrbanCandy:token')) ||
+                (await AsyncStorage.getItem('token'));
 
             if (!token) {
                 setAuthenticated(false);
@@ -102,8 +158,8 @@ export default function CadastroScreen() {
     async function loadAccount() {
         try {
             const stored =
-                await AsyncStorage.getItem('@UrbanCandy:user') ||
-                await AsyncStorage.getItem('user');
+                (await AsyncStorage.getItem('@UrbanCandy:user')) ||
+                (await AsyncStorage.getItem('user'));
 
             if (!stored) {
                 setAuthenticated(false);
@@ -111,7 +167,7 @@ export default function CadastroScreen() {
             }
 
             const user = JSON.parse(stored);
-            const userId = user?.id_user || user?.id_people || user?.id;
+            const userId = user?.id_user || user?.people?.id_user || user?.id;
 
             if (!userId) {
                 setAuthenticated(false);
@@ -122,7 +178,9 @@ export default function CadastroScreen() {
 
             try {
                 const profile = await getUserProfile(userId);
-                const people = profile?.people ?? profile ?? {};
+
+                // Extrai a estrutura respeitando o retorno da API/Storage (user.people)
+                const people = profile?.people ?? user?.people ?? profile ?? {};
                 const address = people?.address ?? profile?.address ?? {};
 
                 setIds({
@@ -130,6 +188,23 @@ export default function CadastroScreen() {
                     people: people?.id_people ?? user?.id_people ?? null,
                     address: address?.id_address ?? null,
                 });
+
+                // Captura a imagem em user.people.image, people.image ou variações
+                const rawImage =
+                    people?.image ||
+                    people?.foto ||
+                    profile?.people?.image ||
+                    profile?.people?.foto ||
+                    profile?.image ||
+                    profile?.foto ||
+                    user?.people?.image ||
+                    user?.people?.foto ||
+                    user?.image ||
+                    user?.foto ||
+                    null;
+
+                console.log('Imagem encontrada:', rawImage);
+                setImageUri(getFullImageUrl(rawImage));
 
                 setForm({
                     name: people?.name ?? user?.name ?? user?.nome ?? '',
@@ -150,12 +225,22 @@ export default function CadastroScreen() {
             } catch (apiError: any) {
                 console.warn('[PERFIL] Falha na API, usando dados locais:', apiError?.message);
 
+                const people = user?.people ?? {};
+                const rawImage =
+                    people?.image ||
+                    people?.foto ||
+                    user?.image ||
+                    user?.foto ||
+                    null;
+
+                setImageUri(getFullImageUrl(rawImage));
+
                 setForm(prev => ({
                     ...prev,
-                    name: user?.name || user?.nome || '',
+                    name: people?.name || user?.name || user?.nome || '',
                     email: user?.email || '',
-                    cpf: user?.cpf || '',
-                    telephone: user?.telephone || '',
+                    cpf: people?.cpf || user?.cpf || '',
+                    telephone: people?.telephone || user?.telephone || '',
                 }));
 
                 setAuthenticated(true);
@@ -165,14 +250,15 @@ export default function CadastroScreen() {
             setAuthenticated(false);
         }
     }
-    
+
     async function handleLogout() {
         try {
+            setImageUri(null);
             await AsyncStorage.multiRemove([
                 '@UrbanCandy:token',
                 'token',
                 '@UrbanCandy:user',
-                'user'
+                'user',
             ]);
             router.replace('/welcome' as any);
         } catch (error) {
@@ -250,15 +336,35 @@ export default function CadastroScreen() {
             setLoading(true);
 
             if (!editing) {
-                const { confirmPassword, ...userData } = form;
+                // CADASTRO DE NOVO USUÁRIO
+                const formData = new FormData();
+                formData.append('name', form.name.trim());
+                formData.append('email', form.email.trim());
+                formData.append('password', form.password);
+                formData.append('cpf', form.cpf.replace(/\D/g, ''));
+                formData.append('telephone', form.telephone.replace(/\D/g, ''));
+                formData.append('cep', form.cep.replace(/\D/g, ''));
+                formData.append('city', form.city.trim());
+                formData.append('neighborhood', form.neighborhood.trim());
+                formData.append('road', form.road.trim());
+                formData.append('number', form.number);
+                formData.append('complement', form.complement.trim());
 
-                await createUser({
-                    ...userData,
-                    cpf: form.cpf.replace(/\D/g, ''),
-                    telephone: form.telephone.replace(/\D/g, ''),
-                    cep: form.cep.replace(/\D/g, ''),
-                    number: Number(form.number),
-                });
+                if (imageUri && (imageUri.startsWith('file://') || imageUri.startsWith('content://'))) {
+                    const filename = imageUri.split('/').pop() || 'profile.jpg';
+                    const match = /\.(\w+)$/.exec(filename);
+                    const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+                    formData.append('image', {
+                        uri: imageUri,
+                        name: filename,
+                        type,
+                    } as any);
+                }
+
+                await createUser(formData as any);
+
+                setImageUri(null);
 
                 showMessage(
                     'Cadastro realizado',
@@ -274,13 +380,9 @@ export default function CadastroScreen() {
                 return;
             }
 
+            // EDIÇÃO DE PERFIL EXISTENTE
             if (!ids.user) {
-                showMessage(
-                    'Erro',
-                    'Usuário não encontrado.',
-                    undefined,
-                    'error'
-                );
+                showMessage('Erro', 'Usuário não encontrado.', undefined, 'error');
                 return;
             }
 
@@ -305,17 +407,53 @@ export default function CadastroScreen() {
                 });
             }
 
-            const stored = await AsyncStorage.getItem('@UrbanCandy:user');
+            let newUploadedImage = null;
 
+            // Envia nova foto se tiver sido selecionada
+            if (ids.people && imageUri && (imageUri.startsWith('file://') || imageUri.startsWith('content://'))) {
+                const photoData = new FormData();
+                const filename = imageUri.split('/').pop() || 'profile.jpg';
+                const match = /\.(\w+)$/.exec(filename);
+                const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+                photoData.append('image', {
+                    uri: imageUri,
+                    name: filename,
+                    type,
+                } as any);
+
+                const uploadRes = await api.patch(
+                    `/pessoa/upload-foto/${ids.people}`,
+                    photoData
+                );
+
+                newUploadedImage =
+                    uploadRes.data?.image ||
+                    uploadRes.data?.foto ||
+                    uploadRes.data?.people?.image ||
+                    uploadRes.data?.people?.foto ||
+                    null;
+
+                if (newUploadedImage) {
+                    setImageUri(getFullImageUrl(newUploadedImage));
+                }
+            }
+
+            // Atualiza o AsyncStorage com as duas nomenclaturas
+            const stored = await AsyncStorage.getItem('@UrbanCandy:user');
             if (stored) {
                 const user = JSON.parse(stored);
+                const updatedUser = {
+                    ...user,
+                    name: form.name.trim(),
+                    ...(newUploadedImage
+                        ? { image: newUploadedImage, foto: newUploadedImage }
+                        : {}),
+                };
 
                 await AsyncStorage.setItem(
                     '@UrbanCandy:user',
-                    JSON.stringify({
-                        ...user,
-                        name: form.name.trim(),
-                    })
+                    JSON.stringify(updatedUser)
                 );
             }
 
@@ -400,41 +538,31 @@ export default function CadastroScreen() {
                     <AccountForm
                         isEditing={editing}
                         {...form}
+                        imageUri={imageUri}
+                        onPickImage={handlePickImage}
                         loading={loading}
                         onChangeName={value => change('name', value)}
                         onChangeCpf={value => change('cpf', value)}
-                        onChangeTelephone={value =>
-                            change('telephone', value)
-                        }
-                        onChangeEmail={value =>
-                            change('email', value)
-                        }
-                        onChangePassword={value =>
-                            change('password', value)
-                        }
-                        onChangeConfirmPassword={value =>
-                            change('confirmPassword', value)
-                        }
+                        onChangeTelephone={value => change('telephone', value)}
+                        onChangeEmail={value => change('email', value)}
+                        onChangePassword={value => change('password', value)}
+                        onChangeConfirmPassword={value => change('confirmPassword', value)}
                         onChangeCep={value => change('cep', value)}
                         onChangeCity={value => change('city', value)}
-                        onChangeNeighborhood={value =>
-                            change('neighborhood', value)
-                        }
-                        onChangeRoad={value =>
-                            change('road', value)
-                        }
-                        onChangeNumber={value =>
-                            change('number', value)
-                        }
-                        onChangeComplement={value =>
-                            change('complement', value)
-                        }
+                        onChangeNeighborhood={value => change('neighborhood', value)}
+                        onChangeRoad={value => change('road', value)}
+                        onChangeNumber={value => change('number', value)}
+                        onChangeComplement={value => change('complement', value)}
                         onSubmit={save}
                     />
 
                     {editing && (
                         <Pressable style={styles.logoutButton} onPress={handleLogout}>
-                            <Ionicons name="log-out-outline" size={22} color={colors.error ?? '#E53935'} />
+                            <Ionicons
+                                name="log-out-outline"
+                                size={22}
+                                color={colors.error ?? '#E53935'}
+                            />
                             <Text style={styles.logoutText}>Sair da Conta</Text>
                         </Pressable>
                     )}

@@ -26,7 +26,6 @@ export default function EmployeeHeader({ employeeName }: Props) {
             width: 38,
             height: 38,
             borderRadius: radius.circle,
-            backgroundColor: colors.primary,
             justifyContent: 'center',
             alignItems: 'center',
             marginBottom: space.sm,
@@ -34,7 +33,7 @@ export default function EmployeeHeader({ employeeName }: Props) {
         title: {
             fontFamily: font.semibold,
             fontSize: fontSize.xl,
-            color: colors.primary,
+            color: colors.white,
             marginBottom: space.sm,
         },
     });

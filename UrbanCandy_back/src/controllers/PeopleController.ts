@@ -64,6 +64,37 @@ class PeopleController {
       next(error);
     }
   }
+
+  // Adicione no PeopleController:
+  static async uploadImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id_people } = req.params;
+
+      if (!id_people || Array.isArray(id_people)) {
+        throw new ApiException('INVALID_ID', 400, 'id_people');
+      }
+
+      const id = Number(id_people);
+      if (Number.isNaN(id)) {
+        throw new ApiException('INVALID_ID', 400, id_people);
+      }
+
+      if (!req.file) {
+        throw new ApiException('FILE_REQUIRED', 400, 'Envie uma imagem de perfil.');
+      }
+
+      // Salva o caminho do arquivo no banco
+      const imagePath = `uploads/${req.file.filename}`;
+      await PeopleService.updatePeopleImage(id, imagePath);
+
+      res.status(200).json({
+        message: 'Foto de perfil atualizada com sucesso',
+        image: imagePath,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default PeopleController;

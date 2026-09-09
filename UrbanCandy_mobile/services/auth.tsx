@@ -8,6 +8,7 @@ export type UserProfile = {
     cpf?: string;
     phone?: string;
     telephone?: string;
+    image?: string;
 };
 
 export type CreateUserData = {
@@ -66,21 +67,22 @@ export async function loginUser(
 export async function getUserProfile(id_user: number) {
     try {
         const response = await api.get(`/usuario/listarPorId/${id_user}`);
-        const data = response.data;
+        const data = response.data?.data || response.data;
         
-        return data?.data || data;
+        console.log('[AUTH.TSX] Dados do usuário recebidos:', data); // <--- Adicione este log para inspecionar
+
+        return data;
     } catch (error: any) {
         console.log('[AUTH.TSX] Erro ao buscar perfil:', error?.response?.status || error.message);
         throw error;
     }
 }
 
-/**
- * Cria um novo usuário na API
- */
+
 export async function createUser(userData: CreateUserData) {
     try {
-        const response = await api.post('/usuario/criar', userData);
+        // CORRIGIDO: mudado de /usuario/criar para /usuario/salvar
+        const response = await api.post('/usuario/salvar', userData); 
         return response.data;
     } catch (error: any) {
         console.log('[AUTH.TSX] Erro no createUser:', error?.response?.data || error.message);

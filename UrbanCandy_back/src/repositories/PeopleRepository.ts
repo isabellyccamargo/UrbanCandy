@@ -23,10 +23,12 @@ class PeopleRepository {
     });
   }
 
-  async createPeople(people: People) {
-    return await people.save();
+  // Permite criar recebendo os dados do objeto (incluindo a imagem)
+  async createPeople(peopleData: Partial<People>) {
+    return await People.create(peopleData);
   }
 
+  // Atualiza os dados da pessoa (incluindo a foto de perfil)
   async updatePeople(idPeople: number, peopleData: Partial<People>) {
     return await People.update(peopleData, { where: { id_people: idPeople } });
   }
