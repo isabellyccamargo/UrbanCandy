@@ -11,6 +11,9 @@ interface UserWithProfile extends Users {
   people?: {
     name: string;
   };
+  roles?: {
+    name: string;
+  }[];
 }
 
 interface IUserRegistration {
@@ -25,12 +28,12 @@ interface IUserRegistration {
   road: string;
   number: number;
   complement: string;
+  image?: string; // Campo opcional para o caminho da imagem de perfil
 }
 
 class UserService {
   private validateEmail(email: string) {
-    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/;
-
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!regex.test(email)) {
       throw new ApiException('INVALID_EMAIL', 400);
     }
@@ -68,11 +71,11 @@ class UserService {
 
     return {
       message: 'Usuário autenticado',
-      //Envia a string longa e criptografada que o Front-end deve guardar, no LocalStorage
       token,
       user: {
         id_user: user.id_user,
         nome: user.people?.name || 'Usuário',
+        roles: user.roles?.map((role) => role.name) || [],
       },
     };
   }
@@ -120,15 +123,16 @@ class UserService {
       name: allData.name,
       cpf: allData.cpf,
       telephone: allData.telephone,
+      image: allData.image || null,
     };
 
     return await UserRepository.createUser(userData, personData, addressData);
   }
 
   async updateUser(id_user: number, userData: Partial<Users>, personData: Partial<People>) {
-    if (userData.email) throw new ApiException('EMAIL_CHANGE_NOT_ALLOWED', 403);
+    if (userData?.email) throw new ApiException('EMAIL_CHANGE_NOT_ALLOWED', 403);
 
-    if (userData.password) {
+    if (userData?.password) {
       this.validatePasswordLevel(userData.password);
       const salt = await bcrypt.genSalt(10);
       userData.password = await bcrypt.hash(userData.password, salt);

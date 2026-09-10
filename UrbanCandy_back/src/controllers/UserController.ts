@@ -57,7 +57,14 @@ class UserController {
 
   static async createUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const newUser = await UserService.createUser(req.body);
+      // Captura a imagem gerada pelo Multer salva na pasta uploads
+      const imagePath = req.file ? `uploads/${req.file.filename}` : undefined;
+
+      const newUser = await UserService.createUser({
+        ...req.body,
+        image: imagePath,
+      });
+
       res.status(201).json({
         message: 'Cadastro completo (Usuário, Pessoa e Endereço) realizado com sucesso',
         id: newUser.id_user,
@@ -78,7 +85,14 @@ class UserController {
       if (Number.isNaN(id)) {
         throw new ApiException('INVALID_ID', 400, id_user);
       }
-      await UserService.updateUser(id, req.body.userData, req.body.personData);
+
+      const imagePath = req.file ? `uploads/${req.file.filename}` : undefined;
+      const personData = {
+        ...req.body.personData,
+        ...(imagePath && { image: imagePath }),
+      };
+
+      await UserService.updateUser(id, req.body.userData, personData);
       res.status(200).json({
         message: 'Usuário atualizado com sucesso',
       });

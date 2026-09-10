@@ -11,18 +11,9 @@ import OrderController from '../controllers/OrderController.js';
 import AddressController from '../controllers/AddressController.js';
 import TypeOfPaymentController from '../controllers/TypeOfPaymentController.js';
 import TypeOfDeliveryController from '../controllers/TypeOfDeliveryController.js';
-
-import multer from 'multer';
+import { upload } from '../config/MulterConfig.js';
 
 const privateRoutes = Router();
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) =>
-    cb(null, Date.now() + '-' + file.originalname),
-});
-
-const upload = multer({ storage });
 
 privateRoutes.use(authMiddleware);
 
@@ -70,43 +61,19 @@ privateRoutes.delete(
 
 // --- USUÁRIO E PESSOA ---
 
-privateRoutes.get(
-  '/usuario/listar',
-  UserController.findAllUsers
-);
+privateRoutes.get('/usuario/listar', UserController.findAllUsers);
 
-privateRoutes.get(
-  '/usuario/listarPorId/:id_user',
-  UserController.findByIdUser
-);
+privateRoutes.get('/usuario/listarPorId/:id_user', UserController.findByIdUser);
 
-privateRoutes.put(
-  '/usuario/atualizar/:id_user',
-  UserController.updateUser
-);
+privateRoutes.put('/usuario/atualizar/:id_user', UserController.updateUser);
 
-privateRoutes.get(
-  '/pessoa/listar',
-  PeopleController.findAllPeople
-);
+privateRoutes.get('/pessoa/listar', PeopleController.findAllPeople);
 
-privateRoutes.put(
-  '/pessoa/atualizar/:id_people',
-  PeopleController.updatePeople
-);
+privateRoutes.put('/pessoa/atualizar/:id_people', PeopleController.updatePeople);
 
-privateRoutes.put(
-  '/endereco/atualizar/:id_address',
-  AddressController.updateAddress
-);
+privateRoutes.put('/endereco/atualizar/:id_address', AddressController.updateAddress);
 
-// --- PEDIDOS ---
-
-privateRoutes.post(
-  '/pedido/checkout',
-  authorizePermission('criar_pedido'),
-  OrderController.store
-);
+privateRoutes.post('/pedido/checkout', OrderController.store);
 
 privateRoutes.get(
   '/pedido/listar',
@@ -114,9 +81,15 @@ privateRoutes.get(
   OrderController.findAllOrders
 );
 
+privateRoutes.patch(
+  '/pessoa/upload-foto/:id_people',
+  upload.single('image'),
+  PeopleController.uploadImage
+);
+
 privateRoutes.get(
   '/pedido/usuario/:id_people',
-  authorizePermission('visualizar_pedidos_proprios'),
+  //authorizePermission('visualizar_pedidos'),
   OrderController.findByUserId
 );
 
@@ -124,6 +97,18 @@ privateRoutes.get(
   '/pedido/:id_order/itens',
   authorizePermission('visualizar_pedido'),
   OrderController.findItemsByOrder
+);
+
+privateRoutes.get(
+  '/pedido/status/listar',
+  authorizePermission('visualizar_pedidos'),
+  OrderController.findAllStatuses
+);
+
+privateRoutes.patch(
+  '/pedido/:id_order/status',
+  authorizePermission('alterar_status_pedido'),
+  OrderController.updateStatus
 );
 
 // --- TIPOS DE PAGAMENTO ---
@@ -146,11 +131,7 @@ privateRoutes.delete(
   TypeOfPaymentController.deleteTypeOfPayment
 );
 
-privateRoutes.get(
-  '/pagamento/listar',
-  authorizePermission('listar_tipos_pagamento'),
-  TypeOfPaymentController.findAllTypeOfPayment
-);
+privateRoutes.get('/pagamento/listar', TypeOfPaymentController.findAllTypeOfPayment);
 
 // --- TIPOS DE DELIVERY ---
 
@@ -177,5 +158,17 @@ privateRoutes.get(
   authorizePermission('listar_tipos_delivery'),
   TypeOfDeliveryController.findById
 );
+
+privateRoutes.stack.forEach((layer) => {
+  if (layer.route) {
+    const routePath = layer.route.path;
+    const handlers = layer.route.stack;
+    handlers.forEach((h: any, index: number) => {
+      if (!h.handle) {
+        console.error(`[ERRO DE ROTA] Handler indefinido na rota: ${routePath} (índice ${index})`);
+      }
+    });
+  }
+});
 
 export default privateRoutes;

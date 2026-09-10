@@ -23,8 +23,8 @@ class PeopleRepository {
     });
   }
 
-  async createPeople(people: People) {
-    return await people.save();
+  async createPeople(peopleData: Partial<People>) {
+    return await People.create(peopleData);
   }
 
   async updatePeople(idPeople: number, peopleData: Partial<People>) {

@@ -4,33 +4,19 @@ import OrderItem from '../models/OrderItem.js';
 import Products from '../models/Products.js';
 import TypeOfPayment from '../models/TypeOfPayment.js';
 import TypeOfDelivery from '../models/TypeOfDelivery.js';
+import OrderStatus from '../models/OrderStatus.js';
 import sequelize from '../config/Config.js';
-import {
-  type Order as SequelizeOrder,
-  Transaction,
-  type FindAndCountOptions,
-} from 'sequelize';
-import {
-  type ICartItem,
-  type IPaginatedResponse,
-} from '../@types/OrdersTypes.js';
+import { type Order as SequelizeOrder, Transaction, type FindAndCountOptions } from 'sequelize';
+import { type ICartItem, type IPaginatedResponse } from '../@types/OrdersTypes.js';
 
 class OrderRepository {
-  private async _createItems(
-    id_order: number,
-    items: ICartItem[],
-    t: Transaction
-  ): Promise<void> {
+  private async _createItems(id_order: number, items: ICartItem[], t: Transaction): Promise<void> {
     const formatted = items.map((item) => {
-      const price = item.products?.price
-        ? Number(item.products.price)
-        : 0;
+      const price = item.products?.price ? Number(item.products.price) : 0;
 
       const quantity = item.quantity || 1;
 
-      const subTotal = item.sub_total
-        ? Number(item.sub_total)
-        : price * quantity;
+      const subTotal = item.sub_total ? Number(item.sub_total) : price * quantity;
 
       return {
         id_order,
@@ -51,7 +37,8 @@ class OrderRepository {
     items: ICartItem[],
     total: number,
     id_payment: number,
-    id_type_delivery: number
+    id_type_delivery: number,
+    status_id: number = 1
   ): Promise<Orders> {
     const t = await sequelize.transaction();
 
@@ -62,33 +49,24 @@ class OrderRepository {
           total: Number(total),
           id_payment: Number(id_payment),
           id_type_delivery: Number(id_type_delivery),
+          status_id: Number(status_id),
         },
         { transaction: t }
       );
 
-      await this._createItems(
-        order.id_orders,
-        items,
-        t
-      );
+      await this._createItems(order.id_orders, items, t);
 
       await t.commit();
 
       return order;
     } catch (error) {
       await t.rollback();
-      console.error(
-        'ERRO REPOSITORY (createFullOrder):',
-        error
-      );
+      console.error('ERRO REPOSITORY (createFullOrder):', error);
       throw error;
     }
   }
 
-  async findAllOrders(
-    limit: number,
-    offset: number
-  ): Promise<IPaginatedResponse<Orders>> {
+  async findAllOrders(limit: number, offset: number): Promise<IPaginatedResponse<Orders>> {
     const options: FindAndCountOptions = {
       distinct: true,
       col: 'id_orders',
@@ -96,7 +74,8 @@ class OrderRepository {
         {
           model: People,
           as: 'people',
-          attributes: ['id_people', 'name'],
+          // CORREÇÃO: Adicionado 'telephone' para retornar o telefone ao front-end
+          attributes: ['id_people', 'name', 'telephone', 'cpf'],
         },
         {
           model: TypeOfPayment,
@@ -109,18 +88,18 @@ class OrderRepository {
           attributes: ['name'],
         },
         {
+          model: OrderStatus,
+          as: 'status',
+          attributes: ['id', 'name', 'label'],
+        },
+        {
           model: OrderItem,
           as: 'items',
           include: [
             {
               model: Products,
               as: 'products',
-              attributes: [
-                'id_product',
-                'name',
-                'description',
-                'price',
-              ],
+              attributes: ['id_product', 'name', 'description', 'price', 'image'],
             },
           ],
         },
@@ -150,19 +129,29 @@ class OrderRepository {
           model: TypeOfPayment,
           as: 'paymentType',
           attributes: ['name_payment'],
+          required: false,
         },
         {
           model: TypeOfDelivery,
           as: 'deliveryType',
           attributes: ['name'],
+          required: false,
+        },
+        {
+          model: OrderStatus,
+          as: 'status',
+          attributes: ['id', 'name', 'label'],
+          required: false,
         },
         {
           model: OrderItem,
           as: 'items',
+          required: false,
           include: [
             {
               model: Products,
               as: 'products',
+              required: false,
             },
           ],
         },
@@ -178,31 +167,12 @@ class OrderRepository {
     return await Orders.findAndCountAll(options);
   }
 
-  async findOpenOrderByPeople(
-    id_people: number
-  ): Promise<Orders | null> {
-    return await Orders.findOne({
-      where: { id_people },
-    });
+  async findAllStatuses(): Promise<OrderStatus[]> {
+    return await OrderStatus.findAll();
   }
 
-  async createOrder(
-    id_people: number
-  ): Promise<Orders> {
-    return await Orders.create({
-      id_people,
-      total: 0,
-    });
-  }
-
-  async updateTotal(
-    id_orders: number,
-    total: number
-  ): Promise<[number]> {
-    return await Orders.update(
-      { total },
-      { where: { id_orders } }
-    );
+  async updateOrderStatus(id_orders: number, status_id: number): Promise<[number]> {
+    return await Orders.update({ status_id }, { where: { id_orders } });
   }
 }
 
