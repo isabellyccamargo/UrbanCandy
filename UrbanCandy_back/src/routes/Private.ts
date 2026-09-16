@@ -89,7 +89,6 @@ privateRoutes.patch(
 
 privateRoutes.get(
   '/pedido/usuario/:id_people',
-  //authorizePermission('visualizar_pedidos'),
   OrderController.findByUserId
 );
 
@@ -109,6 +108,12 @@ privateRoutes.patch(
   '/pedido/:id_order/status',
   authorizePermission('alterar_status_pedido'),
   OrderController.updateStatus
+);
+
+privateRoutes.patch(
+  '/pedido/:id_order/cancel',
+  authorizePermission('alterar_status_pedido'), // Ou crie uma nova permissão como 'cancelar_pedido'
+  OrderController.cancel
 );
 
 // --- TIPOS DE PAGAMENTO ---

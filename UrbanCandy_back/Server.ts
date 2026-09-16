@@ -16,7 +16,14 @@ const PORT = process.env.PORT || 3000;
 // 2. Configure o CORS ANTES das rotas e do express.json
 server.use(
   cors({
-    origin: ['https://urbancandy.local', 'http://localhost:3000', 'http://localhost:5173'],
+    origin: [
+      'https://urbancandy.local',
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://10.10.54.23:3000',
+      'http://10.10.54.23:19006',
+      'http://10.10.54.23:19000',
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true,

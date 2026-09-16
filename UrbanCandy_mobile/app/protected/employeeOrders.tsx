@@ -20,6 +20,7 @@ const STATUS_THEMES: Record<string, { bg: string; text: string; border: string }
     preparando: { bg: '#E3F2FD', text: '#1976D2', border: '#BBDEFB' },
     pronto: { bg: '#F3E5F5', text: '#7B1FA2', border: '#E1BEE7' },
     entregue: { bg: '#E8F5E9', text: '#2E7D32', border: '#C8E6C9' },
+    cancelado: { bg: '#FDECEC', text: '#C0392B', border: '#F5B7B1' },
     default: { bg: '#F5F5F5', text: '#616161', border: '#E0E0E0' },
 };
 
@@ -36,6 +37,7 @@ export default function EmployeeOrders() {
     // Identifica o tema correto com base no nome do status
     const getStatusTheme = (statusName: string) => {
         const s = (statusName || '').toLowerCase();
+        if (s.includes('cancel')) return STATUS_THEMES.cancelado;
         if (s.includes('preparando')) return STATUS_THEMES.preparando;
         if (s.includes('pronto')) return STATUS_THEMES.pronto;
         if (s.includes('entregue') || s.includes('concluido')) return STATUS_THEMES.entregue;
@@ -112,13 +114,12 @@ export default function EmployeeOrders() {
         },
         metricsContainer: {
             flexDirection: 'row',
-            justifyContent: 'space-between',
             paddingHorizontal: space.lg,
             marginTop: space.lg,
             gap: space.xs,
         },
         metricCard: {
-            flex: 1,
+            width: 82,
             borderRadius: radius.md,
             paddingVertical: space.md,
             alignItems: 'center',
@@ -197,8 +198,12 @@ export default function EmployeeOrders() {
             >
                 <EmployeeHeader employeeName="Funcionário" />
 
-                <View style={styles.metricsContainer}>
-                    {statuses.slice(0, 4).map((st) => {
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.metricsContainer}
+                >
+                    {statuses.map((st) => {
                         const label = st.label || st.name || '';
                         const theme = getStatusTheme(label);
                         const count = getStatusCount(st.id);
@@ -223,7 +228,7 @@ export default function EmployeeOrders() {
                             </View>
                         );
                     })}
-                </View>
+                </ScrollView>
 
                 <Text style={styles.sectionTitle}>Pedidos</Text>
 

@@ -1,9 +1,19 @@
-import { StyleSheet, Text, View, TextInput, Pressable, TextInputProps } from 'react-native';
+
+import {
+    StyleSheet,
+    Text,
+    View,
+    TextInput,
+    Pressable,
+    TextInputProps,
+} from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/Theme';
 
 interface Props extends TextInputProps {
     label: string;
+    error?: boolean;
     isPassword?: boolean;
     showPassword?: boolean;
     onToggleShowPassword?: () => void;
@@ -11,6 +21,7 @@ interface Props extends TextInputProps {
 
 export default function AccountInput({
     label,
+    error = false,
     isPassword,
     showPassword,
     onToggleShowPassword,
@@ -53,6 +64,11 @@ export default function AccountInput({
             shadowRadius: 2,
         },
 
+        inputError: {
+            borderWidth: 1.5,
+            borderColor: colors.error ?? '#E53935',
+        },
+
         inputDisabled: {
             backgroundColor: colors.background,
             color: colors.textSecondary,
@@ -84,6 +100,7 @@ export default function AccountInput({
                 <TextInput
                     style={[
                         styles.input,
+                        error && styles.inputError,
                         !isEditable && styles.inputDisabled,
                         isPassword && styles.inputWithIcon,
                         style,
@@ -99,7 +116,11 @@ export default function AccountInput({
                         hitSlop={10}
                     >
                         <Ionicons
-                            name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                            name={
+                                showPassword
+                                    ? 'eye-off-outline'
+                                    : 'eye-outline'
+                            }
                             size={22}
                             color={colors.textSecondary}
                         />

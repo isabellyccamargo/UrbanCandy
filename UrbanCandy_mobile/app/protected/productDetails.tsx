@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
 
 import { API_BASE_URL } from '@/services/api';
 import { getProductById } from '@/services/products';
@@ -257,7 +258,7 @@ export default function ProdutoScreen() {
     }
 
     const imageUrl = product.image
-        ? `${API_BASE_URL}/uploads/${product.image}`
+        ? `${API_BASE_URL.replace(/\/api\/?$/, '')}/uploads/${product.image}`
         : null;
 
     const ingredients = getIngredients();
@@ -290,9 +291,11 @@ export default function ProdutoScreen() {
                 <View style={styles.imageContainer}>
                     {imageUrl ? (
                         <Image
-                            source={{ uri: imageUrl }}
+                            source={imageUrl}
                             style={styles.productImage}
-                            resizeMode="cover"
+                            contentFit="cover"
+                            cachePolicy="memory-disk"
+                            transition={150}
                         />
                     ) : (
                         <View style={styles.imagePlaceholder}>

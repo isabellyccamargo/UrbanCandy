@@ -1,14 +1,14 @@
 import {
-    Image,
     Pressable,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
 
+import { Image } from 'expo-image';
+
 import { SmallButton } from '@/components/ui/smallButton';
 import { useTheme } from '@/context/Theme';
-// Importação corrigida com chaves { }
 import { API_BASE_URL } from '@/services/api';
 
 type FeaturedCardProps = {
@@ -46,39 +46,50 @@ export function FeaturedCard({
             shadowRadius: 8,
             elevation: 8,
         },
+
         image: {
             width: '100%',
             height: 180,
         },
+
         imagePlaceholder: {
             width: '100%',
             height: 140,
             backgroundColor: '#EDEDED',
         },
+
         info: {
             padding: space.md,
         },
+
         name: {
             fontFamily: font.regular,
             fontSize: fontSize.md,
             color: colors.text,
             marginBottom: space.md,
         },
+
         footer: {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
         },
+
         price: {
             fontFamily: font.semibold,
             fontSize: fontSize.base,
             color: colors.text,
         },
+
         pressed: {
             opacity: 0.75,
             transform: [{ scale: 0.98 }],
         },
     });
+
+    const imageUrl = image
+        ? `${API_BASE_URL}/uploads/${image}`
+        : null;
 
     return (
         <Pressable
@@ -88,13 +99,13 @@ export function FeaturedCard({
                 pressed && styles.pressed,
             ]}
         >
-            {image ? (
+            {imageUrl ? (
                 <Image
-                    source={{
-                        uri: `${API_BASE_URL}/uploads/${image}`,
-                    }}
+                    source={imageUrl}
                     style={styles.image}
-                    resizeMode="cover"
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={150}
                 />
             ) : (
                 <View style={styles.imagePlaceholder} />

@@ -54,11 +54,13 @@ class OrderController {
         currentPage: page,
         data: result.rows,
       });
-    } catch (error: any) {
-      console.error('--- ERRO DETALHADO SEQUELIZE ---', error);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erro ao buscar pedidos do usuário.';
+      const sql = error && typeof error === 'object' && 'sql' in error ? String((error as { sql?: string }).sql) : undefined;
+
       return res.status(500).json({
-        message: error.message,
-        sql: error.sql,
+        message,
+        sql,
       });
     }
   }
@@ -86,6 +88,19 @@ class OrderController {
       const { id_order } = req.params;
 
       const result = await OrderService.findItemsByOrder(Number(id_order));
+
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async cancel(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id_order } = req.params;
+      const userId = Number(req.userId);
+
+      const result = await OrderService.cancelOrder(Number(id_order), userId);
 
       res.status(200).json(result);
     } catch (error) {

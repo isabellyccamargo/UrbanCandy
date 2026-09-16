@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, SafeAreaView, Dimensions } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import Svg, { Polyline, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
+import { useFocusEffect } from 'expo-router';
 import { useTheme } from '@/context/Theme';
 import { Menu } from '@/components/home/Menu';
 import EmployeeHeader from '@/components/employee/EmployeeHeader';
@@ -11,6 +12,14 @@ import { getAllProducts } from '@/services/products';
 import { getAllOrders } from '@/services/orders';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
+
+function isCancelledOrder(order: any) {
+    const statusValue = order.status_id ?? order.id_order_status ?? order.status?.id_order_status ?? order.status?.id_status ?? order.status?.id;
+    const statusId = Number(statusValue);
+    const statusName = String(order.status?.name ?? order.status?.label ?? order.status_name ?? order.status_label ?? order.status ?? '').toLowerCase();
+
+    return statusId >= 5 || statusName.includes('cancel');
+}
 
 export default function DashboardScreen() {
     const { user } = useAuth();
@@ -21,13 +30,13 @@ export default function DashboardScreen() {
     const [topProducts, setTopProducts] = useState<any[]>([]);
     const [metrics, setMetrics] = useState({ faturamentoTotal: 0, totalPedidos: 0, totalProdutos: 0, totalClientes: 0 });
 
-    useEffect(() => {
+    useFocusEffect(useCallback(() => {
         async function fetchRealData() {
             try {
                 setLoading(true);
                 const [resProds, resOrders, resUsers] = await Promise.allSettled([
                     getAllProducts(1, 100),
-                    getAllOrders(1, 200),
+                    getAllOrders(1, 0),
                     api.get('/usuario/listar').catch(() => api.get('/pessoa/listar')).catch(() => api.get('/usuario/listarPorId/1')),
                 ]);
 
@@ -57,9 +66,10 @@ export default function DashboardScreen() {
                 if (resOrders.status === 'fulfilled' && resOrders.value) {
                     const data = resOrders.value;
                     const arr = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : (data.pedidos || []));
-                    totalOrdersCount = data.totalItems ?? data.total ?? arr.length;
+                    const activeOrders = arr.filter((order: any) => !isCancelledOrder(order));
+                    totalOrdersCount = activeOrders.length;
 
-                    arr.forEach((curr: any) => {
+                    activeOrders.forEach((curr: any) => {
                         if (curr.id_people) clientesSet.add(curr.id_people);
                         if (curr.id_user) clientesSet.add(curr.id_user);
 
@@ -108,8 +118,8 @@ export default function DashboardScreen() {
                 setLoading(false);
             }
         }
-        fetchRealData();
-    }, []);
+        void fetchRealData();
+    }, []));
 
     // SVG Layout
     const svgWidth = SCREEN_WIDTH - 64, svgHeight = 150, paddingX = 35, paddingY = 25;

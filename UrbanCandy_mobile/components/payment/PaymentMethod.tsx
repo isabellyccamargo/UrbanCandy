@@ -43,9 +43,12 @@ export default function PaymentMethods({
     }
 
     function getPaymentDescription(name: string) {
-        const value = name.toLowerCase();
+        const value = name
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
 
-        return value.includes('cartão') || value.includes('cartao')
+        return value.includes('cartao de credito')
             ? 'Parcelamos em até 3x'
             : '';
     }

@@ -14,6 +14,8 @@ type Props = {
     order: Order;
     expanded: boolean;
     onPress: () => void;
+    onCancel?: () => void;
+    canCancel?: boolean;
 };
 
 // Temas de cores para os status
@@ -21,11 +23,13 @@ const STATUS_THEMES: Record<string, { bg: string; text: string; border: string }
     preparando: { bg: '#E3F2FD', text: '#1976D2', border: '#BBDEFB' },
     pronto: { bg: '#F3E5F5', text: '#7B1FA2', border: '#E1BEE7' },
     entregue: { bg: '#E8F5E9', text: '#2E7D32', border: '#C8E6C9' },
+    cancelado: { bg: '#FDECEC', text: '#C0392B', border: '#F5B7B1' },
     default: { bg: '#FFF8E1', text: '#F57F17', border: '#FFE082' },
 };
 
 function getStatusStyle(statusName?: string) {
     const s = String(statusName || '').toLowerCase();
+    if (s.includes('cancel')) return STATUS_THEMES.cancelado;
     if (s.includes('preparando')) return STATUS_THEMES.preparando;
     if (s.includes('pronto')) return STATUS_THEMES.pronto;
     if (s.includes('entregue') || s.includes('concluido')) return STATUS_THEMES.entregue;
@@ -52,6 +56,8 @@ export default function OrderCard({
     order,
     expanded,
     onPress,
+    onCancel,
+    canCancel = false,
 }: Props) {
     const {
         colors,
@@ -67,7 +73,7 @@ export default function OrderCard({
     }
 
     // 2. Extração segura de propriedades com fallback
-    const statusLabel = order?.status?.label ?? order?.status?.name ?? 'Pendente';
+    const statusLabel = order?.status?.label ?? order?.status?.name ?? (Number(order?.status_id) === 5 ? 'Cancelado' : 'Pendente');
     const statusStyle = getStatusStyle(statusLabel);
 
     const styles = StyleSheet.create({
@@ -161,6 +167,23 @@ export default function OrderCard({
             fontSize: fontSize.md,
             color: colors.primary,
             marginRight: space.xs,
+        },
+
+        cancelButton: {
+            marginTop: space.md,
+            backgroundColor: '#FDECEC',
+            borderWidth: 1,
+            borderColor: '#F5B7B1',
+            borderRadius: radius.md,
+            paddingVertical: space.sm,
+            paddingHorizontal: space.md,
+            alignItems: 'center',
+        },
+
+        cancelButtonText: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.md,
+            color: '#C0392B',
         },
 
         item: {
@@ -312,6 +335,17 @@ export default function OrderCard({
                                 />
                             </View>
                         ))
+                    )}
+
+                    {canCancel && onCancel && (
+                        <Pressable
+                            style={styles.cancelButton}
+                            onPress={onCancel}
+                        >
+                            <Text style={styles.cancelButtonText}>
+                                Cancelar pedido
+                            </Text>
+                        </Pressable>
                     )}
                 </View>
             )}

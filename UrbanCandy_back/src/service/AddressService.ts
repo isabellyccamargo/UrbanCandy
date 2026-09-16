@@ -3,13 +3,50 @@ import AddressRepository from '../repositories/AddressRepository.js';
 import { ApiException } from '../exception/ApiException.js';
 
 class AddressService {
+  /**
+   * Helper privado para consultar a existência do CEP na API dos Correios (ViaCEP)
+   */
+  private async validateCepExists(cep: string): Promise<void> {
+    const cleanCep = cep.replace(/\D/g, '');
+
+    if (!cleanCep || cleanCep.length !== 8) {
+      throw new ApiException('INVALID_CEP_FORMAT', 400);
+    }
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+
+      if (!response.ok) {
+        throw new ApiException('ERROR_FETCHING_CEP', 500);
+      }
+
+      const data = await response.json();
+
+      // O ViaCEP devolve { erro: "true" } quando o CEP não existe no cadastro nacional
+      if (data.erro) {
+        throw new ApiException('CEP_NOT_FOUND', 400);
+      }
+    } catch (error) {
+      if (error instanceof ApiException) throw error;
+      throw new ApiException('FAILED_TO_VALIDATE_CEP', 500);
+    }
+  }
+
   async createAddress(data: Address): Promise<Address> {
-    if (!data.cep || data.cep.length !== 8) {
+    if (!data.cep) {
       throw new ApiException('INVALID_CEP', 400);
     }
+
+    // Normaliza o CEP removendo caracteres especiais
+    data.cep = data.cep.replace(/\D/g, '');
+
+    // Valida se o CEP realmente existe na base dos Correios
+    await this.validateCepExists(data.cep);
+
     if (!data.road || !data.city || !data.number) {
       throw new ApiException('REQUIRED_FIELDS_ADDRESS', 400);
     }
+
     return await AddressRepository.createAddress(data);
   }
 
@@ -37,6 +74,13 @@ class AddressService {
 
   async updateAddress(id_address: number, data: Partial<Address>): Promise<[number]> {
     await this.findByIdAddress(id_address);
+
+    // Se o CEP estiver sendo alterado, limpa e valida se ele existe
+    if (data.cep !== undefined) {
+      data.cep = data.cep.replace(/\D/g, '');
+      await this.validateCepExists(data.cep);
+    }
+
     return await AddressRepository.updateAddress(id_address, data);
   }
 

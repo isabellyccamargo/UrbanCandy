@@ -73,10 +73,18 @@ export function FeaturedSection({
     });
 
     useEffect(() => {
+        console.log('FeaturedSection montou');
+
         loadFeaturedProducts();
+
+        return () => {
+            console.log('FeaturedSection desmontou');
+        };
     }, []);
 
     async function loadFeaturedProducts() {
+        console.log('BUSCANDO PRODUTOS DESTAQUE');
+
         try {
             const response = await api.get('/produto/destaque', {
                 params: {

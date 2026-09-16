@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-    Image,
     Pressable,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
 
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useCart } from '@/context/CartContext';
@@ -15,14 +15,7 @@ import { API_BASE_URL } from '@/services/api';
 
 export default function OrderSummary() {
     const { items, total } = useCart();
-
-    const {
-        colors,
-        font,
-        fontSize,
-        space,
-        radius,
-    } = useTheme();
+    const { colors, font, fontSize, space, radius } = useTheme();
 
     const [expanded, setExpanded] = useState(false);
 
@@ -37,39 +30,47 @@ export default function OrderSummary() {
             shadowRadius: 8,
             elevation: 8,
         },
+
         header: {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
         },
+
         headerInfo: {
             flex: 1,
         },
+
         title: {
             fontFamily: font.regular,
             fontSize: fontSize.lg,
             color: colors.text,
         },
+
         quantity: {
             fontFamily: font.regular,
             fontSize: fontSize.sm,
             color: colors.textSecondary,
             marginTop: space.xs,
         },
+
         right: {
             flexDirection: 'row',
             alignItems: 'center',
         },
+
         total: {
             fontFamily: font.semibold,
             fontSize: fontSize.md,
             color: colors.text,
             marginRight: space.sm,
         },
+
         itemList: {
             marginTop: space.lg,
             gap: space.sm,
         },
+
         item: {
             flexDirection: 'row',
             alignItems: 'center',
@@ -77,12 +78,14 @@ export default function OrderSummary() {
             borderRadius: radius.md,
             padding: space.sm,
         },
+
         image: {
             width: 48,
             height: 48,
             borderRadius: radius.md,
             marginRight: space.sm,
         },
+
         imagePlaceholder: {
             width: 48,
             height: 48,
@@ -90,20 +93,24 @@ export default function OrderSummary() {
             backgroundColor: colors.white,
             marginRight: space.sm,
         },
+
         itemInfo: {
             flex: 1,
         },
+
         itemName: {
             fontFamily: font.medium,
             fontSize: fontSize.base,
             color: colors.text,
         },
+
         itemQuantity: {
             fontFamily: font.regular,
             fontSize: fontSize.sm,
             color: colors.textSecondary,
             marginTop: space.xs,
         },
+
         itemPrice: {
             fontFamily: font.medium,
             fontSize: fontSize.base,
@@ -154,8 +161,11 @@ export default function OrderSummary() {
                             >
                                 {imageUrl ? (
                                     <Image
-                                        source={{ uri: imageUrl }}
+                                        source={imageUrl}
                                         style={styles.image}
+                                        contentFit="cover"
+                                        cachePolicy="memory-disk"
+                                        transition={150}
                                     />
                                 ) : (
                                     <View

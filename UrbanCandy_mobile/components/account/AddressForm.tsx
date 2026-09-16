@@ -8,6 +8,7 @@ import { useTheme } from '@/context/Theme';
 import AccountInput from './AccountInput';
 
 type Props = {
+    errors: Set<string>;
     cep: string;
     city: string;
     neighborhood: string;
@@ -24,6 +25,7 @@ type Props = {
 };
 
 export default function AddressForm({
+    errors,
     cep,
     city,
     neighborhood,
@@ -88,8 +90,6 @@ export default function AddressForm({
             onChangeNeighborhood(data.bairro ?? '');
             onChangeCity(data.localidade ?? '');
         } catch {
-            // Se o CEP não puder ser consultado,
-            // o usuário ainda pode preencher os campos manualmente.
         }
     }
 
@@ -101,6 +101,7 @@ export default function AddressForm({
                 onChangeText={handleCepChange}
                 placeholder="Digite seu CEP"
                 keyboardType="numeric"
+                error={errors.has('cep')}
             />
 
             <View style={styles.row}>
@@ -110,6 +111,7 @@ export default function AddressForm({
                         value={city}
                         onChangeText={onChangeCity}
                         placeholder="Cidade"
+                        error={errors.has('city')}
                     />
                 </View>
 
@@ -119,6 +121,7 @@ export default function AddressForm({
                         value={neighborhood}
                         onChangeText={onChangeNeighborhood}
                         placeholder="Bairro"
+                        error={errors.has('neighborhood')}
                     />
                 </View>
             </View>
@@ -128,6 +131,7 @@ export default function AddressForm({
                 value={road}
                 onChangeText={onChangeRoad}
                 placeholder="Rua"
+                error={errors.has('road')}
             />
 
             <View style={styles.row}>
@@ -142,6 +146,7 @@ export default function AddressForm({
                         }
                         placeholder="Número"
                         keyboardType="numeric"
+                        error={errors.has('number')}
                     />
                 </View>
 
@@ -151,6 +156,7 @@ export default function AddressForm({
                         value={complement}
                         onChangeText={onChangeComplement}
                         placeholder="Complemento"
+                        error={errors.has('complement')}
                     />
                 </View>
             </View>

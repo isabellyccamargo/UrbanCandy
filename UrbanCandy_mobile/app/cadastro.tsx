@@ -25,7 +25,7 @@ import {
     updateUser,
 } from '@/services/auth';
 import { updateAddress } from '@/services/address';
-import api from '@/services/api';
+import api, { API_BASE_URL } from '@/services/api';
 
 import AccountHeader from '@/components/account/AccountHeader';
 import AccountForm from '@/components/account/AccountForm';
@@ -33,24 +33,24 @@ import AccountForm from '@/components/account/AccountForm';
 function getFullImageUrl(imagePath?: string | null) {
     if (!imagePath) return null;
 
-    if (imagePath.startsWith('file://') || imagePath.startsWith('content://')) {
+    if (
+        imagePath.startsWith('file://') ||
+        imagePath.startsWith('content://')
+    ) {
         return imagePath;
     }
 
-    // Pega o baseURL ex: http://192.168.1.101:3000/api ou http://192.168.1.101:3000
-    const rawBaseURL = api.defaults.baseURL || 'http://192.168.1.101:3000';
+    const baseUrl = (
+        api.defaults.baseURL || API_BASE_URL
+    )
+        .replace(/\/api\/?$/, '')
+        .replace(/\/$/, '');
 
-    // Remove o sufixo '/api' do final da URL se ele existir, pois imagens estáticas ficam na raiz do Express
-    const cleanBaseURL = rawBaseURL.replace(/\/api\/?$/, '').replace(/\/$/, '');
+    const cleanPath = imagePath.startsWith('/')
+        ? imagePath
+        : `/${imagePath}`;
 
-    // Garante que o caminho da imagem comece com '/'
-    const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-
-    const fullUrl = `${cleanBaseURL}${cleanPath}`;
-
-    console.log('URL RESTRUTURADA DA FOTO:', fullUrl);
-
-    return `${fullUrl}?t=${Date.now()}`;
+    return `${baseUrl}${cleanPath}`;
 }
 
 export default function CadastroScreen() {
@@ -90,15 +90,24 @@ export default function CadastroScreen() {
         complement: '',
     });
 
+    const [errors, setErrors] = useState<Set<keyof typeof form>>(
+        new Set()
+    );
+
     useEffect(() => {
         initialize();
     }, [mode]);
 
     const change = (field: keyof typeof form, value: string) => {
-        setForm(prev => ({
-            ...prev,
-            [field]: value,
-        }));
+        setForm(prev => ({ ...prev, [field]: value }));
+
+        if (value.trim()) {
+            setErrors(prev => {
+                const next = new Set(prev);
+                next.delete(field);
+                return next;
+            });
+        }
     };
 
     async function handlePickImage() {
@@ -272,58 +281,43 @@ export default function CadastroScreen() {
     }
 
     function validate() {
-        const required = [
-            form.name,
-            form.cpf,
-            form.telephone,
-            form.email,
-            form.cep,
-            form.city,
-            form.neighborhood,
-            form.road,
-            form.number,
+        const required: (keyof typeof form)[] = [
+            'name',
+            'cpf',
+            'telephone',
+            'email',
+            'cep',
+            'city',
+            'neighborhood',
+            'road',
+            'number',
+            ...(!editing ? ['password', 'confirmPassword'] : []),
         ];
 
-        if (required.some(value => !value.trim())) {
+        const emptyFields = new Set(
+            required.filter(field => !form[field].trim())
+        );
+
+        setErrors(emptyFields);
+
+        if (emptyFields.size) {
             showMessage(
                 'Atenção',
-                'Preencha todos os campos obrigatórios.',
+                'Preencha todos os campos obrigatórios. (Em vermelho).',
                 undefined,
                 'warning'
             );
             return false;
         }
 
-        if (!editing) {
-            if (!form.password.trim()) {
-                showMessage(
-                    'Atenção',
-                    'Informe uma senha para continuar.',
-                    undefined,
-                    'warning'
-                );
-                return false;
-            }
-
-            if (!form.confirmPassword.trim()) {
-                showMessage(
-                    'Atenção',
-                    'Confirme sua senha.',
-                    undefined,
-                    'warning'
-                );
-                return false;
-            }
-
-            if (form.password !== form.confirmPassword) {
-                showMessage(
-                    'Atenção',
-                    'As senhas não coincidem.',
-                    undefined,
-                    'warning'
-                );
-                return false;
-            }
+        if (!editing && form.password !== form.confirmPassword) {
+            showMessage(
+                'Atenção',
+                'As senhas não coincidem.',
+                undefined,
+                'warning'
+            );
+            return false;
         }
 
         return true;
@@ -537,6 +531,7 @@ export default function CadastroScreen() {
                 >
                     <AccountForm
                         isEditing={editing}
+                         errors={errors}
                         {...form}
                         imageUri={imageUri}
                         onPickImage={handlePickImage}
