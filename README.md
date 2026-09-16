@@ -1,105 +1,283 @@
 # 🍬 UrbanCandy — E-commerce de Doces
 
-O **UrbanCandy** (SugarBeat) é uma plataforma de e-commerce completa para a venda de doces e guloseimas. O projeto possui uma arquitetura moderna dividida entre uma API robusta no ecossistema Node.js e uma interface rica e responsiva em React. Toda a aplicação foi conteinerizada para rodar facilmente em qualquer ambiente via Docker.
+O **UrbanCandy** (SugarBeat) é uma plataforma de e-commerce desenvolvida para a venda de doces e guloseimas, oferecendo uma experiência de compra digital e ferramentas para gerenciamento de pedidos e produtos.
+
+O projeto possui uma arquitetura dividida entre uma API em Node.js e interfaces web e mobile, utilizando o mesmo backend para compartilhar dados e funcionalidades.
+
+---
+
+## 🚀 Sobre o Projeto
+
+O UrbanCandy foi desenvolvido para modernizar a experiência de compra em uma confeitaria, proporcionando praticidade aos clientes e organização para a gestão do negócio.
+
+A plataforma conta com:
+
+* 🛍️ Catálogo de produtos e categorias.
+* 🛒 Carrinho de compras e checkout.
+* 💳 Formas de pagamento e entrega.
+* 👤 Cadastro, login e gerenciamento de dados.
+* 📦 Acompanhamento e cancelamento de pedidos.
+* 🔐 Controle de acesso por funções e permissões.
+* 📱 Aplicativo mobile integrado à API.
+* 🖥️ Interface web responsiva.
+
+---
+
+## 🏗️ Arquitetura do Projeto
+
+| Aplicação           | Descrição                                                      |
+| ------------------- | -------------------------------------------------------------- |
+| `UrbanCandy_front`  | Interface web em React e Vite.                                 |
+| `UrbanCandy_mobile` | Aplicativo mobile em Expo, React Native e TypeScript.          |
+| `UrbanCandy_back`   | API responsável pelas regras de negócio, autenticação e dados. |
+
+**Web e mobile utilizam o mesmo backend**, permitindo o compartilhamento de clientes, produtos, pedidos e demais informações.
 
 ---
 
 ## 🚀 Tecnologias Utilizadas
 
-### Frontend (`UrbanCandy_front`)
-* **React** com **Vite** (Garante builds ultra rápidos)
-* **React Router Dom** (Gerenciamento de rotas e fluxos protegidos)
-* **Lucide React** (Pacote de ícones modernos)
-* **React Toastify** (Notificações visuais fluidas)
-* **Playwright / Jest** (Esteira completa de testes e2e e unitários)
+### Frontend Web — `UrbanCandy_front`
 
-### Backend (`UrbanCandy_back`)
-* **Node.js** com **TypeScript**
-* **Arquitetura MVC/Camadas** (Controllers, DTOs, Repositories, Services e Models)
-* **Nginx** (Configurado como Proxy Reverso e Servidor de arquivos estáticos)
-* **Jest** (Testes automatizados integrados)
+* React + Vite
+* TypeScript
+* React Router DOM
+* Lucide React
+* React Toastify
+* Playwright / Jest
 
-### Infraestrutura e Ferramentas
-* **Docker & Docker Compose** (Ambiente isolado e padronizado)
-* **Husky & Commitlint** (Padronização e validação de commits antes do push)
-* **ESLint & Prettier** (Consistência na formatação do código)
+### Aplicativo Mobile — `UrbanCandy_mobile`
+
+* React Native
+* Expo + Expo Router
+* TypeScript
+* Expo Image (cache de imagens)
+* AsyncStorage / Expo SecureStore
+* Context API
+* Expo Go
+
+### Backend — `UrbanCandy_back`
+
+* Node.js + TypeScript
+* Express
+* Sequelize
+* MySQL
+* JWT
+* Multer
+* Arquitetura em camadas
+* RBAC (funções e permissões)
+
+### Ferramentas
+
+* Docker & Docker Compose
+* Nginx
+* Jest / Playwright
+* ESLint & Prettier
+* Husky & Commitlint
+* Git & GitHub
 
 ---
 
 ## 📁 Estrutura do Projeto
 
-A estrutura de pastas segue as melhores práticas de mercado para monorepos/projetos divididos:
-
 ```text
 URBANCANDY/
-├── UrbanCandy_back/        # API Rest em Node.js (TypeScript)
+├── UrbanCandy_back/          # API REST
 │   ├── src/
-│   │   ├── controllers/    # Regras de orquestração de rotas
-│   │   ├── dto/            # Data Transfer Objects (Validação de dados)
-│   │   ├── models/         # Definição e estruturas de dados
-│   │   ├── repositories/   # Comunicação direta com a persistência
-│   │   └── service/        # Regras de negócio da aplicação
-│   └── uploads/            # Armazenamento de imagens de produtos
+│   │   ├── controllers/
+│   │   ├── dto/
+│   │   ├── models/
+│   │   ├── repositories/
+│   │   ├── routes/
+│   │   ├── service/
+│   │   └── middlewares/
+│   └── uploads/
 │
-├── UrbanCandy_front/       # Interface do Usuário em React
-│   ├── e2e/                # Testes end-to-end (Playwright)
+├── UrbanCandy_front/         # Interface web
+│   ├── e2e/
 │   └── src/
-│       ├── assets/         # Imagens estáticas e identidade (ex: logo)
-│       ├── componentes/    # Componentes reutilizáveis (Header, Button...)
-│       ├── hooks/          # Custom Hooks (AuthContext, UseCart...)
-│       └── pages/          # Páginas da aplicação (Admin, Checkout, Home...)
+│       ├── assets/
+│       ├── components/
+│       ├── context/
+│       ├── hooks/
+│       ├── pages/
+│       └── services/
 │
-├── nginx/                  # Arquivos de configuração do servidor web
-└── docker-compose.yml      # Orquestração dos containers de Front, Back e Banco
+├── UrbanCandy_mobile/        # Aplicativo mobile
+│   ├── app/
+│   ├── assets/
+│   ├── components/
+│   ├── constants/
+│   ├── context/
+│   ├── hooks/
+│   └── services/
+│
+├── nginx/
+├── docker-compose.yml
+└── README.md
+```
 
-🛠️ Como Rodar o Projeto
-Você pode rodar a aplicação localmente utilizando o ambiente isolado do Docker (Recomendado) ou manualmente na sua máquina.
+---
 
-Pré-requisitos
-- Git
-- Docker e Docker Compose instalados
+## 🔐 Autenticação e Controle de Acesso
 
-1. Clonando o Repositório
-Bash
-git clone [https://github.com/isabellyccamargo/UrbanCandy.git](https://github.com/isabellyccamargo/UrbanCandy.git)
+O UrbanCandy utiliza autenticação por JWT e controle de acesso baseado em funções e permissões.
+
+| Perfil      | Funcionalidades                               |
+| ----------- | --------------------------------------------- |
+| Cliente     | Produtos, carrinho, pedidos e dados pessoais. |
+| Funcionário | Gerenciamento de pedidos conforme permissões. |
+| Gerente     | Recursos administrativos conforme permissões. |
+
+O acesso às funcionalidades administrativas é controlado pelo backend.
+
+---
+
+## 📦 Funcionalidades de Pedidos
+
+* Visualização dos próprios pedidos.
+* Consulta de detalhes, pagamento e entrega.
+* Acompanhamento do status.
+* Cancelamento do próprio pedido quando permitido.
+
+### Cancelamento de pedidos
+
+O cliente pode cancelar o próprio pedido enquanto ele não estiver no status **"Preparando"**.
+
+Após o início da preparação, o cancelamento não é permitido. Essa regra deve ser validada no backend para garantir a segurança da operação.
+
+---
+
+## 📱 Funcionalidades do Aplicativo Mobile
+
+* Login e cadastro.
+* Persistência de autenticação.
+* Home com categorias, destaques e ofertas.
+* Cardápio com navegação por categorias.
+* Carrinho, checkout e pagamentos.
+* Formas de entrega.
+* Consulta e cancelamento de pedidos.
+* Perfil e edição de dados.
+* Menu inferior de navegação.
+* Cache de imagens dos produtos.
+
+---
+
+## 🗄️ Banco de Dados
+
+O backend utiliza **MySQL** com **Sequelize**.
+
+Principais entidades:
+
+* Users
+* People
+* Address
+* Products
+* Orders
+* OrderItem
+* Offers
+* OfferProducts
+* TypeOfPayment
+* TypeOfDelivery
+* Role
+* Permission
+* UserRole
+* RolePermission
+
+Os relacionamentos estão representados no DER do projeto.
+
+---
+
+## 🐳 Como Rodar o Projeto
+
+### Pré-requisitos
+
+* Git
+* Node.js e npm
+* Docker e Docker Compose
+* Expo Go (para testar o mobile)
+
+### 1. Clonar o repositório
+
+```bash
+git clone https://github.com/isabellyccamargo/UrbanCandy.git
 cd UrbanCandy
-2. Rodando com Docker (Forma Rápida)
-Para subir o banco de dados, o backend e o frontend simultaneamente, basta executar:
+```
 
-Bash
-docker-compose up -d
-A aplicação estará disponível através do domínio local configurado (ex: https://urbancandy.local ou pelas portas expostas no seu compose).
+### 2. Backend
 
-💡 Nota sobre Imagens: Se fizer alterações estruturais na identidade visual (src/assets), lembre-se de limpar o cache do build do Docker rodando:
-docker-compose down && docker-compose build --no-cache && docker-compose up -d
-
-3. Rodando Localmente (Desenvolvimento)
-Caso prefira rodar os serviços fora do Docker:
-
-No Backend:
-
-Bash
+```bash
 cd UrbanCandy_back
 npm install
 npm run dev
-No Frontend:
+```
 
-Bash
+### 3. Frontend Web
+
+Em outro terminal:
+
+```bash
 cd UrbanCandy_front
 npm install
 npm run dev
-🧪 Testes Automatizados
-O projeto conta com uma suíte de testes robusta para garantir que nenhuma funcionalidade seja quebrada durante alterações no código.
+```
 
-Para rodar os testes end-to-end (E2E) do fluxo de autenticação, carrinho, perfil e pedidos:
+### 4. Aplicativo Mobile
 
-Bash
+Em outro terminal:
+
+```bash
+cd UrbanCandy_mobile
+npm install
+npx expo start
+```
+
+Após iniciar o Expo, escaneie o QR Code pelo Expo Go.
+
+> Para testar em um dispositivo físico, o celular e o computador devem estar conectados à mesma rede, conforme a configuração da API.
+
+### Docker
+
+Para executar os serviços configurados no Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+---
+
+## 🧪 Testes Automatizados
+
+### Frontend Web
+
+```bash
 cd UrbanCandy_front
 npm run test
-# Ou usando a interface do Playwright:
-npx playwright test
+```
 
-🤝 Contribuindo
-Este projeto utiliza Husky e Commitlint. Toda vez que você for fazer um commit, o código passará por uma checagem automática de formatação e os commits devem seguir a convenção do Conventional Commits (ex: feat: adiciona componente de login ou fix: corrige rota da logo).
+### Backend
 
-Desenvolvido por Isabelly Camargo ✨
+```bash
+cd UrbanCandy_back
+npm test
+```
+
+Os comandos dependem dos scripts configurados nos respectivos `package.json`.
+
+---
+
+## 📚 Documentação do Projeto
+
+A documentação apresenta os objetivos, requisitos, arquitetura, modelagem de dados e funcionalidades do UrbanCandy.
+
+📘 **[Acessar a documentação completa do UrbanCandy](https://docs.google.com/document/d/1yNbEy7QVzsXAts5HcmVfDUTbv5w3EJYmjcVROHTeSYg/edit?tab=t.0#heading=h.kiz4lse391rn)**
+
+A documentação também inclui o DER e os diagramas do sistema.
+
+---
+
+## 👩‍💻 Desenvolvido por
+
+**Isabelly Camargo** ✨
+
+Projeto desenvolvido para fins acadêmicos, com foco em e-commerce de confeitaria, experiência do usuário e eficiência na gestão de pedidos.
