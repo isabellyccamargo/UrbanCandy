@@ -330,7 +330,7 @@ A documentação do UrbanCandy apresenta os principais aspectos do desenvolvimen
 * 📊 **Diagramas do Sistema** — Diagramas utilizados para representar os processos e a arquitetura da aplicação.
 * 📱 **Documentação do Aplicativo Mobile** — Informações sobre a implementação e funcionalidades do aplicativo desenvolvido com Expo e React Native.
 
-👉 [Acessar a documentação completa do UrbanCandy](COLE_AQUI_O_LINK_DO_PDF)
+👉 [Acessar a documentação completa do UrbanCandy](https://docs.google.com/document/d/1yNbEy7QVzsXAts5HcmVfDUTbv5w3EJYmjcVROHTeSYg/edit?tab=t.0#heading=h.kiz4lse391rn)
 
 ---
 
