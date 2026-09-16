@@ -167,6 +167,19 @@ class OrderRepository {
     return await Orders.findAndCountAll(options);
   }
 
+  async findById(id_order: number): Promise<Orders | null> {
+    return await Orders.findByPk(id_order, {
+      include: [
+        {
+          model: OrderStatus,
+          as: 'status',
+          attributes: ['id', 'name', 'label'],
+        },
+        // ... outros includes se necessário para contexto adicional do pedido ...
+      ],
+    });
+  }
+
   async findAllStatuses(): Promise<OrderStatus[]> {
     return await OrderStatus.findAll();
   }

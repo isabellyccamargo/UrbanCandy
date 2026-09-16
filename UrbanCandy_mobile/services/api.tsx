@@ -1,7 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://172.20.10.3:3000';
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:3000';
 export const API_BASE_URL = BASE_URL;
 
 const API_URL = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
@@ -23,7 +23,7 @@ api.interceptors.request.use(
             if (rawToken) {
                 // Limpa aspas extras que o JSON.stringify insere no AsyncStorage
                 const token = rawToken.replace(/^"(.*)"$/, '$1').trim();
-                
+
                 config.headers = config.headers || {};
                 config.headers.Authorization = `Bearer ${token}`;
             } else {

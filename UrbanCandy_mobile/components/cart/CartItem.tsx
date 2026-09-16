@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { useTheme } from '@/context/Theme';
@@ -142,9 +143,11 @@ export default function CartItem({
             <View style={styles.imageContainer}>
                 {imageUrl ? (
                     <Image
-                        source={{ uri: imageUrl }}
+                        source={imageUrl}
                         style={styles.image}
-                        resizeMode="cover"
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                        transition={150}
                     />
                 ) : (
                     <View style={styles.imagePlaceholder}>

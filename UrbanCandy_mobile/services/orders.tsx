@@ -39,6 +39,16 @@ export async function getAllOrders(page = 1, size = 50) {
     });
     return response.data;
 }
+
+export const cancelOrder = async (orderId: number) => {
+    try {
+        const response = await api.patch(`/pedido/${orderId}/cancel`);
+        return response.data;
+    } catch (error: any) {
+        throw error;
+    }
+};
+
 export const updateOrderStatus = async (orderId: number, statusId: number) => {
     const response = await api.patch(`/pedido/${orderId}/status`, {
         id_order_status: statusId,

@@ -8,6 +8,13 @@ import {
 
 import './Dashboard.css';
 
+const isCancelledOrder = (order) => {
+  const statusId = Number(order.status_id ?? order.status?.id_order_status ?? order.status?.id);
+  const statusName = String(order.status?.name ?? order.status?.label ?? order.status ?? '').toLowerCase();
+
+  return statusId >= 5 || statusName.includes('cancel');
+};
+
 const Dashboard = () => {
   const [statsData, setStatsData] = useState([
     { id: 1, label: 'Categorias', value: '0', icon: '🏷️', color: '#ff2d78' },
@@ -28,8 +35,9 @@ const Dashboard = () => {
         const resOrders = await getAllOrdersForDashboard();
         const resPayments = await getAllTypeOfPayment();
 
-        const totalOrdersCount = resOrders.data?.totalItems || 0;
         const arrayPedidos = resOrders.data?.data || [];
+        const pedidosAtivos = arrayPedidos.filter((order) => !isCancelledOrder(order));
+        const totalOrdersCount = pedidosAtivos.length;
 
         const totalCats =
           resCats.data?.totalItems ||
@@ -46,7 +54,7 @@ const Dashboard = () => {
           (Array.isArray(resPayments.data) ? resPayments.data.length : 0) ||
           0;
 
-        const totalVendas = arrayPedidos.reduce((acc, curr) => {
+        const totalVendas = pedidosAtivos.reduce((acc, curr) => {
           const valorBruto = curr.total;
 
           const valorNumerico =

@@ -20,6 +20,17 @@ type AlertData = {
     message: string;
     type: AlertType;
     onClose?: () => void;
+    onConfirm?: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    showCancel?: boolean;
+    buttons?: AlertButton[];
+};
+
+type AlertButton = {
+    text: string;
+    onPress?: () => void;
+    style?: 'cancel' | 'default';
 };
 
 type AlertObjectOptions = {
@@ -28,6 +39,10 @@ type AlertObjectOptions = {
     type?: AlertType;
     onClose?: () => void;
     onConfirm?: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    showCancel?: boolean;
+    buttons?: AlertButton[];
 };
 
 type AlertContextType = {
@@ -39,6 +54,7 @@ type AlertContextType = {
         onClose?: () => void,
         type?: AlertType
     ) => void;
+    confirm: (options: AlertObjectOptions) => Promise<boolean>;
 };
 
 const AlertContext = createContext<AlertContextType | null>(null);
@@ -67,7 +83,12 @@ export function AppAlertProvider({
                 title: titleOrOptions.title,
                 message: titleOrOptions.message,
                 type: titleOrOptions.type || 'error',
-                onClose: titleOrOptions.onClose || titleOrOptions.onConfirm,
+                onClose: titleOrOptions.onClose,
+                onConfirm: titleOrOptions.onConfirm,
+                confirmText: titleOrOptions.confirmText,
+                cancelText: titleOrOptions.cancelText,
+                showCancel: titleOrOptions.showCancel,
+                buttons: titleOrOptions.buttons,
             });
             return;
         }
@@ -99,6 +120,27 @@ export function AppAlertProvider({
         }, 150);
     }
 
+    function confirm(options: AlertObjectOptions): Promise<boolean> {
+        return new Promise(resolve => {
+            showMessage({
+                ...options,
+                type: options.type || 'warning',
+                buttons: [
+                    {
+                        text: options.cancelText || 'Cancelar',
+                        style: 'cancel',
+                        onPress: () => resolve(false),
+                    },
+                    {
+                        text: options.confirmText || 'Confirmar',
+                        style: 'default',
+                        onPress: () => resolve(true),
+                    },
+                ],
+            });
+        });
+    }
+
     const color =
         alert?.type === 'success'
             ? '#22C55E'
@@ -107,7 +149,7 @@ export function AppAlertProvider({
                 : '#EF4444';
 
     return (
-        <AlertContext.Provider value={{ showMessage }}>
+        <AlertContext.Provider value={{ showMessage, confirm }}>
             {children}
 
             <Modal
@@ -132,12 +174,47 @@ export function AppAlertProvider({
                             <Text style={styles.title}>{alert.title}</Text>
                             <Text style={styles.message}>{alert.message}</Text>
 
-                            <Pressable
-                                style={[styles.button, { backgroundColor: color }]}
-                                onPress={closeAlert}
-                            >
-                                <Text style={styles.buttonText}>OK</Text>
-                            </Pressable>
+                            <View style={styles.buttons}>
+                                {alert.buttons?.map((button, index) => (
+                                    <Pressable
+                                        key={`${button.text}-${index}`}
+                                        style={[
+                                            styles.button,
+                                            button.style === 'cancel'
+                                                ? styles.cancelButton
+                                                : { backgroundColor: color },
+                                        ]}
+                                        onPress={() => {
+                                            closeAlert();
+
+                                            if (button.onPress) {
+                                                setTimeout(() => {
+                                                    button.onPress?.();
+                                                }, 180);
+                                            }
+                                        }}
+                                    >
+                                        <Text
+                                            style={
+                                                button.style === 'cancel'
+                                                    ? styles.cancelButtonText
+                                                    : styles.buttonText
+                                            }
+                                        >
+                                            {button.text}
+                                        </Text>
+                                    </Pressable>
+                                ))}
+
+                                {!alert.buttons && (
+                                    <Pressable
+                                        style={[styles.button, { backgroundColor: color }]}
+                                        onPress={closeAlert}
+                                    >
+                                        <Text style={styles.buttonText}>OK</Text>
+                                    </Pressable>
+                                )}
+                            </View>
                         </View>
                     )}
                 </View>
@@ -208,5 +285,32 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    buttons: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        gap: 10,
+        marginTop: 20,
+        flexWrap: 'wrap',
+    },
+
+    cancelButton: {
+        flex: 1,
+        height: 45,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F3F3F3',
+    },
+
+    cancelButtonText: {
+        color: '#555555',
+        fontSize: 15,
+        fontWeight: 'bold',
+    },
+
+    confirmButton: {
+        flex: 1,
     },
 });

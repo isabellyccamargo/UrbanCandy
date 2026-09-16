@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '@/context/Theme';
 import { getOrderItems, updateOrderStatus, getOrderStatuses } from '@/services/orders';
 import { getAllTypeOfPayment, PaymentType } from '@/services/payment';
 import { EmployeeMenu } from '@/components/employee/EmployeeMenu';
-import { useAppAlert } from '@/components/common/AppAlert'; 
+import { useAppAlert } from '@/components/common/AppAlert';
 import { API_BASE_URL } from '@/services/api';
 
 const STATUS_THEMES: Record<string, { bg: string; text: string; border: string }> = {
     preparando: { bg: '#E3F2FD', text: '#1976D2', border: '#BBDEFB' },
     pronto: { bg: '#F3E5F5', text: '#7B1FA2', border: '#E1BEE7' },
     entregue: { bg: '#E8F5E9', text: '#2E7D32', border: '#C8E6C9' },
+    cancelado: { bg: '#FDECEC', text: '#C0392B', border: '#F5B7B1' },
     default: { bg: '#FFF8E1', text: '#F57F17', border: '#FFE082' },
 };
 
@@ -61,17 +63,32 @@ export default function EmployeeOrdersDetails() {
     }, [params.id, params.order]);
 
     const getImageUrl = (imagePath?: string) => {
-        if (!imagePath) return 'https://via.placeholder.com/100';
-        if (imagePath.startsWith('http')) return imagePath;
-        const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
-        return `${API_BASE_URL}${cleanPath.startsWith('/uploads') ? cleanPath : `/uploads${cleanPath}`}`;
+        if (!imagePath) return null;
+
+        if (
+            imagePath.startsWith('http://') ||
+            imagePath.startsWith('https://')
+        ) {
+            return imagePath;
+        }
+
+        const baseUrl = API_BASE_URL.replace(/\/api\/?$/, '');
+        const cleanPath = imagePath.startsWith('/')
+            ? imagePath
+            : `/${imagePath}`;
+
+        return `${baseUrl}${cleanPath.startsWith('/uploads')
+            ? cleanPath
+            : `/uploads${cleanPath}`
+            }`;
     };
 
-    const currentStatusName = orderData?.status?.label || orderData?.status?.name || 'Recebido';
-    const currentStatusId = Number(orderData?.status_id || orderData?.status?.id || 0);
+    const currentStatusId = Number(orderData?.status_id || orderData?.status?.id_order_status || orderData?.status?.id || 0);
+    const currentStatusName = orderData?.status?.label || orderData?.status?.name || (currentStatusId === 5 ? 'Cancelado' : 'Recebido');
 
     const getStatusStyle = () => {
         const s = currentStatusName.toLowerCase();
+        if (s.includes('cancel') || currentStatusId === 5) return STATUS_THEMES.cancelado;
         if (s.includes('preparando')) return STATUS_THEMES.preparando;
         if (s.includes('pronto')) return STATUS_THEMES.pronto;
         if (s.includes('entregue') || s.includes('concluido')) return STATUS_THEMES.entregue;
@@ -80,6 +97,7 @@ export default function EmployeeOrdersDetails() {
 
     const getActionButtonInfo = () => {
         const s = currentStatusName.toLowerCase();
+        if (s.includes('cancel') || currentStatusId === 5) return { text: 'Pedido Cancelado', disabled: true };
         if (s.includes('preparando')) return { text: 'Concluir Preparo', disabled: false };
         if (s.includes('pronto')) return { text: 'Marcar como Entregue', disabled: false };
         if (s.includes('entregue') || s.includes('concluido')) return { text: 'Pedido Finalizado', disabled: true };
@@ -91,41 +109,105 @@ export default function EmployeeOrdersDetails() {
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return 'Data inválida';
         const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        return date.toDateString() === new Date().toDateString() 
-            ? `Recebido hoje às ${time}` 
+        return date.toDateString() === new Date().toDateString()
+            ? `Recebido hoje às ${time}`
             : `Recebido em ${date.toLocaleDateString('pt-BR')} às ${time}`;
     };
 
-    const handleAdvanceStatus = async () => {
+    const handleAdvanceStatus = () => {
         const actionInfo = getActionButtonInfo();
-        if (!validOrderId || !orderData || statuses.length === 0 || actionInfo.disabled) return;
 
-        const sortedStatuses = [...statuses].sort((a, b) => Number(a.id || a.id_status) - Number(b.id || b.id_status));
-        const currentIndex = sortedStatuses.findIndex((s) => Number(s.id || s.id_status) === currentStatusId);
-
-        const nextStatus = currentIndex !== -1 && currentIndex < sortedStatuses.length - 1
-            ? sortedStatuses[currentIndex + 1]
-            : sortedStatuses.find((s, idx) => idx > 0 && (s.name || s.label || '').toLowerCase() === currentStatusName.toLowerCase());
-
-        if (!nextStatus) {
-            showMessage({ title: 'Aviso', message: 'Não foi possível identificar o próximo status.', type: 'warning' });
+        if (
+            !validOrderId ||
+            !orderData ||
+            statuses.length === 0 ||
+            actionInfo.disabled
+        ) {
             return;
         }
 
-        const nextStatusId = Number(nextStatus.id || nextStatus.id_status);
-        const nextStatusName = nextStatus.label || nextStatus.name || 'Atualizado';
+        showMessage({
+            title: 'Confirmar alteração',
+            message: `Tem certeza que deseja ${actionInfo.text.toLowerCase()}?`,
+            type: 'warning',
+            buttons: [
+                {
+                    text: 'Cancelar',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Confirmar',
+                    style: 'default',
+                    onPress: () => {
+                        void advanceStatus();
+                    },
+                },
+            ],
+        });
+    };
+
+    const advanceStatus = async () => {
+        const sortedStatuses = [...statuses].sort(
+            (a, b) => Number(a.id || a.id_status) - Number(b.id || b.id_status)
+        );
+
+        const currentIndex = sortedStatuses.findIndex(
+            (s) => Number(s.id || s.id_status) === currentStatusId
+        );
+
+        const nextStatus =
+            currentIndex !== -1 && currentIndex < sortedStatuses.length - 1
+                ? sortedStatuses[currentIndex + 1]
+                : sortedStatuses.find(
+                    (s, idx) =>
+                        idx > 0 &&
+                        (s.name || s.label || '').toLowerCase() ===
+                        currentStatusName.toLowerCase()
+                );
+
+        if (!nextStatus) {
+            showMessage({
+                title: 'Aviso',
+                message: 'Não foi possível identificar o próximo status.',
+                type: 'warning',
+            });
+            return;
+        }
+
+        const nextStatusId = Number(
+            nextStatus.id || nextStatus.id_status
+        );
+
+        const nextStatusName =
+            nextStatus.label || nextStatus.name || 'Atualizado';
 
         setUpdating(true);
+
         try {
             await updateOrderStatus(validOrderId, nextStatusId);
+
             setOrderData((prev: any) => ({
                 ...prev,
                 status_id: nextStatusId,
-                status: { ...prev?.status, id: nextStatusId, name: nextStatusName, label: nextStatusName },
+                status: {
+                    ...prev?.status,
+                    id: nextStatusId,
+                    name: nextStatusName,
+                    label: nextStatusName,
+                },
             }));
-            showMessage({ title: 'Status Atualizado', message: `O pedido agora está com o status: ${nextStatusName}`, type: 'success' });
+
+            showMessage({
+                title: 'Status Atualizado',
+                message: `O pedido agora está com o status: ${nextStatusName}`,
+                type: 'success',
+            });
         } catch (error) {
-            showMessage({ title: 'Erro', message: 'Não foi possível atualizar o status.', type: 'error' });
+            showMessage({
+                title: 'Erro',
+                message: 'Não foi possível atualizar o status.',
+                type: 'error',
+            });
         } finally {
             setUpdating(false);
         }
@@ -230,7 +312,7 @@ export default function EmployeeOrdersDetails() {
                         return (
                             <View key={item.id || idx} style={styles.betweenRow}>
                                 <View style={[styles.row, { flex: 1 }]}>
-                                    <Image source={{ uri: getImageUrl(product.image || product.image_url) }} style={styles.itemImage} />
+                                    <Image source={{ uri: getImageUrl(product.image || product.image_url) }} style={styles.itemImage} contentFit="cover" cachePolicy="memory-disk" transition={150} />
                                     <View style={styles.qtyBadge}><Text style={styles.qtyText}>{item.quantity || 1}x</Text></View>
                                     <View style={{ flex: 1 }}>
                                         <Text style={styles.productName}>{product.name || 'Produto'}</Text>

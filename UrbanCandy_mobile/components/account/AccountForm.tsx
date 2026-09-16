@@ -1,184 +1,188 @@
-import {
-    StyleSheet,
-    Text,
-    View,
-} from 'react-native';
+    import {
+        StyleSheet,
+        Text,
+        View,
+    } from 'react-native';
 
-import { useTheme } from '@/context/Theme';
+    import { useTheme } from '@/context/Theme';
 
-import PersonalDataForm from './PersonalDataForm';
-import AddressForm from './AddressForm';
-import AccountButton from './AccountButton';
+    import PersonalDataForm from './PersonalDataForm';
+    import AddressForm from './AddressForm';
+    import AccountButton from './AccountButton';
 
-type Props = {
-    isEditing: boolean;
+    type Props = {
+        isEditing: boolean;
+        errors: Set<string>;
 
-    imageUri?: string | null;
-    onPickImage?: () => void;
+        imageUri?: string | null;
+        onPickImage?: () => void;
 
-    name: string;
-    cpf: string;
-    telephone: string;
-    email: string;
+        name: string;
+        cpf: string;
+        telephone: string;
+        email: string;
 
-    password: string;
-    confirmPassword: string;
+        password: string;
+        confirmPassword: string;
 
-    cep: string;
-    city: string;
-    neighborhood: string;
-    road: string;
-    number: string;
-    complement: string;
+        cep: string;
+        city: string;
+        neighborhood: string;
+        road: string;
+        number: string;
+        complement: string;
 
-    loading: boolean;
+        loading: boolean;
 
-    onChangeName: (value: string) => void;
-    onChangeCpf: (value: string) => void;
-    onChangeTelephone: (value: string) => void;
-    onChangeEmail: (value: string) => void;
+        onChangeName: (value: string) => void;
+        onChangeCpf: (value: string) => void;
+        onChangeTelephone: (value: string) => void;
+        onChangeEmail: (value: string) => void;
 
-    onChangePassword: (value: string) => void;
-    onChangeConfirmPassword: (value: string) => void;
+        onChangePassword: (value: string) => void;
+        onChangeConfirmPassword: (value: string) => void;
 
-    onChangeCep: (value: string) => void;
-    onChangeCity: (value: string) => void;
-    onChangeNeighborhood: (value: string) => void;
-    onChangeRoad: (value: string) => void;
-    onChangeNumber: (value: string) => void;
-    onChangeComplement: (value: string) => void;
+        onChangeCep: (value: string) => void;
+        onChangeCity: (value: string) => void;
+        onChangeNeighborhood: (value: string) => void;
+        onChangeRoad: (value: string) => void;
+        onChangeNumber: (value: string) => void;
+        onChangeComplement: (value: string) => void;
 
-    onSubmit: () => void;
-};
+        onSubmit: () => void;
+    };
 
-export default function AccountForm({
-    isEditing,
+    export default function AccountForm({
+        isEditing,
+        errors,
 
-    imageUri,
-    onPickImage,
+        imageUri,
+        onPickImage,
 
-    name,
-    cpf,
-    telephone,
-    email,
+        name,
+        cpf,
+        telephone,
+        email,
 
-    password,
-    confirmPassword,
+        password,
+        confirmPassword,
 
-    cep,
-    city,
-    neighborhood,
-    road,
-    number,
-    complement,
+        cep,
+        city,
+        neighborhood,
+        road,
+        number,
+        complement,
 
-    loading,
+        loading,
 
-    onChangeName,
-    onChangeCpf,
-    onChangeTelephone,
-    onChangeEmail,
+        onChangeName,
+        onChangeCpf,
+        onChangeTelephone,
+        onChangeEmail,
 
-    onChangePassword,
-    onChangeConfirmPassword,
+        onChangePassword,
+        onChangeConfirmPassword,
 
-    onChangeCep,
-    onChangeCity,
-    onChangeNeighborhood,
-    onChangeRoad,
-    onChangeNumber,
-    onChangeComplement,
+        onChangeCep,
+        onChangeCity,
+        onChangeNeighborhood,
+        onChangeRoad,
+        onChangeNumber,
+        onChangeComplement,
 
-    onSubmit,
-}: Props) {
-    const {
-        colors,
-        font,
-        fontSize,
-        space,
-    } = useTheme();
+        onSubmit,
+    }: Props) {
+        const {
+            colors,
+            font,
+            fontSize,
+            space,
+        } = useTheme();
 
-    const styles = StyleSheet.create({
-        section: {
-            marginBottom: space.lg,
-        },
+        const styles = StyleSheet.create({
+            section: {
+                marginBottom: space.lg,
+            },
 
-        title: {
-            fontFamily: font.semibold,
-            fontSize: fontSize.lg,
-            color: colors.text,
-            marginBottom: space.md,
-        },
-    });
+            title: {
+                fontFamily: font.semibold,
+                fontSize: fontSize.lg,
+                color: colors.text,
+                marginBottom: space.md,
+            },
+        });
 
-    return (
-        <View>
-            <View style={styles.section}>
-                <Text style={styles.title}>
-                    Dados pessoais
-                </Text>
+        return (
+            <View>
+                <View style={styles.section}>
+                    <Text style={styles.title}>
+                        Dados pessoais
+                    </Text>
 
-                <PersonalDataForm
-                    isEditing={isEditing}
+                    <PersonalDataForm
+                        isEditing={isEditing}
+                        errors={errors}
 
-                    imageUri={imageUri}
-                    onPickImage={onPickImage}
+                        imageUri={imageUri}
+                        onPickImage={onPickImage}
 
-                    name={name}
-                    cpf={cpf}
-                    telephone={telephone}
-                    email={email}
+                        name={name}
+                        cpf={cpf}
+                        telephone={telephone}
+                        email={email}
 
-                    password={password}
-                    confirmPassword={confirmPassword}
+                        password={password}
+                        confirmPassword={confirmPassword}
 
-                    onChangeName={onChangeName}
-                    onChangeCpf={onChangeCpf}
-                    onChangeTelephone={onChangeTelephone}
-                    onChangeEmail={onChangeEmail}
+                        onChangeName={onChangeName}
+                        onChangeCpf={onChangeCpf}
+                        onChangeTelephone={onChangeTelephone}
+                        onChangeEmail={onChangeEmail}
 
-                    onChangePassword={onChangePassword}
-                    onChangeConfirmPassword={
-                        onChangeConfirmPassword
+                        onChangePassword={onChangePassword}
+                        onChangeConfirmPassword={
+                            onChangeConfirmPassword
+                        }
+                    />
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.title}>
+                        Endereço
+                    </Text>
+
+                    <AddressForm
+                        cep={cep}
+                        city={city}
+                        neighborhood={neighborhood}
+                        road={road}
+                        number={number}
+                        complement={complement}
+                        errors={errors}
+
+                        onChangeCep={onChangeCep}
+                        onChangeCity={onChangeCity}
+                        onChangeNeighborhood={
+                            onChangeNeighborhood
+                        }
+                        onChangeRoad={onChangeRoad}
+                        onChangeNumber={onChangeNumber}
+                        onChangeComplement={
+                            onChangeComplement
+                        }
+                    />
+                </View>
+
+                <AccountButton
+                    title={
+                        isEditing
+                            ? 'Atualizar dados'
+                            : 'Cadastrar'
                     }
+                    onPress={onSubmit}
+                    loading={loading}
                 />
             </View>
-
-            <View style={styles.section}>
-                <Text style={styles.title}>
-                    Endereço
-                </Text>
-
-                <AddressForm
-                    cep={cep}
-                    city={city}
-                    neighborhood={neighborhood}
-                    road={road}
-                    number={number}
-                    complement={complement}
-
-                    onChangeCep={onChangeCep}
-                    onChangeCity={onChangeCity}
-                    onChangeNeighborhood={
-                        onChangeNeighborhood
-                    }
-                    onChangeRoad={onChangeRoad}
-                    onChangeNumber={onChangeNumber}
-                    onChangeComplement={
-                        onChangeComplement
-                    }
-                />
-            </View>
-
-            <AccountButton
-                title={
-                    isEditing
-                        ? 'Atualizar dados'
-                        : 'Cadastrar'
-                }
-                onPress={onSubmit}
-                loading={loading}
-            />
-        </View>
-    );
-}
+        );
+    }

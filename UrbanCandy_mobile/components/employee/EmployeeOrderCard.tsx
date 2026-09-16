@@ -15,6 +15,7 @@ const STATUS_THEMES: Record<string, { bg: string; text: string; border: string }
     preparando: { bg: '#E3F2FD', text: '#1976D2', border: '#BBDEFB' },
     pronto: { bg: '#F3E5F5', text: '#7B1FA2', border: '#E1BEE7' },
     entregue: { bg: '#E8F5E9', text: '#2E7D32', border: '#C8E6C9' },
+    cancelado: { bg: '#FDECEC', text: '#C0392B', border: '#F5B7B1' },
     default: { bg: '#FFFFFF', text: '#616161', border: '#E0E0E0' },
 };
 
@@ -32,9 +33,10 @@ export default function EmployeeOrderCard({
         currency: 'BRL',
     });
     const itemCount = order.items?.length || 0;
-    const currentStatus = (order.status?.name || order.status?.label || '').toLowerCase();
+    const currentStatus = (order.status?.name || order.status?.label || (Number(order.status_id) === 5 ? 'cancelado' : '')).toLowerCase();
 
     function getStatusTheme() {
+        if (currentStatus.includes('cancel')) return STATUS_THEMES.cancelado;
         if (currentStatus.includes('preparando')) return STATUS_THEMES.preparando;
         if (currentStatus.includes('pronto')) return STATUS_THEMES.pronto;
         if (currentStatus.includes('entregue') || currentStatus.includes('concluido')) return STATUS_THEMES.entregue;
@@ -65,6 +67,7 @@ export default function EmployeeOrderCard({
     const { time, date } = formatOrderDateTime(order.order_date);
 
     function getActionButtonText() {
+        if (currentStatus.includes('cancel')) return 'Pedido cancelado';
         if (currentStatus.includes('recebido') || currentStatus.includes('fazer')) return 'Preparar pedido';
         if (currentStatus.includes('preparando')) return 'Concluir preparo';
         if (currentStatus.includes('pronto')) return 'Marcar Entregue';
@@ -99,7 +102,7 @@ export default function EmployeeOrderCard({
             color: colors.text,
         },
         clientName: {
-            width:140,
+            width: 140,
             fontFamily: font.medium,
             fontSize: fontSize.base,
             color: colors.textSecondary,
@@ -139,7 +142,7 @@ export default function EmployeeOrderCard({
         detailsLink: {
             fontFamily: font.medium,
             fontSize: fontSize.base,
-            color: colors.text,
+            color: colors.primary,
         },
         actionButton: {
             backgroundColor: theme.text,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
     ActivityIndicator,
     FlatList,
@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getUserProfile } from '@/services/auth'; 
+import { getUserProfile } from '@/services/auth';
 import { StatusBar } from 'expo-status-bar';
 
 import { useTheme } from '@/context/Theme';
@@ -17,7 +17,7 @@ import { Menu } from '@/components/home/Menu';
 import OrdersHeader from '@/components/orders/OrderHeader';
 import OrderCard from '@/components/orders/OrderCard';
 
-import { getMyOrders } from '@/services/orders';
+import { getMyOrders, cancelOrder } from '@/services/orders';
 
 export type OrderItem = {
     id_orderItem: number;
@@ -45,25 +45,34 @@ export type Order = {
     };
     status?: {
         id_order_status?: number;
+        id?: number;
         name?: string;
         label?: string;
     };
     items?: OrderItem[];
 };
 
+function canCancelOrder(order: Order) {
+    const statusId = Number(order.status?.id_order_status ?? order.status?.id);
+
+    if (statusId === 1) {
+        return true;
+    }
+
+    const statusName = String(order.status?.name || '').trim().toLowerCase();
+    return !statusId && ['recebido', 'pendente'].includes(statusName);
+}
+
 export default function OrdersScreen() {
     const { colors, font, fontSize, space } = useTheme();
-    const { showMessage } = useAppAlert();
+    const { showMessage, confirm } = useAppAlert();
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
+    const idPeopleRef = useRef<number | null>(null);
 
-    useEffect(() => {
-        loadOrders();
-    }, []);
-
-    async function loadOrders() {
+    const loadOrders = useCallback(async () => {
         try {
             setLoading(true);
 
@@ -98,6 +107,8 @@ export default function OrdersScreen() {
                 throw new Error('Não foi possível identificar o cadastro de pessoa associado a este usuário.');
             }
 
+            idPeopleRef.current = Number(id_people);
+
             const response = await getMyOrders(Number(id_people), 1, 50);
             const orderList = response?.data ?? response ?? [];
             setOrders(Array.isArray(orderList) ? orderList : []);
@@ -112,6 +123,60 @@ export default function OrdersScreen() {
             });
         } finally {
             setLoading(false);
+        }
+    }, [showMessage]);
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            await loadOrders();
+        };
+
+        void fetchOrders();
+    }, [loadOrders]);
+
+    async function handleCancelOrder(orderId: number, orderStatusName?: string) {
+        const normalizedStatus = String(orderStatusName || '').trim().toLowerCase();
+
+        if (normalizedStatus === 'preparando') {
+            showMessage({
+                title: 'Pedido em preparo',
+                message: 'Este pedido já está sendo preparado e não pode mais ser cancelado.',
+                type: 'warning',
+            });
+            return;
+        }
+
+        const confirmed = await confirm({
+            title: 'Cancelar pedido',
+            message: 'Deseja realmente cancelar este pedido?',
+            type: 'warning',
+            confirmText: 'Confirmar',
+            cancelText: 'Cancelar',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await cancelOrder(orderId);
+            showMessage({
+                title: 'Sucesso',
+                message: 'Pedido cancelado com sucesso.',
+                type: 'success',
+            });
+            await loadOrders();
+        } catch (error: any) {
+            const message =
+                error?.response?.data?.message ||
+                error?.message ||
+                'Não foi possível cancelar o pedido.';
+
+            showMessage({
+                title: 'Erro ao cancelar',
+                message,
+                type: 'error',
+            });
         }
     }
 
@@ -192,6 +257,8 @@ export default function OrdersScreen() {
                             order={item}
                             expanded={expandedOrder === item.id_orders}
                             onPress={() => toggleOrder(item.id_orders)}
+                            onCancel={() => handleCancelOrder(item.id_orders, item.status?.name)}
+                            canCancel={canCancelOrder(item)}
                         />
                     )}
                     showsVerticalScrollIndicator={false}

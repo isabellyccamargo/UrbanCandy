@@ -1,5 +1,5 @@
+import { Image } from 'expo-image';
 import {
-    Image,
     Pressable,
     StyleSheet,
     Text,
@@ -9,7 +9,7 @@ import { useTheme } from '@/context/Theme';
 
 type CategoryCardProps = {
     name: string;
-    image?: any;
+    image?: string;
     onPress?: () => void;
 };
 
@@ -68,7 +68,9 @@ export function CategoryCard({
             <Image
                 source={image}
                 style={styles.image}
-                resizeMode="cover"
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                transition={150}
             />
 
             <Text

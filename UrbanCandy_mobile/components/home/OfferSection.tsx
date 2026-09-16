@@ -11,7 +11,7 @@ import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/Theme';
 import { getAllOffers } from '@/services/offers';
 
-import {OfferCard} from './OfferCard';
+import OfferCard from './OfferCard';
 
 type OfferProduct = {
     id_product: number;
@@ -107,10 +107,17 @@ function OfferSection({
     });
 
     useEffect(() => {
+        console.log('OfferSection montou');
+
         loadOffers();
+
+        return () => {
+            console.log('OfferSection desmontou');
+        };
     }, []);
 
     async function loadOffers() {
+        console.log('BUSCANDO OFERTAS');
         try {
             const response = await getAllOffers();
 

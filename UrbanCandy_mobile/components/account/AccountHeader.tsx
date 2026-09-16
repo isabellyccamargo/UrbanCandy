@@ -1,5 +1,4 @@
 import {
-    Image,
     Pressable,
     StyleSheet,
     Text,
@@ -57,7 +56,7 @@ export default function AccountHeader({
         backButton: {
             position: 'absolute',
             left: space.xl,
-            top: 60, 
+            top: 60,
             width: 40,
             height: 40,
             justifyContent: 'center',
@@ -82,12 +81,12 @@ export default function AccountHeader({
 
         normalHeader: {
             width: '100%',
-            height: 125, 
+            height: 125,
             backgroundColor: colors.secondary,
             borderBottomLeftRadius: radius.xxl,
             borderBottomRightRadius: radius.xxl,
-            justifyContent: 'flex-start', 
-            paddingTop: 65, 
+            justifyContent: 'flex-start',
+            paddingTop: 65,
             paddingLeft: space.md,
         },
 
@@ -117,9 +116,11 @@ export default function AccountHeader({
                 </Pressable>
 
                 <Image
-                    source={require('@/assets/images/logo.png')}
-                    style={styles.logo}
-                    resizeMode="contain"
+                    source={imageUri}
+                    style={styles.avatarImage}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={150}
                 />
 
                 <Text style={styles.title}>

@@ -65,10 +65,18 @@ export function CategorySection() {
     });
 
     useEffect(() => {
+        console.log('CategorySection montou');
+
         loadCategories();
+
+        return () => {
+            console.log('CategorySection desmontou');
+        };
     }, []);
 
     async function loadCategories() {
+        console.log('BUSCANDO CATEGORIAS');
+
         try {
             const response = await api.get('/categoria/listar');
             const data = response.data?.data;

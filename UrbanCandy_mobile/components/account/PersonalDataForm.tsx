@@ -1,6 +1,7 @@
+
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import {
-    Image,
     Pressable,
     StyleSheet,
     Text,
@@ -14,6 +15,7 @@ import AccountInput from './AccountInput';
 
 type Props = {
     isEditing: boolean;
+    errors: Set<string>;
 
     imageUri?: string | null;
     onPickImage?: () => void;
@@ -37,6 +39,8 @@ type Props = {
 
 export default function PersonalDataForm({
     isEditing,
+    errors,
+
 
     imageUri,
     onPickImage,
@@ -162,8 +166,11 @@ export default function PersonalDataForm({
                     >
                         {imageUri ? (
                             <Image
-                                source={{ uri: imageUri }}
+                                source={imageUri}
                                 style={styles.avatarImage}
+                                contentFit="cover"
+                                cachePolicy="memory-disk"
+                                transition={150}
                             />
                         ) : (
                             <Ionicons
@@ -185,6 +192,7 @@ export default function PersonalDataForm({
                 value={name}
                 onChangeText={onChangeName}
                 placeholder="Digite seu nome completo"
+                error={errors.has('name')}
             />
 
             <View style={styles.row}>
@@ -198,6 +206,7 @@ export default function PersonalDataForm({
                         placeholder="000.000.000-00"
                         keyboardType="numeric"
                         editable={!isEditing}
+                        error={errors.has('cpf')}
                     />
                 </View>
 
@@ -210,6 +219,7 @@ export default function PersonalDataForm({
                         }
                         placeholder="(00) 00000-0000"
                         keyboardType="phone-pad"
+                        error={errors.has('telephone')}
                     />
                 </View>
             </View>
@@ -222,6 +232,7 @@ export default function PersonalDataForm({
                 keyboardType="email-address"
                 autoCapitalize="none"
                 editable={!isEditing}
+                error={errors.has('email')}
             />
 
             {!isEditing && (
@@ -236,6 +247,7 @@ export default function PersonalDataForm({
                         isPassword
                         showPassword={showPassword}
                         onToggleShowPassword={() => setShowPassword(prev => !prev)}
+                        error={errors.has('password')}
                     />
 
                     <AccountInput
@@ -248,6 +260,7 @@ export default function PersonalDataForm({
                         isPassword
                         showPassword={showConfirmPassword}
                         onToggleShowPassword={() => setShowConfirmPassword(prev => !prev)}
+                        error={errors.has('confirmPassword')}
                     />
                 </>
             )}

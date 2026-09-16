@@ -1,13 +1,13 @@
 import {
-    Image,
     Pressable,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
 
-// IMPORTAÇÃO CORRIGIDA (com chaves):
-import { API_BASE_URL } from '@/services/api'; 
+import { Image } from 'expo-image';
+
+import { API_BASE_URL } from '@/services/api';
 import { SmallButton } from '@/components/ui/smallButton';
 import { useTheme } from '@/context/Theme';
 
@@ -36,12 +36,9 @@ export function ProductCard({
         radius,
     } = useTheme();
 
-    // 1. Log no console para checar o valor que vem do Banco de Dados/API
-    console.log(`[PRODUTO #${id_product} - ${name}] Prop 'image' recebida:`, image);
-
-    // Monta a URL da imagem
-    const finalImageUrl = image ? `${API_BASE_URL}/uploads/${image}` : null;
-    console.log(`[PRODUTO #${id_product} - ${name}] URL Final da imagem:`, finalImageUrl);
+    const finalImageUrl = image
+        ? `${API_BASE_URL}/uploads/${image}`
+        : null;
 
     const styles = StyleSheet.create({
         card: {
@@ -110,13 +107,15 @@ export function ProductCard({
         <View style={styles.card}>
             {finalImageUrl ? (
                 <Image
-                    source={{ uri: finalImageUrl }}
+                    source={finalImageUrl}
                     style={styles.image}
-                    resizeMode="cover"
-                    onError={(e) => {
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={150}
+                    onError={(error) => {
                         console.error(
                             `[ERRO DE CARREGAMENTO - ${name}]:`,
-                            e.nativeEvent.error,
+                            error,
                             '| URL:',
                             finalImageUrl
                         );

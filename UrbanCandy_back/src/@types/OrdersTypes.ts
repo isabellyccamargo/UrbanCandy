@@ -16,6 +16,7 @@ export interface ICart {
 export interface IOrderCheckout {
   id_people: number;
   id_payment: number;
+  id_type_delivery: number;
   cart: ICart;
 }
 

@@ -1,5 +1,5 @@
+import { Image } from 'expo-image';
 import {
-    Image,
     Pressable,
     StyleSheet,
     Text,
@@ -19,7 +19,7 @@ type OfferCardProps = {
     onAdd?: () => void;
 };
 
-export function OfferCard({
+function OfferCard({
     name,
     description,
     price,
@@ -51,7 +51,6 @@ export function OfferCard({
             shadowOpacity: 0.12,
             shadowRadius: 4,
             elevation: 3,
-            
         },
         content: {
             flex: 1,
@@ -99,6 +98,16 @@ export function OfferCard({
         },
     });
 
+    const imageUrl = image
+        ? image.startsWith('http://') ||
+          image.startsWith('https://')
+            ? image
+            : `${API_BASE_URL.replace(
+                  /\/api\/?$/,
+                  ''
+              )}/uploads/${image.replace(/^\/?uploads\//, '')}`
+        : null;
+
     return (
         <Pressable
             onPress={onPress}
@@ -126,7 +135,8 @@ export function OfferCard({
                     )}
 
                     <Text style={styles.price}>
-                        R$ {Number(price)
+                        R${' '}
+                        {Number(price)
                             .toFixed(2)
                             .replace('.', ',')}
                     </Text>
@@ -137,13 +147,13 @@ export function OfferCard({
                     />
                 </View>
 
-                {image ? (
+                {imageUrl ? (
                     <Image
-                        source={{
-                            uri: `${API_BASE_URL}/uploads/${image}`,
-                        }}
+                        source={imageUrl}
                         style={styles.image}
-                        resizeMode="cover"
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                        transition={150}
                     />
                 ) : (
                     <View style={styles.imagePlaceholder} />
@@ -152,3 +162,5 @@ export function OfferCard({
         </Pressable>
     );
 }
+
+export default OfferCard;

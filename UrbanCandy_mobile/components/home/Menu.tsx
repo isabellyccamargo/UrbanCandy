@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/Theme';
 import { useAuth } from '@/context/AuthContext';
 
 export function Menu() {
     const router = useRouter();
+    const pathname = usePathname();
+
+    const isActive = (route: string) =>
+        pathname === route || pathname.startsWith(`${route}/`);
     const { items } = useCart();
     const { colors, font, fontSize, space, radius, sizes } = useTheme();
     const { user } = useAuth();
@@ -141,25 +145,54 @@ export function Menu() {
             backgroundColor: colors.border ?? '#F0F0F0',
             marginVertical: 2,
         },
+        activeIndicator: {
+            width: 22,
+            height: 3,
+            borderRadius: radius.pill,
+            backgroundColor: colors.primary,
+            marginTop: space.xs,
+        },
     });
 
     return (
         <>
             <View style={styles.container}>
-                <Pressable style={styles.item} onPress={() => router.push('/protected/home')}>
-                    <Ionicons name="home-outline" size={25} color={colors.text} />
+                <Pressable
+                    style={styles.item}
+                    onPress={() => router.push('/protected/home')}
+                >
+                    <Ionicons
+                        name="home-outline"
+                        size={25}
+                        color={
+                            isActive('/protected/home')
+                                ? colors.primary
+                                : colors.text
+                        }
+                    />
+
+                    {isActive('/protected/home') && (
+                        <View style={styles.activeIndicator} />
+                    )}
+
                     <Text style={styles.label}>Início</Text>
                 </Pressable>
 
                 <Pressable style={styles.item} onPress={() => router.push('/cart')}>
                     <View style={styles.iconContainer}>
-                        <Ionicons name="cart-outline" size={25} color={colors.text} />
+
+                        <Ionicons name="cart-outline" size={25} color={isActive('/cart')
+                            ? colors.primary
+                            : colors.text} />
                         {totalItems > 0 && (
                             <View style={styles.cartBadge}>
                                 <Text style={styles.cartBadgeText}>{totalItems}</Text>
                             </View>
                         )}
                     </View>
+                    {isActive('/cart') && (
+                        <View style={styles.activeIndicator} />
+                    )}
                     <Text style={styles.label}>Carrinho</Text>
                 </Pressable>
 
@@ -167,6 +200,12 @@ export function Menu() {
                     <View style={styles.menuButton}>
                         <Ionicons name="restaurant-outline" size={27} color={colors.white} />
                     </View>
+                    {(
+                        isActive('/protected/cardapio') ||
+                        pathname.startsWith('/products')
+                    ) && (
+                            <View style={styles.activeIndicator} />
+                        )}
                     <Text style={styles.label}>Cardápio</Text>
                 </Pressable>
 
@@ -176,7 +215,12 @@ export function Menu() {
                         style={styles.item}
                         onPress={() => router.push('/protected/dashboard' as any)}
                     >
-                        <Ionicons name="bar-chart-outline" size={25} color={colors.text} />
+                        <Ionicons name="bar-chart-outline" size={25} color={isActive('/protected/dashboard')
+                            ? colors.primary
+                            : colors.text} />
+                        {isActive('/protected/dashboard') && (
+                            <View style={styles.activeIndicator} />
+                        )}
                         <Text style={styles.label}>Dashboard</Text>
                     </Pressable>
                 ) : isFuncionario ? (
@@ -184,12 +228,19 @@ export function Menu() {
                         style={styles.item}
                         onPress={() => router.push('/protected/employeeOrders' as any)}
                     >
-                        <Ionicons name="clipboard-outline" size={25} color={colors.text} />
+                        <Ionicons name="clipboard-outline" size={25} color={isActive('/protected/employeeOrders')
+                            ? colors.primary
+                            : colors.text} />
                         <Text style={styles.label}>Gerenciar</Text>
                     </Pressable>
                 ) : (
                     <Pressable style={styles.item} onPress={() => router.push('/protected/orders')}>
-                        <Ionicons name="bag-handle-outline" size={25} color={colors.text} />
+                        <Ionicons name="bag-handle-outline" size={25} color={isActive('/protected/orders')
+                            ? colors.primary
+                            : colors.text} />
+                        {isActive('/protected/orders') && (
+                            <View style={styles.activeIndicator} />
+                        )}
                         <Text style={styles.label}>Pedidos</Text>
                     </Pressable>
                 )}
@@ -201,11 +252,21 @@ export function Menu() {
                             size={25}
                             color={colors.text}
                         />
+
                         <Text style={styles.label}>Mais</Text>
                     </Pressable>
                 ) : (
                     <Pressable style={styles.item} onPress={handleProfileNav}>
-                        <Ionicons name="person-outline" size={25} color={colors.text} />
+                        <Ionicons
+                            name="person-outline"
+                            size={25}
+                            color={isActive('/cadastro') ? colors.primary : colors.text}
+                        />
+
+                        {isActive('/cadastro') && (
+                            <View style={styles.activeIndicator} />
+                        )}
+
                         <Text style={styles.label}>Perfil</Text>
                     </Pressable>
                 )}
@@ -226,14 +287,24 @@ export function Menu() {
                                 router.push('/protected/orders');
                             }}
                         >
-                            <Ionicons name="receipt-outline" size={20} color={colors.primary} />
+                            <Ionicons name="receipt-outline" size={20} color={isActive('/protected/orders')
+                                ? colors.primary
+                                : colors.text} />
+                            {isActive('/protected/orders') && (
+                                <View style={styles.activeIndicator} />
+                            )}
                             <Text style={styles.popoverOptionText}>Meus Pedidos</Text>
                         </Pressable>
 
                         <View style={styles.divider} />
 
                         <Pressable style={styles.popoverOption} onPress={handleProfileNav}>
-                            <Ionicons name="person-outline" size={20} color={colors.primary} />
+                            <Ionicons name="person-outline" size={20} color={isActive('/protected/profile')
+                                ? colors.primary
+                                : colors.text} />
+                            {isActive('/protected/profile') && (
+                                <View style={styles.activeIndicator} />
+                            )}
                             <Text style={styles.popoverOptionText}>Meus Dados</Text>
                         </Pressable>
                     </View>
