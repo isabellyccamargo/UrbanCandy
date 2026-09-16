@@ -2,41 +2,36 @@
 
 O **UrbanCandy** (SugarBeat) é uma plataforma de e-commerce desenvolvida para a venda de doces e guloseimas, oferecendo uma experiência de compra digital e ferramentas para gerenciamento de pedidos e produtos.
 
-O projeto possui uma arquitetura dividida entre uma API desenvolvida com Node.js e interfaces web e mobile. O sistema permite que clientes realizem compras, acompanhem seus pedidos e gerenciem seus dados, enquanto funcionários e gerentes possuem recursos de gerenciamento de acordo com suas permissões.
+O projeto possui uma arquitetura dividida entre uma API em Node.js e interfaces web e mobile, utilizando o mesmo backend para compartilhar dados e funcionalidades.
 
 ---
 
 ## 🚀 Sobre o Projeto
 
-O UrbanCandy foi desenvolvido com o objetivo de modernizar a experiência de compra em uma confeitaria, proporcionando praticidade aos clientes e maior organização para a gestão do negócio.
+O UrbanCandy foi desenvolvido para modernizar a experiência de compra em uma confeitaria, proporcionando praticidade aos clientes e organização para a gestão do negócio.
 
 A plataforma conta com:
 
 * 🛍️ Catálogo de produtos e categorias.
-* 🛒 Carrinho de compras.
-* 💳 Formas de pagamento.
-* 🚚 Formas de entrega.
-* 👤 Cadastro, login e gerenciamento de dados do cliente.
-* 📦 Acompanhamento de pedidos.
-* ❌ Cancelamento do próprio pedido, enquanto não estiver no status "Preparando".
+* 🛒 Carrinho de compras e checkout.
+* 💳 Formas de pagamento e entrega.
+* 👤 Cadastro, login e gerenciamento de dados.
+* 📦 Acompanhamento e cancelamento de pedidos.
 * 🔐 Controle de acesso por funções e permissões.
-* 📱 Aplicativo mobile integrado à mesma API do sistema web.
+* 📱 Aplicativo mobile integrado à API.
 * 🖥️ Interface web responsiva.
-* 🖼️ Carregamento otimizado de imagens de produtos.
 
 ---
 
 ## 🏗️ Arquitetura do Projeto
 
-O UrbanCandy é dividido em três partes principais:
+| Aplicação           | Descrição                                                      |
+| ------------------- | -------------------------------------------------------------- |
+| `UrbanCandy_front`  | Interface web em React e Vite.                                 |
+| `UrbanCandy_mobile` | Aplicativo mobile em Expo, React Native e TypeScript.          |
+| `UrbanCandy_back`   | API responsável pelas regras de negócio, autenticação e dados. |
 
-| Aplicação           | Descrição                                                                                |
-| ------------------- | ---------------------------------------------------------------------------------------- |
-| `UrbanCandy_front`  | Interface web desenvolvida com React e Vite.                                             |
-| `UrbanCandy_mobile` | Aplicativo mobile desenvolvido com Expo, React Native e TypeScript.                      |
-| `UrbanCandy_back`   | API responsável pelas regras de negócio, autenticação, pedidos e persistência dos dados. |
-
-**Web e mobile utilizam o mesmo backend**, permitindo que os dados de clientes, produtos, pedidos e demais funcionalidades sejam compartilhados entre as plataformas.
+**Web e mobile utilizam o mesmo backend**, permitindo o compartilhamento de clientes, produtos, pedidos e demais informações.
 
 ---
 
@@ -44,46 +39,42 @@ O UrbanCandy é dividido em três partes principais:
 
 ### Frontend Web — `UrbanCandy_front`
 
-* **React** com **Vite** — Desenvolvimento da interface web.
-* **TypeScript** — Tipagem estática.
-* **React Router DOM** — Gerenciamento de rotas e fluxos protegidos.
-* **Lucide React** — Ícones da interface.
-* **React Toastify** — Notificações visuais.
-* **Playwright / Jest** — Testes automatizados.
+* React + Vite
+* TypeScript
+* React Router DOM
+* Lucide React
+* React Toastify
+* Playwright / Jest
 
 ### Aplicativo Mobile — `UrbanCandy_mobile`
 
-* **React Native** — Desenvolvimento mobile multiplataforma.
-* **Expo** — Plataforma e ferramentas de desenvolvimento.
-* **Expo Router** — Navegação baseada em arquivos.
-* **TypeScript** — Tipagem estática.
-* **Expo Image** — Exibição e cache de imagens.
-* **AsyncStorage / Expo SecureStore** — Persistência de dados e autenticação.
-* **Context API** — Gerenciamento de autenticação, carrinho e tema.
-* **Axios / Fetch** — Comunicação com a API.
-* **StyleSheet** — Organização dos estilos.
-* **Expo Go** — Testes e execução em dispositivo físico.
+* React Native
+* Expo + Expo Router
+* TypeScript
+* Expo Image (cache de imagens)
+* AsyncStorage / Expo SecureStore
+* Context API
+* Expo Go
 
 ### Backend — `UrbanCandy_back`
 
-* **Node.js** com **TypeScript**.
-* **Express** — Criação da API REST.
-* **Sequelize** — ORM para comunicação com o banco de dados.
-* **MySQL** — Banco de dados relacional.
-* **JWT** — Autenticação de usuários.
-* **Multer** — Upload de imagens de produtos.
-* **Arquitetura em camadas** — Controllers, Services, Models e Routes.
-* **RBAC** — Controle de acesso baseado em funções e permissões.
+* Node.js + TypeScript
+* Express
+* Sequelize
+* MySQL
+* JWT
+* Multer
+* Arquitetura em camadas
+* RBAC (funções e permissões)
 
-### Infraestrutura e Ferramentas
+### Ferramentas
 
-* **Docker & Docker Compose** — Conteinerização e execução do projeto.
-* **Nginx** — Proxy reverso e servidor de arquivos estáticos.
-* **Jest** — Testes automatizados.
-* **Playwright** — Testes end-to-end.
-* **ESLint & Prettier** — Padronização do código.
-* **Husky & Commitlint** — Validação e padronização de commits.
-* **Git & GitHub** — Versionamento e colaboração.
+* Docker & Docker Compose
+* Nginx
+* Jest / Playwright
+* ESLint & Prettier
+* Husky & Commitlint
+* Git & GitHub
 
 ---
 
@@ -91,109 +82,92 @@ O UrbanCandy é dividido em três partes principais:
 
 ```text
 URBANCANDY/
-├── UrbanCandy_back/          # API REST em Node.js + TypeScript
+├── UrbanCandy_back/          # API REST
 │   ├── src/
-│   │   ├── controllers/      # Controllers das rotas
-│   │   ├── dto/              # Data Transfer Objects
-│   │   ├── models/            # Models e entidades do banco
-│   │   ├── repositories/      # Comunicação com a persistência
-│   │   ├── routes/            # Rotas da API
-│   │   ├── service/           # Regras de negócio
-│   │   └── middlewares/       # Autenticação e permissões
-│   └── uploads/               # Imagens de produtos
+│   │   ├── controllers/
+│   │   ├── dto/
+│   │   ├── models/
+│   │   ├── repositories/
+│   │   ├── routes/
+│   │   ├── service/
+│   │   └── middlewares/
+│   └── uploads/
 │
-├── UrbanCandy_front/          # Interface web em React
-│   ├── e2e/                   # Testes end-to-end
+├── UrbanCandy_front/         # Interface web
+│   ├── e2e/
 │   └── src/
-│       ├── assets/             # Imagens e identidade visual
-│       ├── components/        # Componentes reutilizáveis
-│       ├── context/           # Contextos da aplicação
-│       ├── hooks/              # Custom Hooks
-│       ├── pages/              # Páginas da aplicação
-│       └── services/           # Comunicação com a API
+│       ├── assets/
+│       ├── components/
+│       ├── context/
+│       ├── hooks/
+│       ├── pages/
+│       └── services/
 │
-├── UrbanCandy_mobile/         # Aplicativo mobile em Expo + React Native
-│   ├── app/                   # Rotas e telas do aplicativo
-│   │   ├── protected/          # Rotas protegidas
-│   │   └── ...
-│   ├── assets/                # Imagens e identidade visual
-│   ├── components/            # Componentes reutilizáveis
-│   ├── constants/             # Constantes da aplicação
-│   ├── context/               # Contextos de autenticação e carrinho
-│   ├── hooks/                 # Custom Hooks
-│   ├── services/              # Serviços de comunicação com a API
-│   └── package.json
+├── UrbanCandy_mobile/        # Aplicativo mobile
+│   ├── app/
+│   ├── assets/
+│   ├── components/
+│   ├── constants/
+│   ├── context/
+│   ├── hooks/
+│   └── services/
 │
-├── nginx/                     # Configurações do servidor web
-└── docker-compose.yml         # Orquestração dos containers
+├── nginx/
+├── docker-compose.yml
+└── README.md
 ```
 
 ---
 
 ## 🔐 Autenticação e Controle de Acesso
 
-O UrbanCandy utiliza autenticação por token JWT e controle de acesso baseado em funções e permissões.
+O UrbanCandy utiliza autenticação por JWT e controle de acesso baseado em funções e permissões.
 
-### Perfis de acesso
+| Perfil      | Funcionalidades                               |
+| ----------- | --------------------------------------------- |
+| Cliente     | Produtos, carrinho, pedidos e dados pessoais. |
+| Funcionário | Gerenciamento de pedidos conforme permissões. |
+| Gerente     | Recursos administrativos conforme permissões. |
 
-| Perfil      | Funcionalidades                                                                               |
-| ----------- | --------------------------------------------------------------------------------------------- |
-| Cliente     | Navegar pelos produtos, gerenciar dados, realizar pedidos e acompanhar seus próprios pedidos. |
-| Funcionário | Recursos operacionais e gerenciamento de pedidos conforme suas permissões.                    |
-| Gerente     | Recursos de gerenciamento e permissões administrativas conforme configurado no sistema.       |
-
-O acesso às funcionalidades administrativas é controlado pelo backend, respeitando as permissões atribuídas a cada usuário.
+O acesso às funcionalidades administrativas é controlado pelo backend.
 
 ---
 
 ## 📦 Funcionalidades de Pedidos
 
-O sistema permite ao cliente:
-
-* Visualizar seus pedidos.
-* Consultar detalhes de cada pedido.
-* Acompanhar o status da compra.
-* Consultar informações de pagamento e entrega.
-* Cancelar o próprio pedido quando permitido.
+* Visualização dos próprios pedidos.
+* Consulta de detalhes, pagamento e entrega.
+* Acompanhamento do status.
+* Cancelamento do próprio pedido quando permitido.
 
 ### Cancelamento de pedidos
 
-O cancelamento é permitido somente enquanto o pedido ainda não estiver no status **"Preparando"**.
+O cliente pode cancelar o próprio pedido enquanto ele não estiver no status **"Preparando"**.
 
-Quando o pedido já está sendo preparado, o sistema bloqueia o cancelamento para evitar alterações indevidas durante a produção.
-
-A regra deve ser validada no backend, garantindo que o cliente não consiga burlar a restrição por meio de requisições externas.
+Após o início da preparação, o cancelamento não é permitido. Essa regra deve ser validada no backend para garantir a segurança da operação.
 
 ---
 
-## 🛒 Funcionalidades do Aplicativo Mobile
+## 📱 Funcionalidades do Aplicativo Mobile
 
-O aplicativo mobile foi desenvolvido com Expo Router e React Native, utilizando a mesma API do sistema web.
-
-Principais recursos:
-
-* Tela inicial e apresentação do aplicativo.
-* Login e cadastro de usuários.
+* Login e cadastro.
 * Persistência de autenticação.
-* Home com categorias, produtos em destaque e ofertas.
+* Home com categorias, destaques e ofertas.
 * Cardápio com navegação por categorias.
-* Carrinho de compras.
-* Checkout e seleção de pagamento.
-* Seleção de formas de entrega.
-* Tela de pedidos.
-* Cancelamento de pedidos conforme o status.
-* Tela de perfil e edição dos dados do cliente.
+* Carrinho, checkout e pagamentos.
+* Formas de entrega.
+* Consulta e cancelamento de pedidos.
+* Perfil e edição de dados.
 * Menu inferior de navegação.
-* Interface adaptada para dispositivos móveis.
-* Cache de imagens para otimizar o carregamento dos produtos.
+* Cache de imagens dos produtos.
 
 ---
 
 ## 🗄️ Banco de Dados
 
-O backend utiliza MySQL com Sequelize para modelagem e persistência dos dados.
+O backend utiliza **MySQL** com **Sequelize**.
 
-Entre as principais entidades estão:
+Principais entidades:
 
 * Users
 * People
@@ -210,7 +184,7 @@ Entre as principais entidades estão:
 * UserRole
 * RolePermission
 
-Os relacionamentos entre as entidades são representados por meio do DER (Diagrama Entidade-Relacionamento) do projeto.
+Os relacionamentos estão representados no DER do projeto.
 
 ---
 
@@ -219,30 +193,18 @@ Os relacionamentos entre as entidades são representados por meio do DER (Diagra
 ### Pré-requisitos
 
 * Git
-* Node.js
-* npm
-* MySQL (caso execute sem Docker)
-* Docker e Docker Compose (caso utilize containers)
-* Expo Go para testar o aplicativo mobile em dispositivo físico
+* Node.js e npm
+* Docker e Docker Compose
+* Expo Go (para testar o mobile)
 
-### 1. Clonando o repositório
+### 1. Clonar o repositório
 
 ```bash
 git clone https://github.com/isabellyccamargo/UrbanCandy.git
 cd UrbanCandy
 ```
 
-### 2. Rodando com Docker
-
-Para subir os serviços configurados no Docker Compose:
-
-```bash
-docker-compose up -d
-```
-
-A aplicação estará disponível conforme as portas e configurações definidas no arquivo `docker-compose.yml`.
-
-### 3. Rodando o Backend
+### 2. Backend
 
 ```bash
 cd UrbanCandy_back
@@ -250,7 +212,7 @@ npm install
 npm run dev
 ```
 
-### 4. Rodando o Frontend Web
+### 3. Frontend Web
 
 Em outro terminal:
 
@@ -260,7 +222,7 @@ npm install
 npm run dev
 ```
 
-### 5. Rodando o Aplicativo Mobile
+### 4. Aplicativo Mobile
 
 Em outro terminal:
 
@@ -270,67 +232,47 @@ npm install
 npx expo start
 ```
 
-Após iniciar o Expo, escaneie o QR Code com o aplicativo Expo Go no celular.
+Após iniciar o Expo, escaneie o QR Code pelo Expo Go.
 
-> **Nota:** Para testar o mobile em um dispositivo físico, o celular e o computador devem estar conectados à mesma rede, conforme a configuração de desenvolvimento da API.
+> Para testar em um dispositivo físico, o celular e o computador devem estar conectados à mesma rede, conforme a configuração da API.
+
+### Docker
+
+Para executar os serviços configurados no Docker Compose:
+
+```bash
+docker-compose up -d
+```
 
 ---
 
 ## 🧪 Testes Automatizados
 
-O projeto possui testes automatizados para auxiliar na validação das funcionalidades.
-
-### Testes do Frontend Web
+### Frontend Web
 
 ```bash
 cd UrbanCandy_front
 npm run test
 ```
 
-Ou utilizando o Playwright:
-
-```bash
-npx playwright test
-```
-
-### Testes do Backend
+### Backend
 
 ```bash
 cd UrbanCandy_back
 npm test
 ```
 
-Os comandos devem ser executados conforme os scripts definidos nos respectivos arquivos `package.json`.
-
----
-
-## 📝 Convenção de Commits
-
-O projeto utiliza Conventional Commits para padronizar as mensagens de versionamento.
-
-Exemplos:
-
-```text
-feat: adiciona cancelamento de pedidos no mobile
-fix: corrige validação do status do pedido
-feat: adiciona cache de imagens dos produtos
-docs: atualiza README do projeto
-```
+Os comandos dependem dos scripts configurados nos respectivos `package.json`.
 
 ---
 
 ## 📚 Documentação do Projeto
 
-A documentação do UrbanCandy apresenta os principais aspectos do desenvolvimento da plataforma, incluindo sua arquitetura, requisitos, modelagem de dados e funcionalidades.
+A documentação apresenta os objetivos, requisitos, arquitetura, modelagem de dados e funcionalidades do UrbanCandy.
 
-### 📄 Documentos
+📘 **[Acessar a documentação completa do UrbanCandy](https://docs.google.com/document/d/1yNbEy7QVzsXAts5HcmVfDUTbv5w3EJYmjcVROHTeSYg/edit?tab=t.0#heading=h.kiz4lse391rn)**
 
-* 📘 **Documentação Geral do Projeto** — Apresentação do sistema, objetivos, requisitos e funcionalidades.
-* 🗄️ **DER (Diagrama Entidade-Relacionamento)** — Representação da estrutura do banco de dados e seus relacionamentos.
-* 📊 **Diagramas do Sistema** — Diagramas utilizados para representar os processos e a arquitetura da aplicação.
-* 📱 **Documentação do Aplicativo Mobile** — Informações sobre a implementação e funcionalidades do aplicativo desenvolvido com Expo e React Native.
-
-👉 [Acessar a documentação completa do UrbanCandy](https://docs.google.com/document/d/1yNbEy7QVzsXAts5HcmVfDUTbv5w3EJYmjcVROHTeSYg/edit?tab=t.0#heading=h.kiz4lse391rn)
+A documentação também inclui o DER e os diagramas do sistema.
 
 ---
 
