@@ -35,6 +35,7 @@ export type OrderItem = {
 
 export type Order = {
     id_orders: number;
+    status_id?: number;
     total?: number | string;
     order_date?: string;
     paymentType?: {

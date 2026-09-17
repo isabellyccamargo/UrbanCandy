@@ -94,10 +94,6 @@ export default function CadastroScreen() {
         new Set()
     );
 
-    useEffect(() => {
-        initialize();
-    }, [mode]);
-
     const change = (field: keyof typeof form, value: string) => {
         setForm(prev => ({ ...prev, [field]: value }));
 
@@ -260,6 +256,14 @@ export default function CadastroScreen() {
         }
     }
 
+    useEffect(() => {
+        const initializeTimer = setTimeout(() => {
+            void initialize();
+        }, 0);
+
+        return () => clearTimeout(initializeTimer);
+    }, [mode]);
+
     async function handleLogout() {
         try {
             setImageUri(null);
@@ -291,8 +295,11 @@ export default function CadastroScreen() {
             'neighborhood',
             'road',
             'number',
-            ...(!editing ? ['password', 'confirmPassword'] : []),
         ];
+
+        if (!editing) {
+            required.push('password', 'confirmPassword');
+        }
 
         const emptyFields = new Set(
             required.filter(field => !form[field].trim())
@@ -531,7 +538,7 @@ export default function CadastroScreen() {
                 >
                     <AccountForm
                         isEditing={editing}
-                         errors={errors}
+                        errors={errors}
                         {...form}
                         imageUri={imageUri}
                         onPickImage={handlePickImage}
@@ -556,7 +563,7 @@ export default function CadastroScreen() {
                             <Ionicons
                                 name="log-out-outline"
                                 size={22}
-                                color={colors.error ?? '#E53935'}
+                                color={colors.danger ?? '#E53935'}
                             />
                             <Text style={styles.logoutText}>Sair da Conta</Text>
                         </Pressable>

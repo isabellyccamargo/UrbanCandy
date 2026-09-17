@@ -19,7 +19,7 @@ import {
 } from 'expo-router';
 
 import { useTheme } from '@/context/Theme';
-import { api } from '@/services/api';
+import api from '@/services/api';
 import { getUserProfile } from '@/services/auth';
 
 function getFullImageUrl(

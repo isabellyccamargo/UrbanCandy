@@ -34,19 +34,27 @@ export default function EmployeeOrdersDetails() {
     const validOrderId = Number(params.id || orderData?.id_orders || orderData?.id || 0);
 
     useEffect(() => {
-        let parsedOrder = null;
+        let parsedOrder: Record<string, any> | null = null;
+        let orderUpdateTimer: ReturnType<typeof setTimeout> | undefined;
+        let loadingUpdateTimer: ReturnType<typeof setTimeout> | undefined;
         if (params.order) {
             try {
                 const rawOrder = typeof params.order === 'string' ? params.order : params.order[0];
                 parsedOrder = JSON.parse(decodeURIComponent(rawOrder));
-                setOrderData(parsedOrder);
+                orderUpdateTimer = setTimeout(() => setOrderData(parsedOrder), 0);
             } catch (e) {
                 console.error('Erro ao converter dados do pedido:', e);
             }
         }
 
         const idToUse = Number(params.id || parsedOrder?.id_orders || parsedOrder?.id || 0);
-        if (!idToUse) { setLoading(false); return; }
+        if (!idToUse) {
+            loadingUpdateTimer = setTimeout(() => setLoading(false), 0);
+            return () => {
+                if (orderUpdateTimer) clearTimeout(orderUpdateTimer);
+                if (loadingUpdateTimer) clearTimeout(loadingUpdateTimer);
+            };
+        }
 
         Promise.all([
             getOrderItems(idToUse),
@@ -60,6 +68,11 @@ export default function EmployeeOrdersDetails() {
             })
             .catch((err) => console.error('Erro ao buscar detalhes:', err))
             .finally(() => setLoading(false));
+
+        return () => {
+            if (orderUpdateTimer) clearTimeout(orderUpdateTimer);
+            if (loadingUpdateTimer) clearTimeout(loadingUpdateTimer);
+        };
     }, [params.id, params.order]);
 
     const getImageUrl = (imagePath?: string) => {
@@ -312,7 +325,7 @@ export default function EmployeeOrdersDetails() {
                         return (
                             <View key={item.id || idx} style={styles.betweenRow}>
                                 <View style={[styles.row, { flex: 1 }]}>
-                                    <Image source={{ uri: getImageUrl(product.image || product.image_url) }} style={styles.itemImage} contentFit="cover" cachePolicy="memory-disk" transition={150} />
+                                    <Image source={{ uri: getImageUrl(product.image || product.image_url) ?? undefined }} style={styles.itemImage} contentFit="cover" cachePolicy="memory-disk" transition={150} />
                                     <View style={styles.qtyBadge}><Text style={styles.qtyText}>{item.quantity || 1}x</Text></View>
                                     <View style={{ flex: 1 }}>
                                         <Text style={styles.productName}>{product.name || 'Produto'}</Text>
