@@ -26,7 +26,7 @@ class TypeOfDeliveryController {
       const id = Number(id_type_delivery);
 
       if (!id_type_delivery || Number.isNaN(id)) {
-        throw new ApiException('INVALID_ID', 400, id_type_delivery);
+        throw new ApiException('INVALID_ID', 400, String(id_type_delivery));
       }
 
       const type = await TypeOfDeliveryService.findById(id);
@@ -55,7 +55,7 @@ class TypeOfDeliveryController {
       const id = Number(id_delivery);
 
       if (!id_delivery || Number.isNaN(id)) {
-        throw new ApiException('INVALID_ID', 400, id_delivery);
+        throw new ApiException('INVALID_ID', 400, String(id_delivery));
       }
 
       const type = TypeOfDelivery.build(req.body);
@@ -76,7 +76,7 @@ class TypeOfDeliveryController {
       const id = Number(id_delivery);
 
       if (!id_delivery || Number.isNaN(id)) {
-        throw new ApiException('INVALID_ID', 400, id_delivery);
+        throw new ApiException('INVALID_ID', 400, String(id_delivery));
       }
 
       await TypeOfDeliveryService.delete(id);

@@ -32,7 +32,9 @@ export function authorizePermission(permissionName: string) {
 
       // Consolida todas as permissões do usuário em um único array de strings
       const userPermissions =
-        user.roles?.flatMap((role: any) => role.permissions?.map((p: any) => p.name) || []) || [];
+        user.roles?.flatMap(
+          (role) => role.permissions?.map((permission) => permission.name) ?? []
+        ) ?? [];
 
       if (!userPermissions.includes(permissionName)) {
         return res.status(403).json({

@@ -111,10 +111,10 @@ class RolePermissionController {
         throw new ApiException('REQUIRED_FIELD', 400, 'id_role/id_permission');
       }
 
-      const rolePermission = await RolePermissionService.createRolePermission(
-        Number(id_role),
-        Number(id_permission)
-      );
+      const rolePermission = await RolePermissionService.createRolePermission({
+        id_role: Number(id_role),
+        id_permission: Number(id_permission),
+      });
 
       res.status(201).json({
         message: 'Permissão atribuída ao role com sucesso',

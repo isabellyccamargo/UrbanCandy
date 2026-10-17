@@ -5,7 +5,7 @@ import sequelize from '../config/Config.js';
 class Permission extends Model {
   declare id_permission: number;
   declare name: string;
-  declare description: string;
+  declare description: string | null;
 }
 
 Permission.init(

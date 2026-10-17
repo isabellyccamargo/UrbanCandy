@@ -12,10 +12,10 @@ describe('Order', () => {
     const cart: any = { items: [{ id: 1 }], total: 50 };
 
     try {
-      await OrderService.checkout(0, cart, 'pix');
+      await OrderService.checkout(0, cart, 1, 1);
       throw new Error('Deveria ter lançado um erro');
     } catch (error: any) {
-      expect(error.message).toContain('USER_NOT_FOUND');
+      expect(error.code).toBe('USER_NOT_FOUND');
     }
   });
 
@@ -23,10 +23,10 @@ describe('Order', () => {
     const cart: any = { items: [{ id: 1 }], total: 50 };
 
     try {
-      await OrderService.checkout(1, cart, '');
+      await OrderService.checkout(1, cart, 0, 1);
       throw new Error('Deveria ter lançado um erro');
     } catch (error: any) {
-      expect(error).toBeDefined();
+      expect(error.code).toBe('PAYMENT_REQUIRED');
     }
   });
 
@@ -34,10 +34,10 @@ describe('Order', () => {
     const cartFraude: any = { items: [{ id: 1 }], total: 0 };
 
     try {
-      await OrderService.checkout(1, cartFraude, 'cartao');
+      await OrderService.checkout(1, cartFraude, 1, 1);
       throw new Error('Deveria ter lançado um erro');
     } catch (error: any) {
-      expect(error).toBeDefined();
+      expect(error.code).toBe('INVALID_TOTAL');
     }
   });
 
@@ -51,9 +51,9 @@ describe('Order', () => {
       .spyOn(OrderRepository, 'createFullOrder')
       .mockResolvedValue({ id_order: 123, status: 'success' } as any);
 
-    const res = await OrderService.checkout(1, cartOk, 'boleto');
+    const res = await OrderService.checkout(1, cartOk, 1, 1);
 
-    expect(spy).toHaveBeenCalledWith(1, cartOk.items, 50, 'boleto');
+    expect(spy).toHaveBeenCalledWith(1, cartOk.items, 50, 1, 1, 1);
     expect(res.id_order).toBe(123);
   });
 });

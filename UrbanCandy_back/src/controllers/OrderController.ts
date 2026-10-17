@@ -56,7 +56,10 @@ class OrderController {
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Erro ao buscar pedidos do usuário.';
-      const sql = error && typeof error === 'object' && 'sql' in error ? String((error as { sql?: string }).sql) : undefined;
+      const sql =
+        error && typeof error === 'object' && 'sql' in error
+          ? String((error as { sql?: string }).sql)
+          : undefined;
 
       return res.status(500).json({
         message,

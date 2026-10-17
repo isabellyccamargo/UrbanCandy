@@ -1,10 +1,11 @@
 import type Address from '../models/Address.js';
 import AddressRepository from '../repositories/AddressRepository.js';
 import { ApiException } from '../exception/ApiException.js';
+import ViaCepClient from './ViaCepClient.js';
 
 class AddressService {
   /**
-   * Helper privado para consultar a existência do CEP na API dos Correios (ViaCEP)
+   * Consulta a existência do CEP na API dos Correios (ViaCEP).
    */
   private async validateCepExists(cep: string): Promise<void> {
     const cleanCep = cep.replace(/\D/g, '');
@@ -13,23 +14,7 @@ class AddressService {
       throw new ApiException('INVALID_CEP_FORMAT', 400);
     }
 
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-
-      if (!response.ok) {
-        throw new ApiException('ERROR_FETCHING_CEP', 500);
-      }
-
-      const data = await response.json();
-
-      // O ViaCEP devolve { erro: "true" } quando o CEP não existe no cadastro nacional
-      if (data.erro) {
-        throw new ApiException('CEP_NOT_FOUND', 400);
-      }
-    } catch (error) {
-      if (error instanceof ApiException) throw error;
-      throw new ApiException('FAILED_TO_VALIDATE_CEP', 500);
-    }
+    await ViaCepClient.validate(cleanCep);
   }
 
   async createAddress(data: Address): Promise<Address> {

@@ -105,16 +105,21 @@ class OrderService {
       include: [{ model: People, as: 'people', attributes: ['id_people'] }],
     });
 
-    const requesterPeopleId = user && 'people' in user
-      ? Number((user as { people?: { id_people?: number } | null }).people?.id_people ?? 0)
-      : 0;
+    const requesterPeopleId =
+      user && 'people' in user
+        ? Number((user as { people?: { id_people?: number } | null }).people?.id_people ?? 0)
+        : 0;
 
     if (!requesterPeopleId || requesterPeopleId <= 0) {
       throw new ApiException('USER_PROFILE_NOT_FOUND', 404, 'Perfil do usuário não encontrado.');
     }
 
     if (order.id_people !== requesterPeopleId) {
-      throw new ApiException('UNAUTHORIZED', 403, 'Você não tem permissão para cancelar este pedido.');
+      throw new ApiException(
+        'UNAUTHORIZED',
+        403,
+        'Você não tem permissão para cancelar este pedido.'
+      );
     }
 
     const STATUS_RECEBIDO_ID = 1;
@@ -131,7 +136,11 @@ class OrderService {
     const [affectedRows] = await OrderRepository.updateOrderStatus(id_order, STATUS_CANCELADO_ID);
 
     if (affectedRows === 0) {
-      throw new ApiException('CANCEL_FAILED', 500, 'Não foi possível cancelar o pedido. Tente novamente.');
+      throw new ApiException(
+        'CANCEL_FAILED',
+        500,
+        'Não foi possível cancelar o pedido. Tente novamente.'
+      );
     }
 
     return { message: 'Pedido cancelado com sucesso.' };

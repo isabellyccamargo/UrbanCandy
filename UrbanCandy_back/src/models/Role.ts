@@ -1,11 +1,13 @@
 import { DataTypes, Model } from 'sequelize';
 
 import sequelize from '../config/Config.js';
+import type Permission from './Permission.js';
 
 class Role extends Model {
   declare id_role: number;
   declare name: string;
-  declare description: string;
+  declare description: string | null;
+  declare permissions?: Permission[];
 }
 
 Role.init(

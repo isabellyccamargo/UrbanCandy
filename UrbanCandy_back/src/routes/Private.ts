@@ -87,10 +87,7 @@ privateRoutes.patch(
   PeopleController.uploadImage
 );
 
-privateRoutes.get(
-  '/pedido/usuario/:id_people',
-  OrderController.findByUserId
-);
+privateRoutes.get('/pedido/usuario/:id_people', OrderController.findByUserId);
 
 privateRoutes.get(
   '/pedido/:id_order/itens',
@@ -110,11 +107,7 @@ privateRoutes.patch(
   OrderController.updateStatus
 );
 
-privateRoutes.patch(
-  '/pedido/:id_order/cancel',
-  authorizePermission('alterar_status_pedido'), // Ou crie uma nova permissão como 'cancelar_pedido'
-  OrderController.cancel
-);
+privateRoutes.patch('/pedido/:id_order/cancel', OrderController.cancel);
 
 // --- TIPOS DE PAGAMENTO ---
 

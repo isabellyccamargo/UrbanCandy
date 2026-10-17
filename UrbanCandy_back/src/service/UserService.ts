@@ -11,9 +11,6 @@ interface UserWithProfile extends Users {
   people?: {
     name: string;
   };
-  roles?: {
-    name: string;
-  }[];
 }
 
 interface IUserRegistration {

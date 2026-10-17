@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getUserProfile, createUser, updateUser, updateAddress } from '../../services/Api';
+import { lookupCep, ViaCepError } from '../../services/ViaCep';
 import { Button } from '../../componentes/Button/Button';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/AuthContext';
@@ -68,19 +69,23 @@ const MyData = () => {
     const cep = e.target.value.replace(/\D/g, '');
     if (cep.length !== 8) return;
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data = await res.json();
-      if (!data.erro) {
-        setFormData((prev) => ({
+      const address = await lookupCep(cep);
+      setFormData((prev) => {
+        if (prev.cep.replace(/\D/g, '') !== cep) return prev;
+        return {
           ...prev,
-          road: data.logradouro,
-          neighborhood: data.bairro,
-          city: data.localidade,
-        }));
-        toast.success('Endereço preenchido! 📍');
+          ...address,
+        };
+      });
+      toast.success('Endereço preenchido! 📍');
+    } catch (error) {
+      if (error instanceof ViaCepError && error.code === 'CEP_NOT_FOUND') {
+        toast.error('CEP não encontrado. Confira o número informado.');
+      } else if (error instanceof ViaCepError && error.code === 'INVALID_CEP') {
+        toast.error('Digite um CEP válido com 8 números.');
+      } else {
+        toast.error('Serviço de CEP temporariamente indisponível. Tente novamente.');
       }
-    } catch {
-      toast.error('Erro ao buscar o CEP automaticamente.');
     }
   };
 

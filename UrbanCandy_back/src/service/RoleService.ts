@@ -20,7 +20,7 @@ class RoleService {
     return role;
   }
 
-  async createRole(roleData: { name: string; description?: string }): Promise<Role> {
+  async createRole(roleData: { name: string; description?: string | null }): Promise<Role> {
     if (!roleData.name?.trim()) {
       throw new ApiException('REQUIRED_FIELD', 400, 'name');
     }
@@ -41,7 +41,7 @@ class RoleService {
     id_role: number,
     roleData: {
       name?: string;
-      description?: string;
+      description?: string | null;
     }
   ) {
     const role = await RoleRepository.findByIdRole(id_role);
