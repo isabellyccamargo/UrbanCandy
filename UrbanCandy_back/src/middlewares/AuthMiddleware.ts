@@ -1,7 +1,6 @@
 import { type NextFunction, type Request, type Response } from 'express';
 import jwt from 'jsonwebtoken';
 import UserRepository from '../repositories/UserRepository.js';
-import 'dotenv/config';
 
 type TokenPayload = {
   id: number;

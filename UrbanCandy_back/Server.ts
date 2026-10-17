@@ -30,9 +30,6 @@ server.use(
   })
 );
 
-initializeDatabase();
-dataBaseConectionn();
-
 // 3. O express.json deve vir logo após o CORS
 server.use(express.json());
 
@@ -48,8 +45,18 @@ server.use('/api', publico);
 // Middleware de tratamento de erros - DEVE ser o último middleware
 server.use(errorHandler);
 
-server.listen(PORT, () => {
-  console.log(`Servidor TypeScript rodando na porta ${PORT}`);
+async function startServer() {
+  initializeDatabase();
+  await dataBaseConectionn();
+
+  server.listen(PORT, () => {
+    console.log(`Servidor TypeScript rodando na porta ${PORT}`);
+  });
+}
+
+startServer().catch((error: unknown) => {
+  console.error('Não foi possível iniciar o servidor:', error);
+  process.exitCode = 1;
 });
 
 export default server;

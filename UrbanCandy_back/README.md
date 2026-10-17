@@ -1,109 +1,91 @@
-# UrbanCanndy_back
+# UrbanCandy Backend
 
-Backend da plataforma UrbanCandy desenvolvido com Node.js + Express + TypeScript.
+Backend da plataforma UrbanCandy desenvolvido com Node.js, Express e TypeScript.
 
-## Setup Local
+## Setup local
 
-### 1. Instalar Dependências
+### Instalar dependências
 
 ```bash
 npm install
 ```
 
-### 2. Configurar Variáveis de Ambiente
+### Configurar o ambiente de desenvolvimento
 
-Crie um arquivo `.env` na raiz do projeto:
+Copie `.env.example` para `.env` nesta pasta e configure as credenciais do MySQL
+de desenvolvimento. O backend usa `DB_HOST` e `DB_PORT` para selecionar a
+instância do banco.
 
-```env
-# Exemplos (ajuste conforme necessário)
-DATABASE_URL=postgres://user:password@localhost:5432/urbancandy
-JWT_SECRET=seu_secret_key
-PORT=3000
-```
-
-### 3. Executar Testes
-
-```bash
-# Executar testes uma vez
-npm test
-
-# Modo watch (re-executa ao salvar)
-npm test:watch
-
-# Com cobertura
-npm test:coverage
-```
-
-### 4. Iniciar Servidor
+### Iniciar o servidor
 
 ```bash
 npm run dev
 ```
 
-## Validação de Qualidade
+## Ambientes de banco separados
 
-Este projeto implementa validação automática de qualidade:
+| Execução                      | Arquivo/configuração          | Banco esperado      |
+| ----------------------------- | ----------------------------- | ------------------- |
+| Backend local (`npm run dev`) | `UrbanCandy_back/.env`        | `urbancandy`        |
+| Testes (`npm test`)           | `UrbanCandy_back/.env.test`   | `urbancandy_test`   |
+| Docker Compose                | `.env` na raiz do repositório | `urbancandy_docker` |
 
-- **ESLint:** Valida estilo e boas práticas de código
-- **Prettier:** Formata código automaticamente
-- **Jest:** Executa testes unitários
+Para os testes, copie `.env.test.example` para `.env.test`. `npm test` ativa
+`NODE_ENV=test`; nesse modo a aplicação carrega `.env.test`, mesmo que o
+terminal tenha outras variáveis de banco definidas. A conexão é bloqueada se
+`DB_NAME` não for exatamente `urbancandy_test`.
 
-Todos rodam automaticamente no pre-commit hook (ao fazer `git commit`).
+O Compose executa o backend dentro da rede Docker, que acessa o banco pelo host
+`urbancandy-db` e pela porta interna `3306`. Para conectar um backend executado
+diretamente no computador ao MySQL do Compose, use `127.0.0.1` e a porta
+publicada (por padrão `3307`) no `.env` local. Isso não altera a configuração de
+testes.
 
-### Validar Localmente
+## Testes
 
 ```bash
-npm run lint:check      # Verificar ESLint sem modificar
-npm run format:check    # Verificar Prettier sem modificar
-npm test                # Executar testes
+npm test
+npm run test:watch
 ```
 
-### Auto-corrigir
+Para os testes E2E, primeiro configure `.env.test` e confirme que o MySQL
+selecionado está ativo:
 
 ```bash
-npm run lint --fix      # Corrigir ESLint automaticamente
-npm run format          # Formatar com Prettier automaticamente
+npm run prepare-db:test
+npm run test:e2e
+```
+
+`prepare-db:test` apaga e recria as tabelas do banco `urbancandy_test` antes de
+popular os dados. Não execute esse comando com outro banco.
+
+## Validação de qualidade
+
+```bash
+npm run lint:check
+npm run format:check
+npm test
 ```
 
 ## Arquitetura
 
-```
+```text
 src/
-├── @types/         # Tipos e interfaces TypeScript
-├── config/         # Configurações e properties
-├── controllers/    # Controllers (lógica de requisição)
+├── @types/         # Tipos e interfaces
+├── config/         # Configuração e properties
+├── controllers/    # Controllers HTTP
 ├── dto/            # Data Transfer Objects
-├── exception/      # Exceções personalizadas
-├── middlewares/    # Middleware Express
+├── exception/      # Exceções da aplicação
+├── middlewares/    # Middlewares Express
 ├── models/         # Models Sequelize
-├── repositories/   # Data access layer
-├── routes/         # Rotas Express
+├── repositories/   # Acesso a dados
+├── routes/         # Rotas
 ├── service/        # Lógica de negócio
 └── utils/          # Utilitários
 __tests__/          # Testes unitários
 ```
 
-## Commits
-
-Este projeto segue [Conventional Commits](https://www.conventionalcommits.org/). Veja [CONTRIBUTING.md](./CONTRIBUTING.md) para detalhes.
-
 ## Contribuindo
 
-Por favor, leia [CONTRIBUTING.md](./CONTRIBUTING.md) antes de contribuir.
-
-## Ambiente de Teste Isolado para E2E
-
-Para garantir que os testes E2E não afetem dados reais, utilize um banco de dados de teste separado.
-
-1. Copie o arquivo `.env.example` para `.env` e ajuste as variáveis conforme necessário.
-2. Certifique-se de definir `DATABASE_URL_TEST` para um banco de dados exclusivo de testes (ex: `urbancandy_test`).
-3. Os testes E2E e unitários devem rodar sempre usando `DATABASE_URL_TEST`.
-4. Nunca rode testes E2E apontando para o banco de produção ou desenvolvimento!
-
-### Rodando os testes E2E
-
-```bash
-npm run test:e2e
-```
-
-Os scripts de pre-push garantem que os testes E2E passem antes de permitir push para o repositório.
+Este projeto segue [Conventional Commits](https://www.conventionalcommits.org/).
+Consulte [CONTRIBUTING.md](./CONTRIBUTING.md) antes de contribuir.
