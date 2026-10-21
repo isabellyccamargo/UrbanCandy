@@ -3,6 +3,7 @@ import CategoryRepository from '../repositories/CategoryRepository.js';
 import { deflate } from 'node:zlib';
 import Categories from '../models/Categories.js';
 import { ApiException } from '../exception/ApiException.js';
+import { invalidateProductCache } from '../config/RedisCache.js';
 
 class CategoryService {
   private validateName(category: Categories): void {
@@ -32,7 +33,9 @@ class CategoryService {
   async createCategory(category: Categories): Promise<Categories> {
     this.validateName(category);
     await this.verifyNameNotExists(category);
-    return await CategoryRepository.createCategory(category);
+    const createdCategory = await CategoryRepository.createCategory(category);
+    await invalidateProductCache();
+    return createdCategory;
   }
 
   async updateCategory(idCategory: number, category: Categories): Promise<[number]> {
@@ -40,12 +43,16 @@ class CategoryService {
     this.validateName(category);
     await this.findByIdCategory(idCategory);
     await this.verifyNameNotExists(category, idCategory);
-    return await CategoryRepository.updateCategory(idCategory, category);
+    const result = await CategoryRepository.updateCategory(idCategory, category);
+    await invalidateProductCache();
+    return result;
   }
 
   async deleteCategory(id_category: number): Promise<number> {
     await this.findByIdCategory(id_category);
-    return await CategoryRepository.deleteCategory(id_category);
+    const result = await CategoryRepository.deleteCategory(id_category);
+    await invalidateProductCache();
+    return result;
   }
 }
 

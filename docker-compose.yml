@@ -1,17 +1,20 @@
+name: urbancandy-compose
+
 services:
-  # BANCO DE DADOS
   urbancandy-db:
     image: mysql:8.0
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DOCKER_DB_NAME:-urbancandy_docker}
+      MYSQL_USER: ${DOCKER_DB_USER:-urbancandy_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Configure DB_PASSWORD in the root .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${DB_PASSWORD}}
     ports:
       - "${MYSQL_PORT:-3307}:3306"
     volumes:
-      - urbancandy_db_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     networks:
-      - urbancandy-network
+      - app_network
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test:
@@ -23,57 +26,108 @@ services:
       timeout: 5s
       retries: 10
 
-  #  BACKEND
   urbancandy-backend:
-    restart: always
-    build: ./UrbanCandy_back
-    image: urbancandy-backend:latest
+    build:
+      context: ./UrbanCandy_back
+      dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       NODE_ENV: production
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:?Configure JWT_SECRET in the root .env}
       PORT: 3030
       DB_HOST: urbancandy-db
       DB_PORT: 3306
-      DB_USER: ${DB_USER}
+      DB_USER: ${DOCKER_DB_USER:-urbancandy_app}
       DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
+      DB_NAME: ${DOCKER_DB_NAME:-urbancandy_docker}
+      REDIS_URL: redis://urbancandy-redis:6379
+      PRODUCT_CACHE_TTL_SECONDS: ${PRODUCT_CACHE_TTL_SECONDS:-60}
     volumes:
       - ./UrbanCandy_back/uploads:/app/uploads
     networks:
-      - urbancandy-network
+      - app_network
     depends_on:
       urbancandy-db:
         condition: service_healthy
+      urbancandy-redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3030/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  # FRONTEND
   urbancandy-frontend:
     build:
       context: ./UrbanCandy_front
       dockerfile: Dockerfile
-    image: urbancandy-frontend:latest
-    restart: always
+      args:
+        VITE_API_URL: /api
+    restart: unless-stopped
     networks:
-      - urbancandy-network
+      - app_network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:5173/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  # Nginx
+  urbancandy-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "no", "--save", ""]
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   urbancandy-nginx:
     image: nginx:alpine
-    restart: always
+    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/certs:/etc/nginx/certs:ro
     networks:
-      - urbancandy-network
+      - app_network
     depends_on:
-      - urbancandy-frontend
-      - urbancandy-backend
+      urbancandy-frontend:
+        condition: service_healthy
+      urbancandy-backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'wget --no-check-certificate -qO- https://127.0.0.1/api/health | grep -q ''"status":"ok"''',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
-  urbancandy_db_data:
+  mysql_data:
 
 networks:
-  urbancandy-network:
+  app_network:
     driver: bridge

@@ -6,6 +6,7 @@ import publico from './src/routes/Public.js';
 import { dataBaseConectionn } from './src/config/Config.js';
 import { initializeDatabase } from './src/config/bootstrap.js';
 import { errorHandler } from './src/middlewares/ErrorHandler.js';
+import { initializeRedisCache } from './src/config/RedisCache.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +48,7 @@ server.use(errorHandler);
 
 async function startServer() {
   initializeDatabase();
+  await initializeRedisCache();
   await dataBaseConectionn();
 
   server.listen(PORT, () => {

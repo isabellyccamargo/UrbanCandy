@@ -6,11 +6,13 @@ WORKDIR /app
 # Copia os mapeamentos de dependências
 COPY package*.json ./
 
-# Instala as dependências do front
-RUN npm install
+RUN npm ci
 
 # Copia o restante do código do frontend
 COPY . .
+
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=${VITE_API_URL}
 
 # Compila o Vite para produção (gera a pasta dist estática)
 RUN npm run build
