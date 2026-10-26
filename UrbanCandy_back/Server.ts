@@ -7,6 +7,8 @@ import { dataBaseConectionn } from './src/config/Config.js';
 import { initializeDatabase } from './src/config/bootstrap.js';
 import { errorHandler } from './src/middlewares/ErrorHandler.js';
 import { initializeRedisCache } from './src/config/RedisCache.js';
+import { initializeOrderEventSubscriber } from './src/events/OrderEvents.js';
+import { startOrderStatusOutbox } from './src/events/OrderStatusOutbox.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,6 +52,8 @@ async function startServer() {
   initializeDatabase();
   await initializeRedisCache();
   await dataBaseConectionn();
+  await initializeOrderEventSubscriber();
+  await startOrderStatusOutbox();
 
   server.listen(PORT, () => {
     console.log(`Servidor TypeScript rodando na porta ${PORT}`);

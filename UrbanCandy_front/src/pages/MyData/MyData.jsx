@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { getUserProfile, createUser, updateUser, updateAddress } from '../../services/Api';
+import {
+  getUserProfile,
+  createUser,
+  updateUser,
+  updateAddress,
+  getEmailVerificationStatus,
+  requestEmailVerification,
+  confirmEmailVerification,
+} from '../../services/Api';
 import { lookupCep, ViaCepError } from '../../services/ViaCep';
 import { Button } from '../../componentes/Button/Button';
 import { toast } from 'react-toastify';
@@ -59,6 +67,10 @@ const MyData = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(null);
+  const [verificationRequested, setVerificationRequested] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [accountCreated, setAccountCreated] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -109,6 +121,13 @@ const MyData = () => {
             cep: addr.cep ? masks.cep(addr.cep) : '',
           }));
           setIsEditMode(true);
+          try {
+            const verification = await getEmailVerificationStatus();
+            setEmailVerified(verification.verified);
+            setVerificationRequested(!verification.verified);
+          } catch {
+            setEmailVerified(null);
+          }
         } catch {
           toast.error('Erro ao carregar dados. 😟');
         }
@@ -156,14 +175,53 @@ const MyData = () => {
         localStorage.setItem('@UrbanCandy:user', JSON.stringify(updatedUser));
         toast.success('Dados atualizados! ✨');
       } else {
-        await createUser({ ...formData, cpf: rawCpf, telephone: rawPhone, cep: rawCep });
-        toast.success('Bem-vindo(a)! 🍬');
-        setTimeout(() => (window.location.href = '/?login=true'), 2000);
+        const result = await createUser({
+          ...formData,
+          cpf: rawCpf,
+          telephone: rawPhone,
+          cep: rawCep,
+        });
+        setAccountCreated(true);
+        setVerificationRequested(result.verificationEmailQueued === true);
+        setEmailVerified(result.emailAlreadyVerified === true);
+        if (result.emailAlreadyVerified) {
+          toast.success('Cadastro feito! Seu e-mail já está confirmado.');
+        } else if (result.verificationEmailQueued) {
+          toast.success('Cadastro feito! Digite o código enviado ao seu e-mail.');
+        } else {
+          toast.warning(
+            result.verificationMessage ||
+              'Conta criada; entre e solicite o código de confirmação em Meus Dados.'
+          );
+        }
       }
     } catch (err) {
       toast.error(err.message || 'Erro na operação.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleRequestEmailVerification = async () => {
+    try {
+      await requestEmailVerification();
+      setVerificationRequested(true);
+      toast.success('Código enviado. Confira sua caixa de entrada.');
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Não foi possível enviar o código.');
+    }
+  };
+
+  const handleConfirmEmailVerification = async () => {
+    try {
+      await confirmEmailVerification(formData.email, verificationCode);
+      setEmailVerified(true);
+      toast.success('E-mail confirmado! Você receberá atualizações dos pedidos.');
+      if (accountCreated) {
+        setTimeout(() => (window.location.href = '/?login=true'), 1200);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Código inválido ou expirado.');
     }
   };
 
@@ -300,6 +358,47 @@ const MyData = () => {
               {isSaving ? 'Salvando...' : isEditMode ? 'Salvar Alterações' : 'Finalizar Cadastro'}
             </Button>
           </div>
+
+          {(accountCreated || (isEditMode && emailVerified === false)) && (
+            <section aria-live="polite" style={{ margin: '12px 0 20px', width: '100%' }}>
+              <p>
+                {emailVerified
+                  ? 'E-mail confirmado.'
+                  : 'Confirme seu e-mail uma vez para receber atualizações dos pedidos.'}
+              </p>
+              {!emailVerified && (
+                <>
+                  {!verificationRequested && isEditMode && (
+                    <Button type="button" variant="primary" onClick={handleRequestEmailVerification}>
+                      Enviar código de confirmação
+                    </Button>
+                  )}
+                  {verificationRequested && (
+                    <div className="form-row">
+                      <FormField
+                        label="Código recebido por e-mail"
+                        name="verificationCode"
+                        value={verificationCode}
+                        onChange={(event) =>
+                          setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))
+                        }
+                        inputMode="numeric"
+                        maxLength={6}
+                      />
+                      <Button type="button" variant="primary" onClick={handleConfirmEmailVerification}>
+                        Confirmar e-mail
+                      </Button>
+                      {isEditMode && (
+                        <Button type="button" variant="secondary" onClick={handleRequestEmailVerification}>
+                          Reenviar código
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          )}
         </form>
       </section>
     </div>

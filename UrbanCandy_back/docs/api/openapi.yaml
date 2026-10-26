@@ -1,0 +1,579 @@
+openapi: 3.0.3
+info:
+  title: UrbanCandy API
+  version: 1.0.0
+  description: Principais endpoints da API UrbanCandy. Esta especificação acompanha o backend atual; não inclui operações administrativas menos usadas.
+servers:
+  - url: /api
+    description: API no mesmo host que serve o Swagger UI
+tags:
+  - name: Saúde
+  - name: Autenticação
+  - name: Catálogo
+  - name: Pedidos
+  - name: Pagamentos
+paths:
+  /health:
+    get:
+      tags: [Saúde]
+      summary: Verifica se a API está ativa
+      security: []
+      responses:
+        '200':
+          description: API ativa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  timestamp: { type: string, format: date-time }
+
+  /login:
+    post:
+      tags: [Autenticação]
+      summary: Autentica usuário e retorna JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: Login realizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: Usuário autenticado }
+                  token: { type: string }
+                  user:
+                    type: object
+                    properties:
+                      id_user: { type: integer }
+                      nome: { type: string }
+                      roles:
+                        type: array
+                        items: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /usuario/salvar:
+    post:
+      tags: [Autenticação]
+      summary: Cadastra uma nova conta
+      description: Endpoint público. A imagem é opcional e enviada como multipart/form-data.
+      security: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [email, password, name, cpf, cep, city, neighborhood, road, number]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password, minLength: 8 }
+                name: { type: string }
+                cpf: { type: string }
+                telephone: { type: string }
+                cep: { type: string }
+                city: { type: string }
+                neighborhood: { type: string }
+                road: { type: string }
+                number: { type: integer }
+                complement: { type: string }
+                image: { type: string, format: binary }
+      responses:
+        '201':
+          description: Conta, pessoa e endereço cadastrados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  id: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /produto/listar:
+    get:
+      tags: [Catálogo]
+      summary: Lista produtos
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: size
+          in: query
+          schema: { type: integer, default: 6 }
+      responses:
+        '200':
+          description: Produtos paginados
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedProducts' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /produto/listarPorId/{id_product}:
+    get:
+      tags: [Catálogo]
+      summary: Busca produto por ID
+      security: []
+      parameters:
+        - name: id_product
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Produto encontrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Product' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /categoria/listar:
+    get:
+      tags: [Catálogo]
+      summary: Lista categorias
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: size
+          in: query
+          schema: { type: integer, default: 6 }
+      responses:
+        '200':
+          description: Categorias paginadas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedCategories' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /oferta/listar:
+    get:
+      tags: [Catálogo]
+      summary: Lista ofertas ativas
+      security: []
+      responses:
+        '200':
+          description: Ofertas ativas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Offer' }
+        '500': { $ref: '#/components/responses/InternalError' }
+
+  /pagamento/listar:
+    get:
+      tags: [Pagamentos]
+      summary: Lista formas de pagamento disponíveis
+      description: Requer JWT. Lista modalidades cadastradas para seleção no checkout.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: size
+          in: query
+          schema: { type: integer, default: 6 }
+      responses:
+        '200':
+          description: Formas de pagamento cadastradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PaymentType' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+      security:
+        - bearerAuth: []
+
+  /pedido/checkout:
+    post:
+      tags: [Pedidos]
+      summary: Registra um pedido pago em dinheiro
+      description: Requer JWT. Registra pedido e itens para pagamento em dinheiro. Para Pix ou cartão, use POST /pagamento/checkout.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CheckoutRequest' }
+      responses:
+        '201':
+          description: Pedido criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: Pedido realizado com sucesso! }
+                  id_orders: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+      security:
+        - bearerAuth: []
+
+  /pagamento/checkout:
+    post:
+      tags: [Pagamentos]
+      summary: Cria checkout online no Mercado Pago
+      description: Requer JWT. Persiste uma tentativa e retorna a URL de checkout; o pedido é criado após confirmação aprovada do provedor.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_payment, id_type_delivery, cart]
+              properties:
+                id_payment: { type: integer }
+                id_type_delivery: { type: integer }
+                payment_method:
+                  type: string
+                  enum: [pix, card, both]
+                  default: both
+                cart: { $ref: '#/components/schemas/CartRequest' }
+      responses:
+        '201':
+          description: Tentativa criada e URL do checkout retornada
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [attemptId, checkoutUrl, total]
+                properties:
+                  attemptId: { type: string, format: uuid }
+                  checkoutUrl: { type: string, format: uri }
+                  total: { type: number }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+      security:
+        - bearerAuth: []
+
+  /pagamento/checkout/{id}:
+    get:
+      tags: [Pagamentos]
+      summary: Consulta o estado de uma tentativa de pagamento
+      description: Requer JWT do titular da tentativa. Quando pendente, o backend pode consultar o Mercado Pago para sincronizar o estado.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Estado atual da tentativa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  status:
+                    type: string
+                    enum: [pending, approved, rejected, cancelled, failed]
+                  id_order: { type: integer, nullable: true }
+                  total: { type: number }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+      security:
+        - bearerAuth: []
+
+  /pagamento/webhook:
+    post:
+      tags: [Pagamentos]
+      summary: Recebe notificação de pagamento do Mercado Pago
+      description: Endpoint de provedor. Valida x-signature e x-request-id e consulta o pagamento no Mercado Pago antes de atualizar a tentativa.
+      parameters:
+        - name: data.id
+          in: query
+          required: false
+          schema: { type: string }
+        - name: x-signature
+          in: header
+          required: true
+          schema: { type: string }
+        - name: x-request-id
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    id: { type: string }
+      responses:
+        '200': { description: Notificação processada }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+      security: []
+
+  /pedido/usuario/{id_people}:
+    get:
+      tags: [Pedidos]
+      summary: Consulta pedidos de uma pessoa
+      description: Requer JWT. A rota atual não verifica se o id_people pertence ao usuário autenticado.
+      parameters:
+        - name: id_people
+          in: path
+          required: true
+          schema: { type: integer }
+        - $ref: '#/components/parameters/Page'
+        - name: size
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: Lista paginada de pedidos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedOrders' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '500': { $ref: '#/components/responses/InternalError' }
+      security:
+        - bearerAuth: []
+
+  /pedido/{id_order}/cancel:
+    patch:
+      tags: [Pedidos]
+      summary: Cancela pedido próprio ainda recebido
+      description: Requer JWT. O backend valida titularidade e permite cancelar enquanto status for Recebido.
+      parameters:
+        - name: id_order
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Pedido cancelado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+      security:
+        - bearerAuth: []
+
+  /pedido/listar:
+    get:
+      tags: [Pedidos]
+      summary: Lista pedidos para operação
+      description: Requer JWT e permissão `visualizar_pedidos`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: size
+          in: query
+          schema: { type: integer, default: 6 }
+      responses:
+        '200':
+          description: Pedidos paginados
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedOrders' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '500': { $ref: '#/components/responses/InternalError' }
+      security:
+        - bearerAuth: []
+
+  /pedido/{id_order}/status:
+    patch:
+      tags: [Pedidos]
+      summary: Atualiza status de pedido
+      description: Requer JWT e permissão `alterar_status_pedido`.
+      parameters:
+        - name: id_order
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_order_status]
+              properties:
+                id_order_status: { type: integer }
+      responses:
+        '200':
+          description: Status atualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '500': { $ref: '#/components/responses/InternalError' }
+      security:
+        - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'Use o token retornado por POST /login no cabeçalho Authorization: Bearer <token>.'
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+  responses:
+    BadRequest:
+      description: Requisição inválida
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Unauthorized:
+      description: Token ausente, inválido ou expirado
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - { $ref: '#/components/schemas/ApiError' }
+              - { $ref: '#/components/schemas/Message' }
+    Forbidden:
+      description: Usuário sem permissão para a operação
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - { $ref: '#/components/schemas/ApiError' }
+              - { $ref: '#/components/schemas/Message' }
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Conflict:
+      description: Conflito com dado existente
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    InternalError:
+      description: Erro interno do servidor
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    BadGateway:
+      description: Falha ao iniciar checkout com o provedor de pagamento
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        code: { type: string }
+        message: { type: string }
+    Message:
+      type: object
+      properties:
+        message: { type: string }
+    Product:
+      type: object
+      properties:
+        id_product: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        price: { type: number, nullable: true }
+        image: { type: string }
+        id_category: { type: integer }
+        featured: { type: boolean }
+        ingredients: { type: string, nullable: true }
+    PaginatedProducts:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Product' }
+        totalItems: { type: integer }
+        totalPages: { type: integer }
+        currentPage: { type: integer }
+    PaginatedCategories:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Category' }
+        totalItems: { type: integer }
+        totalPages: { type: integer }
+        currentPage: { type: integer }
+    Category:
+      type: object
+      properties:
+        id_category: { type: integer }
+        name_category: { type: string }
+    Offer:
+      type: object
+      properties:
+        id_offer: { type: integer }
+        name_offer: { type: string }
+        description: { type: string, nullable: true }
+        discount: { type: number }
+        price_offer: { type: number }
+        active: { type: boolean }
+    PaymentType:
+      type: object
+      properties:
+        id_payment: { type: integer }
+        name_payment: { type: string }
+    CheckoutRequest:
+      type: object
+      required: [id_payment, id_type_delivery, cart]
+      properties:
+        id_payment:
+          { type: integer, description: ID da forma cadastrada para pagamento em dinheiro }
+        id_type_delivery: { type: integer }
+        cart: { $ref: '#/components/schemas/CartRequest' }
+    CartRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [id_product, quantity]
+            properties:
+              id_product: { type: integer, minimum: 1 }
+              quantity: { type: integer, minimum: 1, maximum: 99 }
+    PaginatedOrders:
+      type: object
+      properties:
+        totalItems: { type: integer }
+        totalPages: { type: integer }
+        currentPage: { type: integer }
+        data:
+          type: array
+          items: { type: object, additionalProperties: true }

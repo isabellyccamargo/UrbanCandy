@@ -5,8 +5,9 @@ export default function ProtectedLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="employeeOrders" />
       <Stack.Screen name="home" />
-      <Stack.Screen name="cart" />
       <Stack.Screen name="orders" />
+      <Stack.Screen name="notifications" />
+      <Stack.Screen name="payment-result" />
       <Stack.Screen name="cardapio" />
     </Stack>
   );

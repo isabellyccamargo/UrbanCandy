@@ -7,7 +7,11 @@ import TypeOfDelivery from '../models/TypeOfDelivery.js';
 import OrderStatus from '../models/OrderStatus.js';
 import sequelize from '../config/Config.js';
 import { type Order as SequelizeOrder, Transaction, type FindAndCountOptions } from 'sequelize';
+import { randomUUID } from 'node:crypto';
 import { type ICartItem, type IPaginatedResponse } from '../@types/OrdersTypes.js';
+import OrderStatusOutbox, {
+  type OrderStatusOutboxEvent,
+} from '../models/OrderStatusOutbox.js';
 
 class OrderRepository {
   private async _createItems(id_order: number, items: ICartItem[], t: Transaction): Promise<void> {
@@ -38,9 +42,10 @@ class OrderRepository {
     total: number,
     id_payment: number,
     id_type_delivery: number,
-    status_id: number = 1
+    status_id: number = 1,
+    transaction?: Transaction
   ): Promise<Orders> {
-    const t = await sequelize.transaction();
+    const t = transaction ?? (await sequelize.transaction());
 
     try {
       const order = await Orders.create(
@@ -56,11 +61,11 @@ class OrderRepository {
 
       await this._createItems(order.id_orders, items, t);
 
-      await t.commit();
+      if (!transaction) await t.commit();
 
       return order;
     } catch (error) {
-      await t.rollback();
+      if (!transaction) await t.rollback();
       console.error('ERRO REPOSITORY (createFullOrder):', error);
       throw error;
     }
@@ -184,8 +189,47 @@ class OrderRepository {
     return await OrderStatus.findAll();
   }
 
+  async findStatusById(id: number): Promise<OrderStatus | null> {
+    return await OrderStatus.findByPk(id);
+  }
+
   async updateOrderStatus(id_orders: number, status_id: number): Promise<[number]> {
     return await Orders.update({ status_id }, { where: { id_orders } });
+  }
+
+  async updateOrderStatusAndQueueEvent(
+    idOrder: number,
+    previousStatusId: number,
+    newStatusId: number,
+    recipientUserId: number,
+    recipientEmail: string,
+    newStatusLabel: string
+  ): Promise<OrderStatusOutboxEvent | null> {
+    return sequelize.transaction(async (transaction) => {
+      const order = await Orders.findByPk(idOrder, {
+        transaction,
+        lock: transaction.LOCK.UPDATE,
+      });
+      if (!order || Number(order.status_id) !== previousStatusId) return null;
+
+      const event: OrderStatusOutboxEvent = {
+        eventId: randomUUID(),
+        occurredAt: new Date().toISOString(),
+        orderId: idOrder,
+        previousStatusId,
+        newStatusId,
+        recipientUserId,
+        recipientEmail,
+        newStatusLabel,
+      };
+
+      await order.update({ status_id: newStatusId }, { transaction });
+      await OrderStatusOutbox.create(
+        { eventId: event.eventId, payload: event, acknowledgedAt: null },
+        { transaction }
+      );
+      return event;
+    });
   }
 }
 

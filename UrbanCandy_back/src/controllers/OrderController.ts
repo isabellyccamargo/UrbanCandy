@@ -3,9 +3,11 @@ import OrderService from '../service/OrderService.js';
 import { ApiException } from '../exception/ApiException.js';
 import { type ICart, type IOrderCheckout } from '../@types/OrdersTypes.js';
 import OrderRepository from '../repositories/OrderRepository.js';
+import People from '../models/People.js';
+import TypeOfPayment from '../models/TypeOfPayment.js';
 class OrderController {
-  private static validateRequest(id_people: number, cart: ICart): void {
-    if (!id_people || !cart || !cart.items) {
+  private static validateRequest(cart: ICart): void {
+    if (!cart || !cart.items) {
       throw new ApiException(
         'DATA_INCOMPLETE',
         400,
@@ -17,14 +19,42 @@ class OrderController {
   static async store(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const body = req.body as IOrderCheckout;
-      const { id_people, cart, id_payment, id_type_delivery } = body;
+      const { cart, id_payment, id_type_delivery } = body;
 
-      OrderController.validateRequest(id_people, cart);
+      OrderController.validateRequest(cart);
+      const userId = Number(req.userId);
+      if (!userId) {
+        throw new ApiException('UNAUTHORIZED', 401, 'Usuário não autenticado.');
+      }
+      const person = await People.findOne({
+        where: { id_user: userId },
+        attributes: ['id_people'],
+      });
+      if (!person) {
+        throw new ApiException('USER_PROFILE_NOT_FOUND', 404, 'Perfil do cliente não encontrado.');
+      }
 
       const finalPaymentId = id_payment || 0;
       const finalDeliveryId = id_type_delivery || 0;
+      const paymentType = await TypeOfPayment.findByPk(finalPaymentId);
+      const paymentName = paymentType?.name_payment
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase();
+      if (!paymentName?.includes('dinheiro') && !paymentName?.includes('cash')) {
+        throw new ApiException(
+          'ONLINE_PAYMENT_REQUIRED',
+          400,
+          'Pagamentos com Pix ou cartão devem ser concluídos pelo checkout do Mercado Pago.'
+        );
+      }
 
-      const result = await OrderService.checkout(id_people, cart, finalPaymentId, finalDeliveryId);
+      const result = await OrderService.checkout(
+        person.id_people,
+        cart,
+        finalPaymentId,
+        finalDeliveryId
+      );
 
       res.status(201).json({
         message: 'Pedido realizado com sucesso!',

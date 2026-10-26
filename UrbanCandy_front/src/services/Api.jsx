@@ -122,6 +122,21 @@ export const createUser = async (userData) => {
   }
 };
 
+export const getEmailVerificationStatus = async () => {
+  const response = await api.get('/email-verification/status');
+  return response.data;
+};
+
+export const requestEmailVerification = async () => {
+  const response = await api.post('/email-verification/request');
+  return response.data;
+};
+
+export const confirmEmailVerification = async (email, code) => {
+  const response = await api.post('/email-verification/confirm', { email, code });
+  return response.data;
+};
+
 export const updateUser = async (id_people, peopleData) => {
   try {
     const response = await api.put(`/pessoa/atualizar/${id_people}`, peopleData);

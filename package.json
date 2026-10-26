@@ -5,23 +5,27 @@
   "description": "Monorepo for UrbanCandy project (Backend, Frontend, AI)",
   "main": "index.js",
   "scripts": {
-    "postinstall": "husky install",
+    "postinstall": "node -e \"if (process.env.HUSKY !== '0') require('child_process').execSync('husky install', { stdio: 'inherit' })\"",
     "lint:back": "npm --prefix UrbanCandy_back run lint:check",
     "lint:front": "npm --prefix UrbanCandy_front run lint:check",
     "lint:check": "npm run lint:back && npm run lint:front",
     "test:back": "npm --prefix UrbanCandy_back test",
     "test:front": "npm --prefix UrbanCandy_front test",
     "test:e2e:safe": "node scripts/run-e2e.mjs",
-    "quality:check": "npm run lint:check && npm run test:back && npm run test:front",
-    "build:check": "npm --prefix UrbanCandy_back run build && npm --prefix UrbanCandy_front run build",
+    "quality:check": "npm run lint:check && npm run test:back && npm run test:front && npm run test:email",
+    "build:check": "npm --prefix UrbanCandy_back run build && npm --prefix UrbanCandy_front run build && npm run build:email",
     "pre-pr-check": "npm run quality:check && npm run build:check",
     "dev:back": "npm --prefix UrbanCandy_back run dev",
     "dev:front": "npm --prefix UrbanCandy_front run dev",
-    "dev:mobile": "npm --prefix UrbanCandy_mobile run start"
+    "dev:mobile": "npm --prefix UrbanCandy_mobile run start",
+    "dev:email": "npm --prefix UrbanCandy_email run dev",
+    "build:email": "npm --prefix UrbanCandy_email run build",
+    "test:email": "npm --prefix UrbanCandy_email test"
   },
   "workspaces": [
     "UrbanCandy_back",
     "UrbanCandy_front",
-    "UrbanCandy_mobile"
+    "UrbanCandy_mobile",
+    "UrbanCandy_email"
   ]
 }

@@ -30,6 +30,7 @@ export async function loginUser(
     password: string
 ) {
     console.log('[AUTH.TSX] Iniciando loginUser para o e-mail:', email);
+    console.log('[AUTH.TSX] URL da API:', api.defaults.baseURL);
 
     try {
         const response = await api.post('/login', {
@@ -49,6 +50,7 @@ export async function loginUser(
             console.log('Corpo da resposta:', error.response.data);
         } else if (error.request) {
             console.log('A requisição saiu, mas não obteve resposta do servidor.');
+            console.log('Detalhe técnico:', error.message);
         } else {
             console.log('Erro de configuração do Axios/JS:', error.message);
         }
@@ -88,6 +90,21 @@ export async function createUser(userData: CreateUserData) {
         console.log('[AUTH.TSX] Erro no createUser:', error?.response?.data || error.message);
         throw error;
     }
+}
+
+export async function confirmEmailVerification(email: string, code: string) {
+    const response = await api.post('/email-verification/confirm', { email, code });
+    return response.data as { verified: boolean };
+}
+
+export async function requestEmailVerification() {
+    const response = await api.post('/email-verification/request');
+    return response.data as { queued?: boolean; alreadyVerified?: boolean };
+}
+
+export async function getEmailVerificationStatus() {
+    const response = await api.get('/email-verification/status');
+    return response.data as { verified: boolean };
 }
 
 /**

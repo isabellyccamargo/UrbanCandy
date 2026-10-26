@@ -1,11 +1,10 @@
 import api from './api';
 
 export type CreateOrderData = {
-    id_people: number;
     id_payment: number;
-    id_delivery: number;
+    id_type_delivery: number;
     cart: {
-        items: any[];
+        items: { id_product: number; quantity: number }[];
         total: number;
     };
 };
@@ -65,5 +64,3 @@ export const getOrderStatuses = async () => {
     const response = await api.get('/pedido/status/listar');
     return response.data;
 };
-
-

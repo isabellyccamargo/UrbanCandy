@@ -6,6 +6,7 @@ import {
     ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     View,
 } from 'react-native';
 
@@ -23,6 +24,9 @@ import {
     getUserProfile,
     createUser,
     updateUser,
+    getEmailVerificationStatus,
+    requestEmailVerification,
+    confirmEmailVerification,
 } from '@/services/auth';
 import { updateAddress } from '@/services/address';
 import api, { API_BASE_URL } from '@/services/api';
@@ -65,6 +69,9 @@ export default function CadastroScreen() {
     const [authenticated, setAuthenticated] = useState(isCreating);
     const [editing, setEditing] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
+    const [verificationCode, setVerificationCode] = useState('');
+    const [verificationRequested, setVerificationRequested] = useState(false);
 
     // Guardar a URI local/remota da imagem
     const [imageUri, setImageUri] = useState<string | null>(null);
@@ -227,6 +234,12 @@ export default function CadastroScreen() {
                 });
 
                 setAuthenticated(true);
+                try {
+                    const verification = await getEmailVerificationStatus();
+                    setEmailVerified(verification.verified);
+                } catch {
+                    console.warn('Não foi possível consultar a confirmação do e-mail.');
+                }
             } catch (apiError: any) {
                 console.warn('[PERFIL] Falha na API, usando dados locais:', apiError?.message);
 
@@ -249,6 +262,7 @@ export default function CadastroScreen() {
                 }));
 
                 setAuthenticated(true);
+                setEmailVerified(null);
             }
         } catch (error) {
             console.error('Erro crítico no loadAccount:', error);
@@ -363,20 +377,20 @@ export default function CadastroScreen() {
                     } as any);
                 }
 
-                await createUser(formData as any);
+                const created = await createUser(formData as any);
 
                 setImageUri(null);
-
-                showMessage(
-                    'Cadastro realizado',
-                    'Seu cadastro foi realizado com sucesso!',
-                    undefined,
-                    'success'
-                );
-
-                setTimeout(() => {
-                    router.replace('/login' as any);
-                }, 1500);
+                router.replace({
+                    pathname: '/email-confirmation',
+                    params: {
+                        email: form.email.trim(),
+                        queued: created?.emailAlreadyVerified
+                            ? '2'
+                            : created?.verificationEmailQueued
+                                ? '1'
+                                : '0',
+                    },
+                } as any);
 
                 return;
             }
@@ -557,6 +571,73 @@ export default function CadastroScreen() {
                         onChangeComplement={value => change('complement', value)}
                         onSubmit={save}
                     />
+
+                    {editing && emailVerified === false && (
+                        <View style={{ marginTop: space.md, gap: space.sm }}>
+                            <Text style={{ color: colors.text, fontFamily: font.medium }}>
+                                Confirme seu e-mail uma vez para receber atualizações dos pedidos.
+                            </Text>
+                            {!verificationRequested ? (
+                                <Pressable
+                                    style={styles.logoutButton}
+                                    onPress={async () => {
+                                        try {
+                                            await requestEmailVerification();
+                                            setVerificationRequested(true);
+                                            showMessage('Código enviado', 'Confira sua caixa de entrada.', undefined, 'success');
+                                        } catch (error: any) {
+                                            showMessage('Não foi possível enviar', error?.response?.data?.message ?? error?.message ?? 'Tente novamente mais tarde.', undefined, 'error');
+                                        }
+                                    }}
+                                >
+                                    <Text style={styles.logoutText}>Enviar código de confirmação</Text>
+                                </Pressable>
+                            ) : (
+                                <>
+                                    <TextInput
+                                        value={verificationCode}
+                                        onChangeText={value => setVerificationCode(value.replace(/\D/g, '').slice(0, 6))}
+                                        keyboardType="number-pad"
+                                        maxLength={6}
+                                        placeholder="Código de 6 dígitos"
+                                        style={{
+                                            borderWidth: 1,
+                                            borderColor: '#B8A99A',
+                                            borderRadius: radius.md,
+                                            padding: space.md,
+                                            color: colors.text,
+                                        }}
+                                    />
+                                    <Pressable
+                                        style={styles.logoutButton}
+                                        onPress={async () => {
+                                            try {
+                                                await confirmEmailVerification(form.email, verificationCode);
+                                                setEmailVerified(true);
+                                                showMessage('E-mail confirmado', 'Você receberá atualizações dos pedidos neste endereço.', undefined, 'success');
+                                            } catch (error: any) {
+                                                showMessage('Código não confirmado', error?.response?.data?.message ?? error?.message ?? 'Verifique o código e tente novamente.', undefined, 'error');
+                                            }
+                                        }}
+                                    >
+                                        <Text style={styles.logoutText}>Confirmar e-mail</Text>
+                                    </Pressable>
+                                    <Pressable
+                                        onPress={async () => {
+                                            try {
+                                                await requestEmailVerification();
+                                                showMessage('Novo código enviado', 'Confira sua caixa de entrada.', undefined, 'success');
+                                            } catch (error: any) {
+                                                showMessage('Não foi possível enviar', error?.response?.data?.message ?? error?.message ?? 'Tente novamente mais tarde.', undefined, 'error');
+                                            }
+                                        }}
+                                    >
+                                        <Text style={{ color: '#9B542E', textAlign: 'center' }}>Reenviar código</Text>
+                                    </Pressable>
+                                </>
+                            )}
+                        </View>
+                    )}
 
                     {editing && (
                         <Pressable style={styles.logoutButton} onPress={handleLogout}>

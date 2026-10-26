@@ -1,6 +1,7 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import UserService from '../service/UserService.js';
 import { ApiException } from '../exception/ApiException.js';
+import { requestEmailVerification } from '../service/EmailServiceClient.js';
 
 class UserController {
   static async login(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -65,9 +66,29 @@ class UserController {
         image: imagePath,
       });
 
+      let verificationEmailQueued = false;
+      let emailAlreadyVerified = false;
+      try {
+        const result = await requestEmailVerification(newUser.email, newUser.id_user);
+        verificationEmailQueued = result.queued === true;
+        emailAlreadyVerified = result.alreadyVerified === true;
+      } catch (error) {
+        console.error(
+          `[email] Conta criada para usuário ${newUser.id_user}, mas não foi possível enfileirar o código de confirmação:`,
+          error
+        );
+      }
+
       res.status(201).json({
         message: 'Cadastro completo (Usuário, Pessoa e Endereço) realizado com sucesso',
         id: newUser.id_user,
+        verificationEmailQueued,
+        emailAlreadyVerified,
+        verificationMessage: emailAlreadyVerified
+          ? 'Este endereço de e-mail já está confirmado.'
+          : verificationEmailQueued
+            ? 'Código de confirmação enviado para o e-mail cadastrado.'
+            : 'Conta criada, mas não foi possível enfileirar o código. Entre e solicite o envio novamente no perfil.',
       });
     } catch (error) {
       next(error);
