@@ -18,7 +18,8 @@ C4Context
     Rel(cliente, urbancandy, "Consulta catálogo, compra e acompanha pedidos", "Web / Mobile")
     Rel(gestor, urbancandy, "Gerencia catálogo e acompanha/atualiza pedidos", "Web / Mobile")
     Rel(urbancandy, viacep, "Consulta e valida CEP", "HTTPS")
-    Rel(urbancandy, mercado_pago, "Cria checkout e consulta pagamentos; recebe notificações assinadas", "HTTPS")
+    Rel(urbancandy, mercado_pago, "Cria checkout e consulta pagamentos", "HTTPS")
+    Rel(mercado_pago, urbancandy, "Envia notificação de pagamento via webhook assinado", "HTTPS")
     Rel(urbancandy, smtp, "Envia mensagens de confirmação e atualização de pedidos", "SMTP")
 ```
 

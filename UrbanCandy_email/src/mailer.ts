@@ -1,5 +1,5 @@
-import nodemailer from 'nodemailer';
-import { config } from './config.js';
+import nodemailer from "nodemailer";
+import { config } from "./config.js";
 
 export type MailMessage = {
   to: string;
@@ -14,6 +14,9 @@ export function createGmailSender(deliver?: MailSender): MailSender {
     host: config.smtp.host,
     port: config.smtp.port,
     secure: config.smtp.port === 465,
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 30_000,
     auth:
       config.smtp.user && config.smtp.password
         ? { user: config.smtp.user, pass: config.smtp.password }
@@ -26,7 +29,7 @@ export function createGmailSender(deliver?: MailSender): MailSender {
       (!config.smtp.user || !config.smtp.password || !config.smtp.from)
     ) {
       throw new Error(
-        'SMTP is not configured. Set SMTP_USER, SMTP_APP_PASSWORD, and SMTP_FROM.'
+        "SMTP is not configured. Set SMTP_USER, SMTP_APP_PASSWORD, and SMTP_FROM.",
       );
     }
     if (deliver) {

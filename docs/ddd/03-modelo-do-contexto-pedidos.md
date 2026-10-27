@@ -21,6 +21,7 @@ O fluxo está implementado em [OrderService.ts](../../UrbanCandy_back/src/servic
 | `Products` | ID, nome, descrição, preço, imagem, categoria, destaque e ingredientes | Entidade de Catálogo referenciada pelo item. |
 | `TypeOfPayment` / `TypeOfDelivery` | ID e nome | Modalidades referenciadas pelo Pedido; não representam transação financeira nem logística externa. |
 | `People` | ID, nome, CPF, telefone, usuário e endereço | Perfil associado ao Pedido; não é parte do agregado Pedido proposto. |
+| `PaymentAttempt` | Tentativa, usuário, snapshot do carrinho, total, estado, referências do provedor e pedido associado | Model persistido no fluxo de pagamento online; candidato a entidade da capacidade/contexto Pagamentos, fora do agregado Pedido. |
 
 O inventário de models está em [UrbanCandy_back/src/models](../../UrbanCandy_back/src/models/); associações em [Associations.ts](../../UrbanCandy_back/src/models/Associations.ts).
 
@@ -95,7 +96,7 @@ classDiagram
     ItemPedido ..> Quantity : quantidade
 ```
 
-A composição e os Value Objects são decisões de modelagem futura. O repositório cria pedido e itens dentro de uma transação, mas isso, isoladamente, não significa que uma raiz de agregado DDD já esteja implementada.
+A composição e os Value Objects são decisões de modelagem futura. O repositório cria pedido e itens dentro de uma transação, mas isso, isoladamente, não significa que uma raiz de agregado DDD já esteja implementada. A tentativa de pagamento é persistida separadamente; quando aprovada, a criação do pedido e a atualização da tentativa ocorrem em uma transação.
 
 ## Regras implementadas e lacunas
 
@@ -106,7 +107,7 @@ A composição e os Value Objects são decisões de modelagem futura. O reposit�
 | Pedido e itens são salvos numa transação; falha causa rollback. | Implementado em `OrderRepository.createFullOrder`. |
 | Cliente só cancela o próprio pedido no status ID `1`, e o sistema grava ID `5`. | Implementado em `OrderService.cancelOrder`. |
 | Listagem operacional e mudança de status exigem permissões nas rotas selecionadas. | Implementado em `Private.ts`. |
-| Backend recalcula o total e valida o preço vigente do Catálogo. | Não confirmado: o checkout recebe total e dados dos itens do cliente; o repositório usa os valores enviados. |
+| Backend recalcula o total e valida o preço vigente do Catálogo. | Implementado em `priceCart`: busca produtos/preços atuais no MySQL, valida produtos e quantidades e calcula subtotais e total, tanto no checkout de pagamento em dinheiro quanto no checkout Mercado Pago. |
 | Backend valida toda a máquina de estados. | Não confirmado: serviço aceita um ID de status; a interface escolhe o status seguinte. |
 | Pagamento online é confirmado pelo provedor antes de registrar o pedido como aprovado. | Implementado via Mercado Pago: tentativa persistida, webhook assinado/consulta de status e criação transacional do pedido aprovado. |
 

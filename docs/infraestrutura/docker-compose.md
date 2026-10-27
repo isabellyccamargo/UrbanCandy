@@ -2,15 +2,17 @@
 
 ## Serviços e responsabilidades
 
-| Serviço               | Função                                         | Comunicação                                                                             |
-| --------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `urbancandy-nginx`    | Entrada HTTP/HTTPS e proxy reverso             | Publica as portas do host; encaminha `/` ao frontend e `/api/` e `/uploads/` ao backend |
-| `urbancandy-frontend` | Build e servidor dos arquivos da aplicação web | Recebe tráfego do Nginx; usa `/api` para chamar a API pela mesma origem                 |
-| `urbancandy-backend`  | API Express                                    | Conecta ao MySQL pelo host de serviço `urbancandy-db:3306`                              |
-| `urbancandy-db`       | MySQL 8                                        | Usa o banco isolado `urbancandy_docker` e o volume `mysql_data`                         |
-| `urbancandy-redis`    | Cache de produtos e mensageria de pedidos      | Backend Compose usa `urbancandy-redis:6379`; backend local usa `127.0.0.1:6380`         |
-| `urbancandy-email`    | Serviço independente de confirmação e envio de e-mails | Recebe atualizações dos pedidos via Redis Pub/Sub e usa SMTP do Gmail |
-| `urbancandy-email-db` | MySQL exclusivo do serviço de e-mail            | Persiste códigos de confirmação e tentativas de envio no volume `email_mysql_data`       |
+| Serviço                 | Função                                                                    | Comunicação                                                                             |
+| ----------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `urbancandy-nginx`      | Entrada HTTP/HTTPS e proxy reverso                                        | Publica as portas do host; encaminha `/` ao frontend e `/api/` e `/uploads/` ao backend |
+| `urbancandy-frontend`   | Build e servidor dos arquivos da aplicação web                            | Recebe tráfego do Nginx; usa `/api` para chamar a API pela mesma origem                 |
+| `urbancandy-backend`    | API Express                                                               | Conecta ao MySQL pelo host de serviço `urbancandy-db:3306`                              |
+| `urbancandy-db`         | MySQL 8                                                                   | Usa o banco isolado `urbancandy_docker` e o volume `mysql_data`                         |
+| `urbancandy-redis`      | Cache de produtos e mensageria de pedidos                                 | Backend Compose usa `urbancandy-redis:6379`; backend local usa `127.0.0.1:6380`         |
+| `urbancandy-email`      | Serviço independente de confirmação e envio de e-mails                    | Recebe atualizações dos pedidos via Redis Pub/Sub e usa SMTP do Gmail                   |
+| `urbancandy-email-db`   | MySQL exclusivo do serviço de e-mail                                      | Persiste códigos de confirmação e tentativas de envio no volume `email_mysql_data`      |
+| `urbancandy-prometheus` | Coleta métricas do backend, mantém histórico por 35 dias e avalia alertas | Acessa a porta interna `9464`; interface limitada ao loopback do host                   |
+| `urbancandy-grafana`    | Painel de métricas provisionado para UrbanCandy                           | Consulta Prometheus; interface limitada ao loopback do host                             |
 
 Os serviços se comunicam pela rede bridge privada `app_network`. O Nginx só
 inicia depois que frontend e backend estiverem saudáveis; o backend aguarda o
@@ -20,8 +22,9 @@ health check do MySQL.
 
 Na raiz do repositório, copie `.env.example` para `.env` apenas se ainda não
 tiver um `.env`. Se já existir, preserve-o e confira as configurações de banco,
-`JWT_SECRET`, `EMAIL_API_KEY` e as credenciais do banco de e-mail. Não versione
-o `.env` nem certificados privados.
+`JWT_SECRET`, `EMAIL_API_KEY`, `GRAFANA_ADMIN_PASSWORD` e as credenciais do
+banco de e-mail. Defina uma senha forte para o administrador do Grafana. Não
+versione o `.env` nem certificados privados.
 
 O Compose usa `DOCKER_DB_NAME=urbancandy_docker` e
 `DOCKER_DB_USER=urbancandy_app` por padrão; estes valores não são retirados do
@@ -51,6 +54,25 @@ docker compose config -q
 docker compose up --build -d
 docker compose ps
 ```
+
+Com os serviços saudáveis, o painel está em `http://localhost:3001` (usuário
+`GRAFANA_ADMIN_USER`, padrão `admin`; senha `GRAFANA_ADMIN_PASSWORD`). O
+dashboard **UrbanCandy - API overview** é provisionado automaticamente.
+Prometheus fica em `http://localhost:9090`; a página **Status > Rules** exibe
+os alertas configurados. Ambas as portas são publicadas somente em `127.0.0.1`.
+O endpoint de métricas do backend escuta na porta interna `9464`, sem publicação
+no host e sem rota pelo Nginx; Prometheus acessa-o apenas pela rede privada do
+Compose.
+
+As métricas HTTP usam rótulos de rota Express, método e status (não IDs,
+query strings, tokens ou dados pessoais), com duração em histogramas. Métricas
+de dependência registram sucesso/falha e duração de chamadas observadas a
+ViaCEP, serviço de e-mail e Mercado Pago. O processo também publica métricas
+padrão do Node.js. Logs de requisição estruturados são enviados para stdout e
+incluem método, rota normalizada, status e duração, nunca o corpo ou credenciais.
+Os alertas Prometheus cobrem backend sem coleta, taxa de 5xx acima de 1%, p95
+do catálogo acima de 500 ms e circuito ViaCEP aberto. Alertas ficam disponíveis
+no Prometheus; notificações por e-mail ou chat não estão configuradas.
 
 O Compose inicia um backend e um banco separados para o envio de e-mails. O
 MySQL de e-mail é publicado apenas no loopback pela porta `3308` e persiste no

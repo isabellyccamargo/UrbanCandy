@@ -35,6 +35,8 @@ services:
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET:?Configure JWT_SECRET in the root .env}
       PORT: 3030
+      METRICS_HOST: 0.0.0.0
+      METRICS_PORT: 9464
       DB_HOST: urbancandy-db
       DB_PORT: 3306
       DB_USER: ${DOCKER_DB_USER:-urbancandy_app}
@@ -53,6 +55,8 @@ services:
       - ./UrbanCandy_back/uploads:/app/uploads
     ports:
       - "${BACKEND_PORT:-3030}:3030"
+    expose:
+      - "9464"
     networks:
       - app_network
     depends_on:
@@ -71,6 +75,43 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
+
+  urbancandy-prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=35d
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - app_network
+    depends_on:
+      urbancandy-backend:
+        condition: service_healthy
+
+  urbancandy-grafana:
+    image: grafana/grafana:12.1.1
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Configure GRAFANA_ADMIN_PASSWORD in the root .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - app_network
+    depends_on:
+      - urbancandy-prometheus
 
   urbancandy-email-db:
     image: mysql:8.0
@@ -207,6 +248,8 @@ services:
 volumes:
   mysql_data:
   email_mysql_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   app_network:

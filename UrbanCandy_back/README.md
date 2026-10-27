@@ -85,6 +85,14 @@ src/
 __tests__/          # Testes unitários
 ```
 
+## Observabilidade
+
+O backend disponibiliza métricas Prometheus em `http://127.0.0.1:9464/metrics`
+quando executado diretamente no computador. No Docker Compose, o endpoint fica
+restrito à rede interna do Compose; Prometheus coleta as métricas e o Grafana
+apresenta o dashboard. Consulte `../docs/infraestrutura/docker-compose.md` para
+configurar a senha do Grafana e acessar os painéis.
+
 ## Contribuindo
 
 Este projeto segue [Conventional Commits](https://www.conventionalcommits.org/).
