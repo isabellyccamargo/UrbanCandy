@@ -38,7 +38,8 @@
     "pg-hstore": "^2.3.4",
     "react-toastify": "^11.0.5",
     "redis": "^5.12.1",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^21.0.1",
