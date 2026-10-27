@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate, test, and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          HUSKY: 0
+
+      - name: Test backend
+        run: npm run test:back
+
+      - name: Test frontend
+        run: npm run test:front
+
+      - name: Test email service
+        run: npm run test:email
+
+      - name: Build backend, frontend, and email service
+        run: npm run build:check
+
+      - name: Validate Docker Compose configuration
+        run: docker compose config -q
+        env:
+          DB_PASSWORD: ci-only-not-a-real-secret
+          JWT_SECRET: ci-only-not-a-real-secret
+          EMAIL_API_KEY: ci-only-not-a-real-secret
+          GRAFANA_ADMIN_PASSWORD: ci-only-not-a-real-secret
+
+      - name: Build application images
+        run: docker compose build urbancandy-backend urbancandy-email urbancandy-frontend
+        env:
+          DB_PASSWORD: ci-only-not-a-real-secret
+          JWT_SECRET: ci-only-not-a-real-secret
+          EMAIL_API_KEY: ci-only-not-a-real-secret
+          GRAFANA_ADMIN_PASSWORD: ci-only-not-a-real-secret

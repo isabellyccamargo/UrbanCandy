@@ -31,5 +31,5 @@ Esta documentação descreve a arquitetura observada no código e distingue func
 - O backend principal é um monólito em camadas; seus diretórios não comprovam Bounded Contexts isolados. O serviço de e-mail é implantável separadamente.
 - Os cenários de desempenho e disponibilidade são metas propostas, não medições ou garantias atuais.
 - A especificação OpenAPI está no repositório. A exposição de Swagger UI em `/api-docs` não foi confirmada no servidor atual.
-- O workflow CI/CD, o Compose de produção e o script de deploy não estão presentes no estado atual do repositório; essa entrega continua pendente.
+- A CI automatiza testes, builds e validação/construção das imagens Docker. Como ainda não há servidor remoto aprovado, o deploy pelo Compose é manual; publicação de imagens, deploy remoto automatizado e ensaio de restauração continuam pendentes.
 - A rubrica C4 só poderá ser marcada como concluída após incorporar e revisar os diagramas de Contexto e Containers.
