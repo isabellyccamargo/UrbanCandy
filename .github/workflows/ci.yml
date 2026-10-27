@@ -34,6 +34,14 @@ jobs:
 
       - name: Test backend
         run: npm run test:back
+        env:
+          NODE_ENV: test
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: urbancandy_test
+          DB_USER: root
+          DB_PASSWORD: ci-only-not-a-real-secret
+          JWT_SECRET: ci-only-not-a-real-secret
 
       - name: Test frontend
         run: npm run test:front
