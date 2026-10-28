@@ -57,6 +57,18 @@ function getMercadoPagoClient(accessToken = getMercadoPagoAccessToken()): Mercad
   });
 }
 
+async function observeMercadoPago<T>(operation: () => Promise<T>): Promise<T> {
+  const startedAt = performance.now();
+  try {
+    const result = await operation();
+    observeDependency('mercado_pago', 'success', (performance.now() - startedAt) / 1_000);
+    return result;
+  } catch (error) {
+    observeDependency('mercado_pago', 'failure', (performance.now() - startedAt) / 1_000);
+    throw error;
+  }
+}
+
 export function getCheckoutUrl(
   preference: { init_point?: string; sandbox_init_point?: string },
   accessToken: string
@@ -84,18 +96,6 @@ function getCheckoutErrorDetails(error: unknown): Record<string, unknown> {
   return {
     message: error instanceof Error ? error.message : String(error),
   };
-}
-
-async function observeMercadoPago<T>(operation: () => Promise<T>): Promise<T> {
-  const startedAt = performance.now();
-  try {
-    const result = await operation();
-    observeDependency('mercado_pago', 'success', (performance.now() - startedAt) / 1_000);
-    return result;
-  } catch (error) {
-    observeDependency('mercado_pago', 'failure', (performance.now() - startedAt) / 1_000);
-    throw error;
-  }
 }
 
 class MercadoPagoService {

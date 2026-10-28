@@ -9,7 +9,17 @@ if (!Number.isInteger(cacheTtl) || cacheTtl < 1) {
 }
 
 export const PRODUCT_CACHE_TTL_SECONDS = cacheTtl;
-export const PRODUCT_CACHE_PREFIX = 'urbancandy:products:';
+export function productCachePrefixForEnvironment(nodeEnvironment = process.env.NODE_ENV): string {
+  const namespace =
+    nodeEnvironment === 'production'
+      ? 'docker'
+      : nodeEnvironment === 'test'
+        ? 'test'
+        : 'local';
+  return `urbancandy:${namespace}:products:`;
+}
+
+export const PRODUCT_CACHE_PREFIX = productCachePrefixForEnvironment();
 
 const redisClient = createClient({
   url: redisUrl,

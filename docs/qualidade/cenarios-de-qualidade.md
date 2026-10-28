@@ -1,16 +1,19 @@
-# Atributos de qualidade — UrbanCandy
+# Cenários de qualidade
 
 Os SLOs abaixo são **metas propostas**, não resultados medidos nem garantias atuais. A aplicação agora expõe métricas e o Compose inclui coleta e painel; comprovar as metas ainda requer aprová-las e medir carga/ disponibilidade em ambiente representativo.
 
-## Cenário de desempenho: consulta ao catálogo
+## Desempenho do catálogo
 
-- **Estímulo:** clientes Web/Mobile realizam consultas de listagem, destaque e categoria em carga concorrente.
-- **Ambiente:** backend, MySQL e Redis em ambiente de teste representativo; carga inicial proposta de até 2.000 usuários virtuais simultâneos, a validar antes da execução.
-- **Resposta esperada:** catálogo responde com dados corretos, usando cache quando disponível e consultando MySQL em caso de miss ou falha do Redis.
-- **Medidas e meta proposta:** p95 até 500 ms para leituras e taxa de erro 5xx abaixo de 1% durante o teste. Registrar p50/p95/p99, requisições por segundo, erros e carga de MySQL/Redis.
-- **Estado:** cache-aside, TTL padrão de 60 s e invalidação após alterações existem; esta meta não foi comprovada por benchmark.
+- **Cenário:** consultas Web/Mobile de listagem, destaques e categorias sob
+  carga concorrente em ambiente representativo.
+- **SLIs:** latência p50/p95/p99, requisições por segundo, erros e uso de
+  MySQL/Redis.
+- **SLO proposto:** p95 até 500 ms e menos de 1% de erros HTTP 5xx. A carga
+  inicial sugerida é de até 2.000 usuários virtuais, a validar antes do teste.
+- **Implementado:** Cache-Aside, TTL de 60 s e invalidação após alterações.
+  Ainda não há benchmark que comprove as metas.
 
-## Cenário de disponibilidade: API e dependências
+## Disponibilidade e resiliência
 
 - **Estímulo:** medir requisições válidas por 30 dias e simular falhas de dependências essenciais.
 - **Ambiente:** execução monitorada da aplicação; falhas de Redis, MySQL, ViaCEP e SMTP devem ser injetadas apenas em ambiente de teste.
@@ -25,7 +28,8 @@ Os SLOs abaixo são **metas propostas**, não resultados medidos nem garantias a
 - **SLI de erro:** proporção de respostas 5xx entre respostas não-4xx. Meta proposta: abaixo de 1% durante teste de carga.
 - **Granularidade:** Prometheus coleta a cada 15 segundos e mantém 35 dias, o suficiente para inspecionar a janela móvel de 30 dias, desde que o serviço permaneça em execução e o volume persistente seja mantido.
 
-## Cenário de resiliência: dependências
+Os comportamentos de falha devem ser comprovados com testes controlados,
+somente em ambiente de teste.
 
 | Falha simulada                                 | Comportamento esperado / implementado                                                                              | O que validar                                                           |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
@@ -35,8 +39,19 @@ Os SLOs abaixo são **metas propostas**, não resultados medidos nem garantias a
 | SMTP indisponível após e-mail enfileirado      | A entrega fica pendente e o worker tenta novamente com backoff.                                                    | Persistência da entrega, número de tentativas e envio após recuperação. |
 | Redis indisponível para evento de status       | O evento permanece na outbox MySQL até publicação e ACK.                                                           | Reenvio após recuperação e idempotência da entrega por `eventId`.       |
 | Mercado Pago indisponível/ambíguo              | Não declarar aprovação sem confirmação; tentativa permanece registrada e pode ser consultada.                      | Idempotência, consistência do estado e tratamento de webhook/consulta.  |
+## Observabilidade
 
-Os comportamentos esperados acima derivam das implementações existentes; executar testes de falha é necessário para comprová-los em conjunto. Redis Pub/Sub isoladamente não é durável; a outbox MySQL protege os eventos de status de pedido.
+- **Implementado:** o Compose inclui Prometheus e Grafana. Métricas de
+  requisições, latência, dependências e circuito ViaCEP alimentam o dashboard
+  **UrbanCandy - API overview**. A coleta ocorre a cada 15 s, com retenção de
+  até 35 dias enquanto os serviços e o volume persistente estiverem ativos.
+- **Ainda não comprovado:** atendimento dos SLOs; a coleta começa quando o
+  ambiente Docker está em execução e os gráficos de tráfego exigem requisições.
+- **Alertas:** regras de disponibilidade, erros 5xx, latência p95 e circuito
+  aberto são avaliadas pelo Prometheus; notificações externas não estão
+  configuradas.
+- **Cuidados:** não registrar credenciais, dados pessoais ou o corpo completo
+  do checkout; avaliar logs estruturados e identificador de correlação.
 
 ### Parâmetros de resiliência observados no código
 

@@ -29,13 +29,21 @@ O inventário de models está em [UrbanCandy_back/src/models](../../UrbanCandy_b
 
 Estes são conceitos propostos, não classes implementadas. Atualmente o código usa primitivos/números e models Sequelize.
 
-| Value Object candidato | Dados e regra a encapsular | Estado atual |
-|---|---|---|
-| `Money` | Valor decimal e moeda; operações monetárias consistentes para total, preço e subtotal. | Campos decimais; sem classe `Money`. A moeda não aparece modelada no pedido. |
-| `Quantity` | Quantidade inteira positiva de itens. | Valor numérico primitivo. |
-| `Email` | Endereço normalizado e validado. | String em `Users`; validação no serviço, sem tipo de domínio. |
-| `OrderStatus` | Estado e, se especificado, validação de transições permitidas. | Tabela/model consultado por ID; transições completas não validadas no backend. |
-| IDs tipados | `OrderId`, `PersonId`, `ProductId` etc., para evitar mistura acidental de identificadores. | Números primitivos. |
+- **`Money`**
+  - **Dados e regra a encapsular:** valor decimal e moeda; operações monetárias consistentes para total, preço e subtotal.
+  - **Estado atual:** campos decimais; sem classe `Money`. A moeda não aparece modelada no pedido.
+- **`Quantity`**
+  - **Dados e regra a encapsular:** quantidade inteira positiva de itens.
+  - **Estado atual:** valor numérico primitivo.
+- **`Email`**
+  - **Dados e regra a encapsular:** endereço normalizado e validado.
+  - **Estado atual:** string em `Users`; validação no serviço, sem tipo de domínio.
+- **`OrderStatus`**
+  - **Dados e regra a encapsular:** estado e, se especificado, validação de transições permitidas.
+  - **Estado atual:** tabela/model consultado por ID; transições completas não validadas no backend.
+- **IDs tipados**
+  - **Dados e regra a encapsular:** `OrderId`, `PersonId`, `ProductId` etc., para evitar mistura acidental de identificadores.
+  - **Estado atual:** números primitivos.
 
 `Address` existe como model com ID e associação. Só deve ser redesenhado como Value Object se as regras de domínio tratarem o endereço como valor sem identidade própria; o esquema atual não resolve essa decisão.
 

@@ -60,19 +60,19 @@ class ViaCepClient {
   async validate(cep: string): Promise<void> {
     const isHalfOpenProbe = this.acquireCircuit();
     const deadline = this.now() + OPERATION_TIMEOUT_MS;
-    const startedAt = this.now();
+    const startedAt = performance.now();
 
     try {
       const data = await this.fetchWithRetry(cep, deadline);
+      observeDependency('viacep', 'success', (performance.now() - startedAt) / 1_000);
       this.recordOutcome(true, isHalfOpenProbe);
-      observeDependency('viacep', 'success', (this.now() - startedAt) / 1_000);
 
       if (data.erro) throw new ApiException('CEP_NOT_FOUND', 400);
     } catch (error) {
       if (error instanceof ApiException && error.code === 'CEP_NOT_FOUND') throw error;
 
+      observeDependency('viacep', 'failure', (performance.now() - startedAt) / 1_000);
       this.recordOutcome(false, isHalfOpenProbe);
-      observeDependency('viacep', 'failure', (this.now() - startedAt) / 1_000);
       throw new ApiException('FAILED_TO_VALIDATE_CEP', 503);
     }
   }
@@ -98,6 +98,7 @@ class ViaCepClient {
 
       if (success) {
         this.openedAt = undefined;
+        setViaCepCircuitOpen(false);
         this.consecutiveFailures = 0;
         this.recentOutcomes.length = 0;
         setViaCepCircuitOpen(false);

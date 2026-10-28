@@ -2,27 +2,61 @@
 
 ## Situação atual
 
-O backend principal é uma aplicação Node.js/Express/TypeScript organizada em camadas. Catálogo, usuários, pedidos e pagamentos compartilham implantação, Sequelize e modelos; o código não comprova módulos DDD isolados. Os contextos da tabela são **limites conceituais propostos** para organizar o domínio, não serviços existentes.
+O backend principal é uma aplicação Node.js/Express/TypeScript organizada em camadas. Catálogo, usuários, pedidos e pagamentos compartilham implantação, Sequelize e modelos; o código não comprova módulos DDD isolados. Os contextos abaixo são **limites conceituais propostos** para organizar o domínio, não serviços existentes.
 
-| Contexto candidato | Responsabilidade | Situação observada |
-|---|---|---|
-| **Usuários e Acesso** | Conta, perfil, endereço, autenticação e permissões. | Funcionalidades implementadas no backend compartilhado. |
-| **Catálogo** | Produtos, categorias e ofertas. | Funcionalidades implementadas no backend compartilhado. |
-| **Pedidos** | Checkout, itens, ciclo de status, consulta e cancelamento. | Funcionalidades implementadas no backend compartilhado. |
-| **Pagamentos** | Tentativa e confirmação de pagamento. | Capacidade implementada no backend via Mercado Pago; não é serviço independente. |
-| **Gestão e Indicadores** | Consultas operacionais e agregadas. | Interfaces consultam a API; não há read model dedicado confirmado. |
+### Usuários e Acesso
+
+- **Responsabilidade:** conta, perfil, endereço, autenticação e permissões.
+- **Situação observada:** funcionalidades implementadas no backend compartilhado.
+
+### Catálogo
+
+- **Responsabilidade:** produtos, categorias e ofertas.
+- **Situação observada:** funcionalidades implementadas no backend compartilhado.
+
+### Pedidos
+
+- **Responsabilidade:** checkout, itens, ciclo de status, consulta e cancelamento.
+- **Situação observada:** funcionalidades implementadas no backend compartilhado.
+
+### Pagamentos
+
+- **Responsabilidade:** tentativa e confirmação de pagamento.
+- **Situação observada:** capacidade implementada no backend via Mercado Pago; não é serviço independente.
+
+### Gestão e Indicadores
+
+- **Responsabilidade:** consultas operacionais e agregadas.
+- **Situação observada:** interfaces consultam a API; não há read model dedicado confirmado.
 
 O serviço de e-mail é uma aplicação implantável separadamente, com banco próprio. É uma fronteira técnica real; sua classificação como Bounded Context de negócio não está estabelecida.
 
 ## Relações
 
-| Origem → destino | Relação observada | Observação |
-|---|---|---|
-| Usuários e Acesso → Pedidos | Identidade e titularidade | Relação no backend compartilhado; contrato entre módulos não formalizado. |
-| Catálogo → Pedidos | Referência de produto e snapshot de itens | Implementação no backend compartilhado; não implica limite modular. |
-| Pedidos → Pagamentos | Criação de tentativa e resultado | Lógica no mesmo backend; Mercado Pago é provedor externo. |
-| Backend → serviço de e-mail | HTTP interno para verificação; Redis Pub/Sub/outbox para eventos de status | Integração implementada entre aplicações. |
-| Serviço de e-mail → MySQL/SMTP | Persistência de verificações/entregas e envio | Banco separado; SMTP é dependência externa. |
+### Usuários e Acesso → Pedidos
+
+- **Relação observada:** identidade e titularidade.
+- **Observação:** relação no backend compartilhado; contrato entre módulos não formalizado.
+
+### Catálogo → Pedidos
+
+- **Relação observada:** referência de produto e snapshot de itens.
+- **Observação:** implementação no backend compartilhado; não implica limite modular.
+
+### Pedidos → Pagamentos
+
+- **Relação observada:** criação de tentativa e resultado.
+- **Observação:** lógica no mesmo backend; Mercado Pago é provedor externo.
+
+### Backend → serviço de e-mail
+
+- **Relação observada:** HTTP interno para verificação; Redis Pub/Sub/outbox para eventos de status.
+- **Observação:** integração implementada entre aplicações.
+
+### Serviço de e-mail → MySQL/SMTP
+
+- **Relação observada:** persistência de verificações/entregas e envio.
+- **Observação:** banco separado; SMTP é dependência externa.
 
 Não atribuir padrões DDD como *Customer-Supplier*, *Conformist* ou *Shared Kernel* sem contratos e responsabilidades comprovados. Relações de tabelas não bastam para demonstrá-los.
 

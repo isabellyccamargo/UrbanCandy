@@ -4,6 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "predev": "powershell -NoProfile -ExecutionPolicy Bypass -File ..\\scripts\\set-api-mode.ps1 -Mode local -SkipApiHealthCheck",
     "dev": "cross-env NODE_ENV=development tsx watch Server.ts",
     "build": "tsc",
     "test:server": "cross-env NODE_ENV=development tsx Server.ts",

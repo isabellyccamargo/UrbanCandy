@@ -1,6 +1,10 @@
-# Execução local com Docker Compose
+# Docker Compose
 
-## Serviços e responsabilidades
+Este guia cobre a execução local do UrbanCandy com Docker. Os detalhes de
+cache, e-mail, notificações e pagamento estão nos guias específicos listados ao
+final.
+
+## Serviços do Compose
 
 | Serviço                 | Função                                                                    | Comunicação                                                                             |
 | ----------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
@@ -12,46 +16,75 @@
 | `urbancandy-email`      | Serviço independente de confirmação e envio de e-mails                    | Recebe atualizações dos pedidos via Redis Pub/Sub e usa SMTP do Gmail                   |
 | `urbancandy-email-db`   | MySQL exclusivo do serviço de e-mail                                      | Persiste códigos de confirmação e tentativas de envio no volume `email_mysql_data`      |
 | `urbancandy-prometheus` | Coleta métricas do backend, mantém histórico por 35 dias e avalia alertas | Acessa a porta interna `9464`; interface limitada ao loopback do host                   |
+| `urbancandy-blackbox-exporter` | Executa probes HTTP de saúde da API | Acessível ao Prometheus pela rede privada do Compose |
 | `urbancandy-grafana`    | Painel de métricas provisionado para UrbanCandy                           | Consulta Prometheus; interface limitada ao loopback do host                             |
 
-Os serviços se comunicam pela rede bridge privada `app_network`. O Nginx só
-inicia depois que frontend e backend estiverem saudáveis; o backend aguarda o
-health check do MySQL.
+## O que o Compose inicia
 
-## Configuração inicial
+- **Aplicação:** frontend, backend, serviço de e-mail e Nginx.
+- **Observabilidade:** Prometheus, probe de saúde da API e Grafana.
+- **Dados:** MySQL principal (`urbancandy_docker`), MySQL de e-mail e Redis.
+- **Rede:** os containers se comunicam pela rede privada `app_network`.
+- **Persistência:** `mysql_data` guarda o banco principal e `email_mysql_data`
+  guarda o banco de e-mail; `prometheus_data` mantém o histórico das métricas.
 
-Na raiz do repositório, copie `.env.example` para `.env` apenas se ainda não
-tiver um `.env`. Se já existir, preserve-o e confira as configurações de banco,
-`JWT_SECRET`, `EMAIL_API_KEY`, `GRAFANA_ADMIN_PASSWORD` e as credenciais do
-banco de e-mail. Defina uma senha forte para o administrador do Grafana. Não
-versione o `.env` nem certificados privados.
+## Preparar e iniciar
 
-O Compose usa `DOCKER_DB_NAME=urbancandy_docker` e
-`DOCKER_DB_USER=urbancandy_app` por padrão; estes valores não são retirados do
-`.env` do backend nem do `.env.test`. Defina uma senha forte em `DB_PASSWORD`.
-`MYSQL_ROOT_PASSWORD` pode ser definida separadamente; se for omitida, o Compose
-reutiliza `DB_PASSWORD` para o usuário root do MySQL. O serviço de e-mail usa
-um container, banco e volume próprios. Para não exigir novas configurações
-iniciais, ele reutiliza `DB_PASSWORD` como senha do usuário de aplicação e a
-senha root existente como padrão; é possível definir `EMAIL_DB_PASSWORD` e
-`EMAIL_DB_ROOT_PASSWORD` separadamente depois. O banco de e-mail é publicado em
-`localhost:3308` (o `3306` é apenas a porta interna do container). `EMAIL_API_KEY`
-deve ser uma chave
-aleatória compartilhada apenas entre o backend principal e o serviço de e-mail.
-Para envio real com Gmail, configure `SMTP_USER` com a conta remetente,
-`SMTP_APP_PASSWORD` com a senha de app e `SMTP_FROM` com o endereço autorizado.
-Nunca use a senha normal da conta nem versione a senha de app.
+1. Na raiz do projeto, copie `.env.example` para `.env` se ainda não existir.
+   Preserve um `.env` já configurado.
+2. Configure os valores necessários, incluindo `DB_PASSWORD`, `JWT_SECRET` e
+   `EMAIL_API_KEY`, `GRAFANA_ADMIN_PASSWORD` e as credenciais do banco de
+   e-mail. Use uma senha forte para o administrador do Grafana. Nunca versione
+   o `.env`, certificados privados ou senhas.
+3. Disponibilize os certificados locais esperados pelo Nginx:
+   `nginx/certs/cert.pem` e `nginx/certs/key.pem`.
+4. Inicie o ambiente:
 
-O Nginx espera `nginx/certs/cert.pem` e `nginx/certs/key.pem`. Esses arquivos
-devem existir localmente e não devem ser commitados.
+   ```powershell
+   .\scripts\start-docker.ps1
+   ```
 
-## Validar e iniciar
+O script executa o Compose, seleciona o backend Docker e verifica a API. Para
+usar `https://urbancandy.local`, configure esse nome para apontar ao computador
+local no arquivo `hosts`; como alternativa, tente `https://localhost`.
 
-Execute na raiz do repositório:
+## Usar o mesmo endereço com o backend local
 
-```sh
-docker compose config -q
-docker compose up --build -d
+Para desenvolver com o banco local, inicie o MySQL local e rode `npm run dev`
+na pasta `UrbanCandy_back`. O comando seleciona o backend local para
+`https://urbancandy.local`; o frontend e o Nginx continuam no Compose.
+
+Para voltar ao backend Docker, execute novamente
+`.\scripts\start-docker.ps1`. Essa seleção de backend não migra nem modifica
+dados. Detalhes de conexão do backend local estão em
+[`UrbanCandy_back/.env.example`](../../UrbanCandy_back/.env.example).
+
+## Portas principais
+
+- `80` e `443`: HTTP/HTTPS publicados pelo Nginx.
+- `3307`: MySQL principal no host; internamente, os containers usam `3306`.
+- `3308`: MySQL de e-mail, acessível somente pelo computador local.
+- `3030`: API Docker para acesso direto, por exemplo, pelo aplicativo mobile.
+- `3041`: serviço de e-mail Docker no host; internamente usa `3040`.
+- `6380`: Redis publicado somente no loopback; internamente usa `6379`.
+- `3001` e `9090`: Grafana e Prometheus, publicados somente no loopback.
+
+As portas publicadas podem ser alteradas no `.env` raiz com `HTTP_PORT`,
+`HTTPS_PORT`, `MYSQL_PORT`, `BACKEND_PORT`, `EMAIL_SERVICE_PORT` e
+`REDIS_PORT`. As portas de observabilidade podem ser ajustadas com
+`GRAFANA_PORT` e `PROMETHEUS_PORT`.
+
+## Acesso pelo aplicativo mobile
+
+Para acessar o backend Docker em um celular físico, configure
+`EXPO_PUBLIC_API_URL` no `UrbanCandy_mobile/.env` com
+`http://<IP-do-computador>:3030`. O celular e o computador precisam estar na
+mesma rede, e o firewall deve permitir a conexão. O backend local usa a porta
+`3000`; no emulador Android padrão, o endereço é `http://10.0.2.2:3000`.
+
+## Verificar, acompanhar e parar
+
+```powershell
 docker compose ps
 ```
 
@@ -129,182 +162,19 @@ docker compose logs --tail=100
 docker compose logs --follow urbancandy-backend
 ```
 
-## Cache distribuído de produtos
+Para parar os containers sem apagar os dados:
 
-O backend usa Cache-Aside com Redis nas consultas públicas de produtos:
-listagem paginada, destaques, busca por categoria e busca por ID. O tempo de
-expiração padrão é de 60 segundos e pode ser alterado por
-`PRODUCT_CACHE_TTL_SECONDS` no `.env` da raiz. As chaves usam o prefixo
-`urbancandy:products:`.
-
-Ao criar, atualizar ou excluir um produto, o backend invalida as chaves de
-produto. Alterações em categorias também invalidam esse conjunto, pois as
-consultas incluem os dados da categoria. Os logs do backend registram `MISS`,
-`HIT`, gravações com TTL e invalidações. Se Redis ficar indisponível, o backend
-registra o erro e consulta o banco; a API continua disponível, mas sem cache.
-
-Para demonstrar o comportamento, com os serviços em execução:
-
-1. Acompanhe `docker compose logs --follow urbancandy-backend`.
-2. Acesse duas vezes `https://localhost/api/produto/listar`. O primeiro acesso
-   deve registrar `MISS` e gravação; o segundo deve registrar `HIT`.
-3. Confira as chaves com
-   `docker compose exec urbancandy-redis redis-cli --scan --pattern "urbancandy:products:*"`.
-4. Crie, edite ou exclua um produto pela aplicação. O log deve registrar a
-   invalidação; ao consultar novamente, a API carrega os dados atualizados e
-   preenche o cache novamente.
-
-Os testes automatizados de `Cache-Aside` cobrem cache miss, hit e fallback
-quando Redis não pode ser acessado.
-
-## Serviço de confirmação e envio de e-mails
-
-O backend principal grava cada mudança de status do pedido na tabela
-`order_status_outbox`, na mesma transação que atualiza o pedido. Um publicador
-reenviará o evento pelo Redis Pub/Sub até o serviço de e-mail registrar o evento
-em seu banco e publicar a confirmação de recebimento. O identificador do evento
-é único; assim, reentregas não criam novos envios. O serviço persiste os e-mails
-pendentes e tenta novamente falhas SMTP com intervalo crescente. O cliente só
-recebe atualizações do pedido depois de confirmar o endereço uma vez; a
-confirmação não bloqueia o login nem as compras. As contas existentes podem
-solicitar o código em “Meus Dados”.
-
-Para desenvolver localmente:
-
-1. Crie o banco MySQL `urbancandy_email_development` no MySQL local, sem
-   reutilizar `urbancandy` ou `urbancandy_test`.
-2. Copie `UrbanCandy_email/.env.example` para `UrbanCandy_email/.env` e ajuste
-   host/usuário/senha do banco. Configure `EMAIL_API_KEY` com o mesmo valor
-   usado em `UrbanCandy_back/.env`.
-3. Em `UrbanCandy_back/.env`, defina
-   `EMAIL_SERVICE_URL=http://127.0.0.1:3040` e a mesma `EMAIL_API_KEY`.
-4. Para Gmail, ative a verificação em duas etapas da conta remetente, gere uma
-   senha de app e configure `SMTP_USER`, `SMTP_APP_PASSWORD` e `SMTP_FROM` no
-   `UrbanCandy_email/.env`. Sem essas credenciais, o serviço permanece
-   executável, mas os envios ficam pendentes e serão tentados novamente.
-5. Inicie Redis, backend e serviço de e-mail em terminais separados:
-
-   ```sh
-   npm run dev:email
-   npm run dev:back
-   ```
-
-   O Redis pode ser iniciado com `docker compose up -d urbancandy-redis`.
-
-O banco de testes do serviço deve ser `urbancandy_email_test`; o arquivo modelo
-está em `UrbanCandy_email/.env.test.example`. Os testes do serviço usam um
-transporte SMTP simulado e não enviam e-mails reais. A senha de app jamais deve
-ser copiada para `.env.example`, `.env.test.example` ou qualquer arquivo
-versionado.
-
-Os ambientes local e Compose podem ficar ativos ao mesmo tempo: o local usa os
-canais Redis padrão, e o Compose usa canais com o prefixo
-`urbancandy:docker:`. Assim, cada serviço de e-mail consome somente os eventos
-do backend do mesmo ambiente.
-
-## Eventos com Redis Pub/Sub
-
-O backend publica o evento `order.status.changed` no canal
-`urbancandy:orders:status-changed` depois que o status de um pedido é alterado
-com sucesso ou cancelado. A mensagem contém `eventId`, `occurredAt`, `orderId`,
-`previousStatusId` e `newStatusId`. Um assinante Redis iniciado com o backend
-consome o evento e registra a publicação, assinatura e consumo nos logs.
-Quando o status recebido contém "pronto", o consumidor grava uma notificação
-associada ao usuário e ao pedido; ela só é enviada ao dono do pedido.
-
-No aplicativo mobile, o sino do cabeçalho abre o histórico de notificações,
-com contador de não lidas e ações para marcar uma ou todas como lidas. Com o
-app aberto, a tela consulta novas notificações a cada 10 segundos e mostra um
-aviso na tela; ao retornar do segundo plano, consulta novamente. As
-notificações ficam salvas no MySQL e continuam no histórico após reiniciar o
-app. Isso não é uma notificação push do sistema operacional: com o app fechado,
-o aviso só aparece quando ele for aberto novamente.
-
-As rotas autenticadas `GET /api/notificacoes`,
-`PATCH /api/notificacoes/:id_notification/lida` e
-`PATCH /api/notificacoes/lidas` servem o histórico e a leitura. A rota
-`GET /api/notificacoes/stream` oferece Server-Sent Events para uma futura
-interface web.
-
-Para demonstrar a circulação:
-
-1. Acompanhe `docker compose logs --follow urbancandy-backend`.
-2. Altere o status de um pedido pela aplicação.
-3. Confira os logs `[pubsub] Publicado`, `[pubsub] Assinante conectado` e
-   `[pubsub] Consumido`, com o identificador e a transição do pedido.
-4. Opcionalmente, observe o canal com
-   `docker compose exec urbancandy-redis redis-cli MONITOR` em outro terminal.
-
-Pub/Sub não armazena mensagens nem garante entrega a consumidores
-desconectados. Este fluxo demonstra comunicação por eventos; notificações
-críticas que não podem ser perdidas exigirão uma fila durável/outbox.
-
-## Pagamento com Mercado Pago
-
-No mobile, a pessoa escolhe entre dinheiro na entrega/retirada e pagar pelo
-Mercado Pago. O Checkout Pro hospedado oferece os meios habilitados para a
-conta, como Pix e cartões; os dados do cartão não passam nem ficam armazenados
-no UrbanCandy. Ao fechar o checkout sem concluir, a tela de pagamento permanece
-aberta e permite retomar o checkout enquanto consulta a confirmação. O backend
-calcula os preços a partir do MySQL e mantém a tentativa de pagamento separada
-do pedido. O pedido só é criado com status "Recebido" após o Mercado Pago
-confirmar a aprovação.
-
-Para testar:
-
-1. Configure `MERCADOPAGO_ACCESS_TOKEN` com uma credencial de teste do vendedor
-   no `.env` da raiz (Compose) ou em `UrbanCandy_back/.env` (backend local).
-   Não compartilhe nem versione esse token.
-   Credenciais com prefixo `TEST-` usam exclusivamente a URL sandbox do
-   Checkout Pro; o backend não redireciona essas credenciais para o checkout de
-   produção.
-   Em desenvolvimento, uma credencial de produção `APP_USR-` também pode ser
-   usada intencionalmente; nesse caso, os pagamentos são reais e podem cobrar
-   dinheiro. Use-a somente quando estiver ciente desse risco.
-2. Para confirmação automática por webhook, configure
-   `MERCADOPAGO_WEBHOOK_SECRET` e `MERCADOPAGO_WEBHOOK_URL` com os valores da
-   aplicação no painel de desenvolvedores do Mercado Pago. A URL precisa ser
-   HTTPS e publicamente acessível, apontando para
-   `/api/pagamento/webhook`. Sem webhook, a tela de resultado consulta o status
-   ao Mercado Pago enquanto permanecer aberta.
-3. Use um usuário comprador de teste do Mercado Pago e siga o fluxo no app. A
-   tela de resultado mostra a aprovação, rejeição ou estado pendente. Não use
-   dados de cartão reais em testes.
-
-As rotas autenticadas `POST /api/pagamento/checkout` e
-`GET /api/pagamento/checkout/:id` iniciam e consultam a tentativa. O endpoint
-`POST /api/pagamento/webhook` valida a assinatura e consulta o pagamento
-diretamente à API Mercado Pago antes de aprovar o pedido. A tentativa registra
-o snapshot dos produtos e valores usados no checkout; preços e total enviados
-pelo app não são considerados fonte confiável.
-
-Para parar os containers sem apagar dados:
-
-```sh
+```powershell
 docker compose down
 ```
 
-O volume `mysql_data` mantém os dados do banco do Compose. O comando abaixo
-apagaria permanentemente esse banco e seu volume; não o execute sem querer
-remover os dados locais do Compose. Ele não remove bancos externos ao Compose.
+**Não use `docker compose down -v` para uma parada normal:** a opção `-v`
+remove os volumes do Compose e apaga os dados persistidos nos bancos Docker.
+Bancos MySQL instalados fora do Compose não são afetados.
 
-```sh
-docker compose down -v
-```
+## Guias relacionados
 
-## Estado da rubrica
-
-- Compose, containers do frontend e backend, MySQL, Nginx, rede e volume
-  isolados: configurados e validados em execução.
-- Banco: o backend foi confirmado conectado ao schema `urbancandy_docker`;
-  a porta publicada no host é `3307` por padrão, separada dos bancos locais
-  de desenvolvimento e de testes.
-- Redis: container e health check configurados e validados (`PONG`); o backend
-  usa Redis para Cache-Aside nas consultas de produtos e Pub/Sub para eventos
-  de alteração de status do pedido.
-- Validação realizada: `docker compose --env-file .env.example config -q` e
-  `docker compose build` passaram; os cinco serviços ficaram `healthy`;
-  frontend e API responderam HTTP 200; `/api/health` retornou status `ok`;
-  `nginx -t` passou.
-- A integração Mercado Pago é uma etapa separada da rubrica; requer credenciais
-  de teste para validar o checkout real no ambiente sandbox.
+- [Cache de produtos com Redis](cache-redis.md)
+- [Serviço de e-mail](servico-email.md)
+- [Eventos e notificações](eventos-notificacoes.md)
+- [Pagamento com Mercado Pago](pagamento-mercado-pago.md)

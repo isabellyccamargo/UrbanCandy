@@ -128,12 +128,30 @@
       ],
       "title": "15-day request success ratio (partial until 15 days of data)",
       "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0, "max": 100 },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+      "id": 8,
+      "targets": [
+        {
+          "expr": "100 * avg_over_time(probe_success{job=\"urbancandy-api-health\"}[20d])",
+          "legendFormat": "health probe success",
+          "refId": "A"
+        }
+      ],
+      "title": "API health probe success (20-day rolling window)",
+      "type": "timeseries"
     }
   ],
   "refresh": "15s",
   "schemaVersion": 39,
   "tags": ["urbancandy", "observability"],
-  "time": { "from": "now-1h", "to": "now" },
+  "time": { "from": "now-20d", "to": "now" },
   "title": "UrbanCandy - API overview",
   "uid": "urbancandy-api-overview",
   "version": 1

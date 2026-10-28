@@ -6,14 +6,35 @@ O UrbanCandy é uma plataforma de comércio eletrônico de doces: apresenta o ca
 
 ## Subdomínios candidatos
 
-| Subdomínio | Classificação inicial | Evidência e estado |
-|---|---|---|
-| Vendas e ciclo do pedido | Candidato a *core*; validar com responsáveis pelo negócio | Checkout, itens, consulta, cancelamento e atualização de status implementados. |
-| Catálogo e ofertas | Suporte | Produtos, categorias e ofertas implementados; não foi identificada gestão de estoque. |
-| Usuários e acesso | Suporte ou genérico | Cadastro, autenticação, perfil, endereço, papéis e permissões implementados. |
-| Pagamento transacional | Suporte ao fluxo de vendas | Integração Mercado Pago implementada no backend; tentativas persistidas, webhook assinado e consulta de status. |
-| Comunicação por e-mail | Capacidade técnica de apoio | Serviço separado para confirmação e notificações; banco próprio e integração por HTTP/Pub/Sub. |
-| Consulta gerencial | Funcionalidade da aplicação | As interfaces consultam dados da API; não há read model independente confirmado. |
+### Vendas e ciclo do pedido
+
+- **Classificação inicial:** candidato a *core*; validar com responsáveis pelo negócio.
+- **Evidência e estado:** checkout, itens, consulta, cancelamento e atualização de status implementados.
+
+### Catálogo e ofertas
+
+- **Classificação inicial:** suporte.
+- **Evidência e estado:** produtos, categorias e ofertas implementados; não foi identificada gestão de estoque.
+
+### Usuários e acesso
+
+- **Classificação inicial:** suporte ou genérico.
+- **Evidência e estado:** cadastro, autenticação, perfil, endereço, papéis e permissões implementados.
+
+### Pagamento transacional
+
+- **Classificação inicial:** suporte ao fluxo de vendas.
+- **Evidência e estado:** integração Mercado Pago implementada no backend; tentativas persistidas, webhook assinado e consulta de status.
+
+### Comunicação por e-mail
+
+- **Classificação inicial:** capacidade técnica de apoio.
+- **Evidência e estado:** serviço separado para confirmação e notificações; banco próprio e integração por HTTP/Pub/Sub.
+
+### Consulta gerencial
+
+- **Classificação inicial:** funcionalidade da aplicação.
+- **Evidência e estado:** as interfaces consultam dados da API; não há read model independente confirmado.
 
 A classificação de um subdomínio como *core* é uma decisão de negócio e deve ser validada com as pessoas responsáveis; não se deduz apenas do código.
 

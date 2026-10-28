@@ -1,43 +1,70 @@
 # Entrega contínua e recuperação
 
-## Estado no repositório
+## Escopo e estado
+O workflow [.github/workflows/ci.yml](../../.github/workflows/ci.yml) executa CI automaticamente em pull requests e pushes, ou manualmente. Ele instala dependências, executa testes, compila backend, frontend e serviço de e-mail, valida e constrói as imagens Docker. O workflow **não publica imagens nem executa deploy remoto**, pois não há servidor de produção/homologação nem credenciais configuradas. A promoção de uma versão para o ambiente Docker existente é manual.
 
-O Docker Compose de desenvolvimento e o Nginx estão versionados. Na revisão de 2026-10-23, não foram encontrados o workflow `.github/workflows/ci-cd.yml`, `docker-compose.production.yml` nem `scripts/deploy.sh`. Portanto, **pipeline CI/CD, estratégia de deploy automatizada e rollback não podem ser considerados implementados ou verificados** com o estado atual do repositório.
+## Pipeline de CI
 
-## Esqueleto recomendado de CI
+1.  **Disparo:** pull request, push em qualquer branch ou execução manual pelo GitHub Actions.
+2. **Instalação:** `npm ci` com o `package-lock.json`.
+3. **Testes:** `npm run test:back`, `npm run test:front` e
+   `npm run test:email` executam as suítes dos três serviços.
+4. **Build:** `npm run build:check` compila e verifica os tipos de backend,
+   frontend e serviço de e-mail.
+5.  **Infraestrutura:** docker compose config -q verifica a configuração e docker compose build constrói as imagens de backend, e-mail e frontend. As variáveis usadas nesta validação são valores fictícios exclusivos do CI, não secrets de produção.
 
-Criar um workflow que, em pull requests e pushes, instale dependências de forma reprodutível e execute:
+Qualquer falha reprova o job. Esta CI valida o software e as imagens, mas não testa a aplicação integrada com serviços externos reais nem realiza deploy.
 
-1. Testes de backend, frontend e serviço de e-mail.
-2. Builds/type-checks dos três projetos.
-3. Validação da configuração Compose e dos arquivos de documentação/API relevantes.
-4. Publicação/deploy somente após sucesso das verificações, usando secrets do ambiente, nunca credenciais versionadas.
+## Estratégia de deploy adotada
 
-## Estratégia de deploy a decidir
+A estratégia atual é a **recriação manual dos serviços via Docker Compose**, com breve indisponibilidade. Não é Blue-Green.
 
-Para o Compose atual, uma estratégia simples é recriar os serviços após backup e validação, executar health checks e manter instruções de rollback da versão anterior. Isso pode causar breve indisponibilidade. Blue-green exigiria duas pilhas, roteamento de tráfego e compatibilidade entre versões do banco; não está configurado.
+### Publicação manual (Deploy)
 
-Antes de deploy de produção, definir domínio/TLS, armazenamento de secrets, backup e restauração de MySQL/uploads, política de migração de schema, monitoramento e responsável pela aprovação. Não executar `docker compose down -v` em ambiente com dados a preservar.
+1.  Com Docker Desktop/Engine ativo e .env configurado (ver [docs/infraestrutura/docker-compose.md](../infraestrutura/docker-compose.md)), execute:
 
-## Runbook mínimo
+    `sh
+    docker compose up --build -d
+    `
 
-### Aplicação indisponível
+2.  Confirme que os serviços estão saudáveis (docker compose ps) e valide os fluxos essenciais.
 
-1. Verificar estado e health checks com `docker compose ps`.
-2. Consultar somente os logs necessários com `docker compose logs --tail=200 <serviço>`.
-3. Conferir API, Nginx e dependências; preservar volumes.
-4. Reverter a aplicação para uma versão conhecida somente após confirmar compatibilidade do banco.
-5. Registrar causa, duração, impacto e recuperação.
+3.  **Atenção:** docker compose up --build -d é uma atualização/recriação que causa breve interrupção. Sempre faça backup antes.
 
-### MySQL indisponível ou suspeita de perda de dados
+### Rollback da aplicação
 
-1. Preservar volumes e interromper gravações se houver risco de corrupção.
-2. Não remover volumes nem restaurar sobre a única cópia.
-3. Validar backup em ambiente isolado e confirmar integridade antes de qualquer restauração.
-4. Reativar serviços e verificar os fluxos de leitura e gravação; documentar o ponto de recuperação e possível perda de dados.
+1.  Identifique o último commit/tag saudável.
+2.  Volte ao commit/tag anterior (ex: git checkout <hash-do-commit-anterior>).
+3.  Execute o deploy manual: docker compose up --build -d.
+4.  Verifique e registre o rollback.
 
-## Pendências para cumprir a rubrica
+**Importante:** Rollback da aplicação **não reverte o banco automaticamente**. Só volte a versão se ela for compatível com o schema atual.
 
-- Versionar o workflow CI/CD executável com etapas de build, test e deploy.
-- Definir e documentar a estratégia de deploy/rollback realmente adotada.
-- Testar o runbook de indisponibilidade e recuperação e registrar evidências.
+## Runbook de incidentes e recuperação
+
+### Aplicação ou deploy indisponível
+
+1.  Verifique docker compose ps e identifique serviços parados.
+2.  Consulte logs com docker compose logs --tail=200 <serviço>.
+3.  Verifique versão do código, .env e portas.
+4.  Se falha após deploy, siga **Rollback da aplicação**. Caso contrário, corrija.
+5.  Registre o incidente (início, impacto, causa, ações, recuperação).
+
+### Banco indisponível ou suspeita de corrupção
+
+1.  Preserve o volume MySQL. Interrompa gravações se houver risco de corrupção.
+2.  Verifique o estado e logs do banco (docker compose ps urbancandy-db, docker compose logs --tail=200 urbancandy-db).
+3.  Não execute docker compose down -v nem remova volumes.
+4.  Faça backup do volume/dados atuais e valide a restauração em ambiente isolado.
+5.  Restaure o backup aprovado em ambiente isolado.
+6.  Valide a restauração e registre o resultado.
+
+### Backup e Restauração (Visão Geral)
+
+Não há rotina automática de backup. Antes de atualizações, realize backup manual do banco e uploads (UrbanCandy_back/uploads). A restauração deve ser ensaiada em ambiente isolado antes de impactar o ambiente ativo.
+
+## Limitações e próximos passos para deploy remoto
+
+-   CI está automatizada; publicação de imagens e deploy remoto não estão configurados por falta de servidor/destino aprovado.
+-   Backup/restore continuam procedimentos manuais e ainda precisam de ensaio controlado e evidência registrada.
+-   Para automatizar o deploy, primeiro definir servidor, domínio/TLS, armazenamento de secrets, acesso restrito do runner, política de retenção de backups e responsável por aprovar a publicação. Em seguida, implementar um ambiente protegido e validar deploy e rollback nesse destino antes de declarar o processo pronto para produção.

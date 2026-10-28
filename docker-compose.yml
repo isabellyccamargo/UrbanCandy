@@ -94,6 +94,18 @@ services:
     depends_on:
       urbancandy-backend:
         condition: service_healthy
+      urbancandy-blackbox-exporter:
+        condition: service_started
+
+  urbancandy-blackbox-exporter:
+    image: prom/blackbox-exporter:v0.27.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/blackbox_exporter/config.yml
+    volumes:
+      - ./observability/prometheus/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    networks:
+      - app_network
 
   urbancandy-grafana:
     image: grafana/grafana:12.1.1
@@ -221,12 +233,18 @@ services:
   urbancandy-nginx:
     image: nginx:alpine
     restart: unless-stopped
+    environment:
+      BACKEND_UPSTREAM: ${BACKEND_UPSTREAM:-urbancandy-backend:3030}
+      NGINX_ENVSUBST_FILTER: ^BACKEND_UPSTREAM$
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/urbancandy.conf.template:/etc/nginx/templates/urbancandy.conf.template:ro
       - ./nginx/certs:/etc/nginx/certs:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - app_network
     depends_on:

@@ -14,8 +14,9 @@ describe('Prometheus HTTP metrics', () => {
 
     try {
       const address = server.address();
-      if (!address || typeof address === 'string')
+      if (!address || typeof address === 'string') {
         throw new Error('Test server did not bind a port.');
+      }
       const baseUrl = `http://127.0.0.1:${address.port}`;
 
       const response = await fetch(`${baseUrl}/api/products/123`);

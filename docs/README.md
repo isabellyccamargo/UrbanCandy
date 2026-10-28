@@ -1,17 +1,21 @@
-# Arquitetura de software — UrbanCandy
+# Documentação — UrbanCandy
 
-Esta documentação descreve a arquitetura observada no código e distingue funcionalidades implementadas de decisões ou metas ainda propostas. O código é a fonte de verdade para o comportamento.
+Índice dos documentos de arquitetura, decisões e operação do projeto.
 
-## Documentação
+## Arquitetura e decisões
 
 - [Diagrama C4 de Contexto](arquitetura/c4-contexto.md)
 - [Diagrama C4 de Containers](arquitetura/c4-containers.md)
+- **Diagramas C4:** os diagramas Draw.io de Contexto e Containers estão pendentes de revisão e atualização conforme a arquitetura implementada.
 - [Domínio e subdomínios](ddd/01-dominio-e-subdominios.md)
 - [Bounded Contexts e Context Map](ddd/02-bounded-contexts-e-context-map.md)
 - [Modelo do contexto Pedidos](ddd/03-modelo-do-contexto-pedidos.md)
 - [ADRs](adr/)
 - [Cenários de qualidade](qualidade/cenarios-de-qualidade.md)
-- [Especificação OpenAPI](../UrbanCandy_back/docs/api/openapi.yaml)
+- [Documentação da API (Swagger e OpenAPI)](api/documentacao-api.md)
+
+## Infraestrutura e operação
+
 - [Estado de CI/CD e runbook](entrega/ci-cd-e-runbook.md)
 - [Orquestração local e Docker Compose](infraestrutura/docker-compose.md)
 
@@ -32,5 +36,10 @@ Esta documentação descreve a arquitetura observada no código e distingue func
 - O backend principal é um monólito em camadas; seus diretórios não comprovam Bounded Contexts isolados. O serviço de e-mail é implantável separadamente.
 - As métricas HTTP, coleta Prometheus, dashboard Grafana e regras de alerta estão configuradas para execução local; as metas de SLO ainda dependem de aprovação e validação por testes de carga e observação.
 - A especificação OpenAPI documenta os principais fluxos da API. Swagger UI está disponível em `/api-docs` na porta do backend (local: `http://localhost:3000/api-docs`; Compose: `http://localhost:3030/api-docs`).
-- O workflow CI/CD e a documentação de deploy estão sendo entregues separadamente na branch `feature/ci-cd-docs`; nesta branch, deploy remoto e ensaio de restauração ainda não estão configurados.
+- O workflow CI/CD e o runbook de deploy estão documentados em [Estado de CI/CD e runbook](entrega/ci-cd-e-runbook.md); deploy remoto e ensaio de restauração ainda dependem de configuração e validação.
 - A rubrica C4 só poderá ser marcada como concluída após incorporar e revisar os diagramas de Contexto e Containers.
+- [Dashboard de observabilidade com Grafana e Prometheus](observabilidade/grafana-prometheus.md)
+- [Cache de produtos com Redis](infraestrutura/cache-redis.md)
+- [Serviço de e-mail](infraestrutura/servico-email.md)
+- [Eventos e notificações](infraestrutura/eventos-notificacoes.md)
+- [Pagamento com Mercado Pago](infraestrutura/pagamento-mercado-pago.md)

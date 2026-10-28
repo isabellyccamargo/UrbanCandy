@@ -78,7 +78,9 @@ const ProductsForm = () => {
       }
       navigate('/admin/produtos');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Erro ao salvar.');
+      toast.error(
+        err.response?.data?.message || err.message || err.mensagem || 'Erro ao salvar.'
+      );
     } finally {
       setLoading(false);
     }

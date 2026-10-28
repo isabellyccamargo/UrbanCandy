@@ -46,6 +46,8 @@ server.use(
 );
 
 server.use(httpMetricsMiddleware);
+
+// 3. O express.json deve vir logo após o CORS
 server.use(express.json());
 
 server.get('/api-docs/openapi.yaml', (_req, res, next) => {
