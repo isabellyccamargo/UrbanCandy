@@ -66,7 +66,7 @@ export default function AccountInput({
 
         inputError: {
             borderWidth: 1.5,
-            borderColor: colors.error ?? '#E53935',
+            borderColor: colors.danger ?? '#E53935',
         },
 
         inputDisabled: {

@@ -19,7 +19,8 @@ import {
 } from 'expo-router';
 
 import { useTheme } from '@/context/Theme';
-import { api } from '@/services/api';
+import { useNotifications } from '@/context/NotificationContext';
+import api, { BASE_URL } from '@/services/api';
 import { getUserProfile } from '@/services/auth';
 
 function getFullImageUrl(
@@ -38,9 +39,7 @@ function getFullImageUrl(
         return imagePath;
     }
 
-    const rawBaseURL =
-        api?.defaults?.baseURL ||
-        'http://172.20.10.3:3000';
+    const rawBaseURL = api.defaults.baseURL || BASE_URL;
 
     const cleanBaseURL = rawBaseURL
         .replace(/\/api\/?$/, '')
@@ -63,6 +62,7 @@ export function HomeHeader() {
     } = useTheme();
 
     const router = useRouter();
+    const { unreadCount } = useNotifications();
 
     const [userName, setUserName] =
         useState<string>('Visitante');
@@ -217,6 +217,43 @@ export function HomeHeader() {
             height: '100%',
             borderRadius: 22,
         },
+
+        actions: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: space.md,
+        },
+
+        notificationButton: {
+            width: 44,
+            height: 44,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 22,
+            backgroundColor: colors.background || '#F0F0F0',
+        },
+
+        notificationBadge: {
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            minWidth: 18,
+            height: 18,
+            paddingHorizontal: 4,
+            borderRadius: 9,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.danger,
+            borderWidth: 1,
+            borderColor: colors.white,
+        },
+
+        notificationBadgeText: {
+            color: colors.white,
+            fontFamily: font?.bold || 'System',
+            fontSize: 10,
+            lineHeight: 12,
+        },
     });
 
     const handleProfilePress = () => {
@@ -242,27 +279,49 @@ export function HomeHeader() {
                     </Text>
                 </View>
 
-                <Pressable
-                    style={styles.avatarPressable}
-                    onPress={handleProfilePress}
-                >
-                    {userImage ? (
-                        <Image
-                            source={userImage}
-                            style={styles.avatarImage}
-                            contentFit="cover"
-                            cachePolicy="memory-disk"
-                            transition={150}
-                            onError={() => setUserImage(null)}
-                        />
-                    ) : (
+                <View style={styles.actions}>
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Notificações${unreadCount ? `, ${unreadCount} não lidas` : ''}`}
+                        style={styles.notificationButton}
+                        onPress={() => router.push('/protected/notifications' as any)}
+                    >
                         <Ionicons
-                            name="person"
-                            size={20}
+                            name="notifications-outline"
+                            size={23}
                             color={colors.primary}
                         />
-                    )}
-                </Pressable>
+                        {unreadCount > 0 && (
+                            <View style={styles.notificationBadge}>
+                                <Text style={styles.notificationBadgeText}>
+                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                </Text>
+                            </View>
+                        )}
+                    </Pressable>
+
+                    <Pressable
+                        style={styles.avatarPressable}
+                        onPress={handleProfilePress}
+                    >
+                        {userImage ? (
+                            <Image
+                                source={userImage}
+                                style={styles.avatarImage}
+                                contentFit="cover"
+                                cachePolicy="memory-disk"
+                                transition={150}
+                                onError={() => setUserImage(null)}
+                            />
+                        ) : (
+                            <Ionicons
+                                name="person"
+                                size={20}
+                                color={colors.primary}
+                            />
+                        )}
+                    </Pressable>
+                </View>
             </View>
         </View>
     );

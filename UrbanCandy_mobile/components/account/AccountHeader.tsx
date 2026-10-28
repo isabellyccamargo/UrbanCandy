@@ -1,4 +1,5 @@
 import {
+    Image,
     Pressable,
     StyleSheet,
     Text,
@@ -116,11 +117,9 @@ export default function AccountHeader({
                 </Pressable>
 
                 <Image
-                    source={imageUri}
-                    style={styles.avatarImage}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                    transition={150}
+                    source={require('@/assets/images/logo.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
                 />
 
                 <Text style={styles.title}>

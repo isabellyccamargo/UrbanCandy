@@ -1,0 +1,28 @@
+{
+  "name": "urbancandy-email",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development tsx watch src/Server.ts",
+    "build": "tsc",
+    "start": "node dist/Server.js",
+    "test": "cross-env NODE_ENV=test node --import tsx --test __tests__/index.test.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "mysql2": "^3.14.1",
+    "nodemailer": "^7.0.3",
+    "redis": "^5.12.1",
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "@types/nodemailer": "^6.4.17",
+    "cross-env": "^10.1.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

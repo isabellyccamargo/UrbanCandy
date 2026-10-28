@@ -1,11 +1,14 @@
 import { useRouter } from 'expo-router';
-import { getUser } from '@/services/authStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type RouterType = ReturnType<typeof useRouter>;
 
 export async function navigateToAdminArea(router: RouterType) {
   try {
-    const user = (await getUser()) as any;
+    const storedUser =
+      (await AsyncStorage.getItem('@UrbanCandy:user')) ||
+      (await AsyncStorage.getItem('user'));
+    const user = storedUser ? JSON.parse(storedUser) : null;
 
     const roleId = user?.role_id || user?.id_role;
 

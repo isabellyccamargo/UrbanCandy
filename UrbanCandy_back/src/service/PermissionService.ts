@@ -22,7 +22,7 @@ class PermissionService {
 
   async createPermission(permissionData: {
     name: string;
-    description?: string;
+    description?: string | null;
   }): Promise<Permission> {
     if (!permissionData.name?.trim()) {
       throw new ApiException('REQUIRED_FIELD', 400, 'name');
@@ -44,7 +44,7 @@ class PermissionService {
     id_permission: number,
     permissionData: {
       name?: string;
-      description?: string;
+      description?: string | null;
     }
   ) {
     const permission = await PermissionRepository.findByIdPermission(id_permission);

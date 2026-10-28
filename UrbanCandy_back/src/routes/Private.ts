@@ -11,11 +11,23 @@ import OrderController from '../controllers/OrderController.js';
 import AddressController from '../controllers/AddressController.js';
 import TypeOfPaymentController from '../controllers/TypeOfPaymentController.js';
 import TypeOfDeliveryController from '../controllers/TypeOfDeliveryController.js';
+import NotificationController from '../controllers/NotificationController.js';
+import MercadoPagoController from '../controllers/MercadoPagoController.js';
+import EmailVerificationController from '../controllers/EmailVerificationController.js';
 import { upload } from '../config/MulterConfig.js';
 
 const privateRoutes = Router();
 
 privateRoutes.use(authMiddleware);
+
+privateRoutes.get('/notificacoes', NotificationController.list);
+privateRoutes.get('/email-verification/status', EmailVerificationController.status);
+privateRoutes.post('/email-verification/request', EmailVerificationController.requestForAuthenticatedUser);
+privateRoutes.get('/notificacoes/stream', NotificationController.stream);
+privateRoutes.patch('/notificacoes/lidas', NotificationController.markAllAsRead);
+privateRoutes.patch('/notificacoes/:id_notification/lida', NotificationController.markAsRead);
+privateRoutes.post('/pagamento/checkout', MercadoPagoController.createCheckout);
+privateRoutes.get('/pagamento/checkout/:id', MercadoPagoController.getStatus);
 
 // --- PRODUTO ---
 
@@ -87,10 +99,7 @@ privateRoutes.patch(
   PeopleController.uploadImage
 );
 
-privateRoutes.get(
-  '/pedido/usuario/:id_people',
-  OrderController.findByUserId
-);
+privateRoutes.get('/pedido/usuario/:id_people', OrderController.findByUserId);
 
 privateRoutes.get(
   '/pedido/:id_order/itens',
@@ -110,11 +119,7 @@ privateRoutes.patch(
   OrderController.updateStatus
 );
 
-privateRoutes.patch(
-  '/pedido/:id_order/cancel',
-  authorizePermission('alterar_status_pedido'), // Ou crie uma nova permissão como 'cancelar_pedido'
-  OrderController.cancel
-);
+privateRoutes.patch('/pedido/:id_order/cancel', OrderController.cancel);
 
 // --- TIPOS DE PAGAMENTO ---
 

@@ -11,15 +11,18 @@ export default defineConfig({
   },
   reporter: process.env.CI ? 'list' : [['html', { open: 'never' }], ['list']],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://127.0.0.1:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
+    command: 'npm run dev -- --host 127.0.0.1',
+    url: 'http://127.0.0.1:5173',
+    env: {
+      VITE_API_URL: 'http://127.0.0.1:3000/api',
+    },
+    reuseExistingServer: false,
     timeout: 30000,
   },
 });

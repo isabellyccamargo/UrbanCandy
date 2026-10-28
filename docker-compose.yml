@@ -1,72 +1,256 @@
+name: urbancandy-compose
+
 services:
-  # BANCO DE DADOS
   urbancandy-db:
     image: mysql:8.0
-    container_name: urbancandy-mysql-container
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DOCKER_DB_NAME:-urbancandy_docker}
+      MYSQL_USER: ${DOCKER_DB_USER:-urbancandy_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Configure DB_PASSWORD in the root .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-${DB_PASSWORD}}
     ports:
-      - '3307:3306' 
+      - "${MYSQL_PORT:-3307}:3306"
     volumes:
-      - urbancandy_db_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
     networks:
-      - urbancandy-network
+      - app_network
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mysqladmin ping -h 127.0.0.1 -uroot -p"$${MYSQL_ROOT_PASSWORD}" --silent',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
-  #  BACKEND
   urbancandy-backend:
-    container_name: urbancandy-backend-container
-    restart: always 
-    build: ./UrbanCandy_back
-    image: urbancandy-backend:latest
+    build:
+      context: ./UrbanCandy_back
+      dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
-      JWT_SECRET: ${JWT_SECRET}    
-      PORT: 3030                    
-      DB_HOST: ${DB_HOST}          
-      DB_USER: ${DB_USER}           
-      DB_PASSWORD: ${DB_PASSWORD}   
-      DB_NAME: ${DB_NAME}           
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET:?Configure JWT_SECRET in the root .env}
+      PORT: 3030
+      METRICS_HOST: 0.0.0.0
+      METRICS_PORT: 9464
+      DB_HOST: urbancandy-db
+      DB_PORT: 3306
+      DB_USER: ${DOCKER_DB_USER:-urbancandy_app}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DOCKER_DB_NAME:-urbancandy_docker}
+      REDIS_URL: redis://urbancandy-redis:6379
+      ORDER_STATUS_CHANGED_CHANNEL: urbancandy:docker:orders:status-changed
+      ORDER_STATUS_ACK_CHANNEL: urbancandy:docker:orders:email-received
+      EMAIL_SERVICE_URL: http://urbancandy-email:3040
+      EMAIL_API_KEY: ${EMAIL_API_KEY:?Configure EMAIL_API_KEY in the root .env}
+      PRODUCT_CACHE_TTL_SECONDS: ${PRODUCT_CACHE_TTL_SECONDS:-60}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
+      MERCADOPAGO_WEBHOOK_SECRET: ${MERCADOPAGO_WEBHOOK_SECRET:-}
+      MERCADOPAGO_WEBHOOK_URL: ${MERCADOPAGO_WEBHOOK_URL:-}
     volumes:
       - ./UrbanCandy_back/uploads:/app/uploads
+    ports:
+      - "${BACKEND_PORT:-3030}:3030"
+    expose:
+      - "9464"
     networks:
-      - urbancandy-network
+      - app_network
     depends_on:
       urbancandy-db:
-        condition: service_started
+        condition: service_healthy
+      urbancandy-redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3030/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
 
-  # FRONTEND
+  urbancandy-prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=35d
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - app_network
+    depends_on:
+      urbancandy-backend:
+        condition: service_healthy
+
+  urbancandy-grafana:
+    image: grafana/grafana:12.1.1
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Configure GRAFANA_ADMIN_PASSWORD in the root .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - app_network
+    depends_on:
+      - urbancandy-prometheus
+
+  urbancandy-email-db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${EMAIL_DB_NAME:-urbancandy_email_docker}
+      MYSQL_USER: ${EMAIL_DB_USER:-urbancandy_email}
+      MYSQL_PASSWORD: ${EMAIL_DB_PASSWORD:-${DB_PASSWORD:?Configure DB_PASSWORD in the root .env}}
+      MYSQL_ROOT_PASSWORD: ${EMAIL_DB_ROOT_PASSWORD:-${MYSQL_ROOT_PASSWORD:-${DB_PASSWORD:?Configure DB_PASSWORD in the root .env}}}
+    ports:
+      - "127.0.0.1:3308:3306"
+    volumes:
+      - email_mysql_data:/var/lib/mysql
+    networks:
+      - app_network
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mysqladmin ping -h 127.0.0.1 -uroot -p"$${MYSQL_ROOT_PASSWORD}" --silent',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  urbancandy-email:
+    build:
+      context: .
+      dockerfile: UrbanCandy_email/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3040
+      EMAIL_DB_HOST: urbancandy-email-db
+      EMAIL_DB_PORT: 3306
+      EMAIL_DB_NAME: ${EMAIL_DB_NAME:-urbancandy_email_docker}
+      EMAIL_DB_USER: ${EMAIL_DB_USER:-urbancandy_email}
+      EMAIL_DB_PASSWORD: ${EMAIL_DB_PASSWORD:-${DB_PASSWORD:?Configure DB_PASSWORD in the root .env}}
+      EMAIL_REDIS_URL: redis://urbancandy-redis:6379
+      ORDER_STATUS_CHANGED_CHANNEL: urbancandy:docker:orders:status-changed
+      ORDER_STATUS_ACK_CHANNEL: urbancandy:docker:orders:email-received
+      EMAIL_API_KEY: ${EMAIL_API_KEY:?Configure EMAIL_API_KEY in the root .env}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_APP_PASSWORD: ${SMTP_APP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+    ports:
+      - "127.0.0.1:${EMAIL_SERVICE_PORT:-3041}:3040"
+    networks:
+      - app_network
+    depends_on:
+      urbancandy-email-db:
+        condition: service_healthy
+      urbancandy-redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3040/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   urbancandy-frontend:
     build:
       context: ./UrbanCandy_front
       dockerfile: Dockerfile
-    image: urbancandy-frontend:latest
-    container_name: urbancandy-frontend-container
-    restart: always
+      args:
+        VITE_API_URL: /api
+    restart: unless-stopped
     networks:
-      - urbancandy-network
+      - app_network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:5173/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  # Nginx
+  urbancandy-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "no", "--save", ""]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6380}:6379"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   urbancandy-nginx:
     image: nginx:alpine
-    container_name: urbancandy-nginx-container
-    restart: always
+    restart: unless-stopped
     ports:
-      - '80:80'
-      - '443:443'
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/certs:/etc/nginx/certs:ro
     networks:
-      - urbancandy-network
+      - app_network
     depends_on:
-      - urbancandy-frontend
-      - urbancandy-backend
+      urbancandy-frontend:
+        condition: service_healthy
+      urbancandy-backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'wget --no-check-certificate -qO- https://127.0.0.1/api/health | grep -q ''"status":"ok"''',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
-  urbancandy_db_data:
+  mysql_data:
+  email_mysql_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
-  urbancandy-network:
+  app_network:
     driver: bridge

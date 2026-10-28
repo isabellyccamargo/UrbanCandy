@@ -1,10 +1,12 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/Config.js';
+import type Role from './Role.js';
 
 class Users extends Model {
   declare id_user: number;
   declare email: string;
   declare password: string;
+  declare roles?: Role[];
 }
 
 Users.init(

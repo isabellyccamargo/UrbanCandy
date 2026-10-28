@@ -4,16 +4,12 @@ import People from '../models/People.js';
 import bcrypt from 'bcrypt';
 import Address from '../models/Address.js';
 import { ApiException } from '../exception/ApiException.js';
-import 'dotenv/config';
 import jwt from 'jsonwebtoken';
 
 interface UserWithProfile extends Users {
   people?: {
     name: string;
   };
-  roles?: {
-    name: string;
-  }[];
 }
 
 interface IUserRegistration {

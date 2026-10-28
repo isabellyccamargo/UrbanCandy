@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+    ActivityIndicator,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { getAllTypeOfPayment, PaymentType } from '@/services/payment';
+import {
+    getAllTypeOfPayment,
+    getPaymentMethodKind,
+    PaymentType,
+} from '@/services/payment';
 import { useTheme } from '@/context/Theme';
 
 type PaymentMethodsProps = {
@@ -18,10 +28,6 @@ export default function PaymentMethods({
     const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadPaymentTypes();
-    }, []);
-
     async function loadPaymentTypes() {
         try {
             setPaymentTypes(await getAllTypeOfPayment());
@@ -32,26 +38,10 @@ export default function PaymentMethods({
         }
     }
 
-    function getPaymentIcon(name: string) {
-        const value = name.toLowerCase();
-
-        if (value.includes('pix')) return 'qr-code-outline';
-        if (value.includes('cartão') || value.includes('cartao')) return 'card-outline';
-        if (value.includes('dinheiro')) return 'cash-outline';
-
-        return 'wallet-outline';
-    }
-
-    function getPaymentDescription(name: string) {
-        const value = name
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '');
-
-        return value.includes('cartao de credito')
-            ? 'Parcelamos em até 3x'
-            : '';
-    }
+    useEffect(() => {
+        const initialLoad = setTimeout(() => void loadPaymentTypes(), 0);
+        return () => clearTimeout(initialLoad);
+    }, []);
 
     const styles = StyleSheet.create({
         container: {
@@ -119,27 +109,43 @@ export default function PaymentMethods({
         );
     }
 
+    const cashPayment = paymentTypes.find(
+        (payment) => getPaymentMethodKind(payment.name_payment) === 'cash',
+    );
+    const paymentOptions: PaymentType[] = [
+        ...(cashPayment ? [cashPayment] : []),
+        { id_payment: 0, name_payment: 'Mercado Pago' },
+    ];
+
     return (
         <View style={styles.container}>
-            {paymentTypes.map((payment, index) => {
-                const selected = selectedPayment?.id_payment === payment.id_payment;
-                const description = getPaymentDescription(payment.name_payment);
+            {paymentOptions.map((payment, index) => {
+                const selected =
+                    selectedPayment?.id_payment === payment.id_payment;
+                const isCash =
+                    getPaymentMethodKind(payment.name_payment) === 'cash';
 
                 return (
                     <Pressable
                         key={payment.id_payment}
                         style={[
                             styles.option,
-                            index === paymentTypes.length - 1 && styles.lastOption,
+                            index === paymentOptions.length - 1 &&
+                                styles.lastOption,
                         ]}
                         onPress={() => onSelect(payment)}
                     >
-                        <View style={[styles.radio, selected && styles.radioSelected]}>
+                        <View
+                            style={[
+                                styles.radio,
+                                selected && styles.radioSelected,
+                            ]}
+                        >
                             {selected && <View style={styles.radioInner} />}
                         </View>
 
                         <Ionicons
-                            name={getPaymentIcon(payment.name_payment)}
+                            name={isCash ? 'cash-outline' : 'wallet-outline'}
                             size={22}
                             color={colors.text}
                             style={styles.icon}
@@ -147,14 +153,14 @@ export default function PaymentMethods({
 
                         <View style={styles.content}>
                             <Text style={styles.title}>
-                                {payment.name_payment}
+                                {isCash ? 'Dinheiro' : 'Pagar com Mercado Pago'}
                             </Text>
 
-                            {description && (
-                                <Text style={styles.description}>
-                                    {description}
-                                </Text>
-                            )}
+                            <Text style={styles.description}>
+                                {isCash
+                                    ? 'Pagamento na entrega ou retirada'
+                                    : 'Pix, cartão de crédito ou débito no checkout seguro'}
+                            </Text>
                         </View>
                     </Pressable>
                 );

@@ -11,12 +11,14 @@ import { useTheme } from '@/context/Theme';
 type PaymentFooterProps = {
     total: number;
     disabled?: boolean;
+    buttonLabel?: string;
     onPress: () => void;
 };
 
 export default function PaymentFooter({
     total,
     disabled = false,
+    buttonLabel = 'Finalizar pagamento',
     onPress,
 }: PaymentFooterProps) {
     const {
@@ -101,7 +103,7 @@ export default function PaymentFooter({
                     disabled={disabled}
                 >
                     <Text style={styles.buttonText}>
-                        Finalizar pagamento
+                        {buttonLabel}
                     </Text>
                 </Pressable>
             </View>

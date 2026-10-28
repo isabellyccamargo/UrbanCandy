@@ -20,7 +20,11 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
     cb(null, true);
   } else {
     cb(
-      new ApiException('INVALID_FILE_TYPE', 400, 'Apenas imagens (JPG, PNG, WEBP) são permitidas.')
+      new ApiException(
+        'INVALID_FILE_TYPE',
+        400,
+        'Apenas imagens (JPG, PNG, WEBP, jpeg) são permitidas.'
+      )
     );
   }
 };
@@ -30,6 +34,6 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 2 * 1024 * 1024, // 2 MegaBytes
+    fileSize: 2 * 1024 * 1024,
   },
 });

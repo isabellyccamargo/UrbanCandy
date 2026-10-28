@@ -5,3 +5,7 @@ UrbanCandy_IA/
 **/node_modules/
 **/dist/
 **/.env
+**/.env.test
+**/.env.development
+**/.env.production
+**/.env.local
