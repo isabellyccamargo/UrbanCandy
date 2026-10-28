@@ -1,4 +1,5 @@
 import { ApiException } from '../exception/ApiException.js';
+import { observeDependency, setViaCepCircuitOpen } from '../observability/metrics.js';
 
 const REQUEST_TIMEOUT_MS = 2_000;
 const OPERATION_TIMEOUT_MS = 4_500;
@@ -59,15 +60,18 @@ class ViaCepClient {
   async validate(cep: string): Promise<void> {
     const isHalfOpenProbe = this.acquireCircuit();
     const deadline = this.now() + OPERATION_TIMEOUT_MS;
+    const startedAt = performance.now();
 
     try {
       const data = await this.fetchWithRetry(cep, deadline);
+      observeDependency('viacep', 'success', (performance.now() - startedAt) / 1_000);
       this.recordOutcome(true, isHalfOpenProbe);
 
       if (data.erro) throw new ApiException('CEP_NOT_FOUND', 400);
     } catch (error) {
       if (error instanceof ApiException && error.code === 'CEP_NOT_FOUND') throw error;
 
+      observeDependency('viacep', 'failure', (performance.now() - startedAt) / 1_000);
       this.recordOutcome(false, isHalfOpenProbe);
       throw new ApiException('FAILED_TO_VALIDATE_CEP', 503);
     }
@@ -94,12 +98,14 @@ class ViaCepClient {
 
       if (success) {
         this.openedAt = undefined;
+        setViaCepCircuitOpen(false);
         this.consecutiveFailures = 0;
         this.recentOutcomes.length = 0;
         return;
       }
 
       this.openedAt = this.now();
+      setViaCepCircuitOpen(true);
       return;
     }
 
@@ -114,6 +120,7 @@ class ViaCepClient {
       (this.recentOutcomes.length === FAILURE_WINDOW_SIZE && failures / FAILURE_WINDOW_SIZE >= 0.5)
     ) {
       this.openedAt = this.now();
+      setViaCepCircuitOpen(true);
     }
   }
 

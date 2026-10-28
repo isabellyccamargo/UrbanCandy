@@ -8,6 +8,7 @@ import TypeOfDelivery from '../models/TypeOfDelivery.js';
 import TypeOfPayment from '../models/TypeOfPayment.js';
 import Users from '../models/Users.js';
 import { priceCart } from './CartPricingService.js';
+import { observeDependency } from '../observability/metrics.js';
 
 type CheckoutRequest = {
   userId: number;
@@ -53,6 +54,18 @@ function getMercadoPagoClient(accessToken = getMercadoPagoAccessToken()): Mercad
     accessToken,
     options: { timeout: 10_000 },
   });
+}
+
+async function observeMercadoPago<T>(operation: () => Promise<T>): Promise<T> {
+  const startedAt = performance.now();
+  try {
+    const result = await operation();
+    observeDependency('mercado_pago', 'success', (performance.now() - startedAt) / 1_000);
+    return result;
+  } catch (error) {
+    observeDependency('mercado_pago', 'failure', (performance.now() - startedAt) / 1_000);
+    throw error;
+  }
 }
 
 export function getCheckoutUrl(
@@ -166,27 +179,29 @@ class MercadoPagoService {
           : input.paymentMethod === 'card'
             ? ['bank_transfer', 'ticket', 'atm']
             : [];
-      const response = await preference.create({
-        body: {
-          external_reference: attempt.id,
-          ...(notificationUrl ? { notification_url: notificationUrl } : {}),
-          payer: { email: user.email },
-          items: trustedCart.items.map((item) => ({
-            id: String(item.id_product),
-            title: item.products?.name ?? `Produto ${item.id_product}`,
-            quantity: item.quantity,
-            unit_price: item.products?.price ?? 0,
-            currency_id: 'BRL',
-          })),
-          payment_methods: {
-            installments: 3,
-            ...(excludedPaymentTypes.length > 0
-              ? { excluded_payment_types: excludedPaymentTypes.map((id) => ({ id })) }
-              : {}),
+      const response = await observeMercadoPago(() =>
+        preference.create({
+          body: {
+            external_reference: attempt.id,
+            ...(notificationUrl ? { notification_url: notificationUrl } : {}),
+            payer: { email: user.email },
+            items: trustedCart.items.map((item) => ({
+              id: String(item.id_product),
+              title: item.products?.name ?? `Produto ${item.id_product}`,
+              quantity: item.quantity,
+              unit_price: item.products?.price ?? 0,
+              currency_id: 'BRL',
+            })),
+            payment_methods: {
+              installments: 3,
+              ...(excludedPaymentTypes.length > 0
+                ? { excluded_payment_types: excludedPaymentTypes.map((id) => ({ id })) }
+                : {}),
+            },
           },
-        },
-        requestOptions: { idempotencyKey: attempt.id },
-      });
+          requestOptions: { idempotencyKey: attempt.id },
+        })
+      );
       const checkoutUrl = getCheckoutUrl(response, accessToken);
       if (!response.id || !checkoutUrl) {
         throw new Error('Mercado Pago não retornou o link da preferência.');
@@ -213,17 +228,20 @@ class MercadoPagoService {
       throw new ApiException('PAYMENT_ATTEMPT_NOT_FOUND', 404, 'Pagamento não encontrado.');
     }
     if (attempt.status === 'pending' && attempt.preference_id) {
-      const results = await new Payment(getMercadoPagoClient()).search({
-        options: {
-          external_reference: attempt.id,
-          sort: 'date_created',
-          criteria: 'desc',
-          limit: 1,
-        },
-      });
+      const currentAttemptId = attempt.id;
+      const results = await observeMercadoPago(() =>
+        new Payment(getMercadoPagoClient()).search({
+          options: {
+            external_reference: currentAttemptId,
+            sort: 'date_created',
+            criteria: 'desc',
+            limit: 1,
+          },
+        })
+      );
       const paymentId = results.results?.[0]?.id;
       if (paymentId) {
-        await this.processProviderPayment(String(paymentId), attempt.id);
+        await this.processProviderPayment(String(paymentId), currentAttemptId);
         const refreshedAttempt = await PaymentAttemptRepository.findOwnedByUser(attemptId, userId);
         if (!refreshedAttempt) {
           throw new ApiException(
@@ -277,7 +295,9 @@ class MercadoPagoService {
     paymentId: string,
     expectedAttemptId?: string
   ): Promise<void> {
-    const payment = await new Payment(getMercadoPagoClient()).get({ id: paymentId });
+    const payment = await observeMercadoPago(() =>
+      new Payment(getMercadoPagoClient()).get({ id: paymentId })
+    );
     if (!payment.external_reference) {
       console.warn(`[payment] Pagamento ${paymentId} sem referência externa; ignorado.`);
       return;

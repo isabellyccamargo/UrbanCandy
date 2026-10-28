@@ -1,3 +1,5 @@
+import { observeDependency } from '../observability/metrics.js';
+
 type EmailServiceResponse = {
   alreadyVerified?: boolean;
   queued?: boolean;
@@ -18,26 +20,35 @@ async function postToEmailService(
   body: Record<string, string | number>
 ): Promise<EmailServiceResponse> {
   const { baseUrl, apiKey } = serviceSettings();
-  const response = await fetch(`${baseUrl}${endpoint}`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-service-key': apiKey },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(5000),
-  });
-  const responseBody: unknown = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message =
-      responseBody &&
-      typeof responseBody === 'object' &&
-      'message' in responseBody &&
-      typeof responseBody.message === 'string'
-        ? responseBody.message
-        : 'Email service request failed.';
-    const error = new Error(message);
-    Object.assign(error, { status: response.status });
+  const startedAt = performance.now();
+
+  try {
+    const response = await fetch(`${baseUrl}${endpoint}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-service-key': apiKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(5000),
+    });
+    const responseBody: unknown = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message =
+        responseBody &&
+        typeof responseBody === 'object' &&
+        'message' in responseBody &&
+        typeof responseBody.message === 'string'
+          ? responseBody.message
+          : 'Email service request failed.';
+      const error = new Error(message);
+      Object.assign(error, { status: response.status });
+      throw error;
+    }
+
+    observeDependency('email_service', 'success', (performance.now() - startedAt) / 1_000);
+    return responseBody as EmailServiceResponse;
+  } catch (error) {
+    observeDependency('email_service', 'failure', (performance.now() - startedAt) / 1_000);
     throw error;
   }
-  return responseBody as EmailServiceResponse;
 }
 
 export function requestEmailVerification(email: string, userId: number) {
