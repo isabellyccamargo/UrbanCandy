@@ -9,7 +9,7 @@ O contexto proposto de Pedidos registra a intenção de compra, seus itens e o a
 - **Status:** estado consultável do pedido.
 - **Cancelamento:** no comportamento atual, cancelamento solicitado pelo titular enquanto o pedido está “Recebido”.
 
-O fluxo está implementado em [OrderService.ts](../../UrbanCandy_back/src/service/OrderService.ts), [OrderRepository.ts](../../UrbanCandy_back/src/repositories/OrderRepository.ts), [Orders.ts](../../UrbanCandy_back/src/models/Orders.ts), [OrderItem.ts](../../UrbanCandy_back/src/models/OrderItem.ts) e [OrderStatus.ts](../../UrbanCandy_back/src/models/OrderStatus.ts).
+O fluxo está implementado em [OrderService.ts](../../../UrbanCandy_back/src/service/OrderService.ts), [OrderRepository.ts](../../../UrbanCandy_back/src/repositories/OrderRepository.ts), [Orders.ts](../../../UrbanCandy_back/src/models/Orders.ts), [OrderItem.ts](../../../UrbanCandy_back/src/models/OrderItem.ts) e [OrderStatus.ts](../../../UrbanCandy_back/src/models/OrderStatus.ts).
 
 ## Entidades persistidas observadas
 
@@ -23,7 +23,7 @@ O fluxo está implementado em [OrderService.ts](../../UrbanCandy_back/src/servic
 | `People` | ID, nome, CPF, telefone, usuário e endereço | Perfil associado ao Pedido; não é parte do agregado Pedido proposto. |
 | `PaymentAttempt` | Tentativa, usuário, snapshot do carrinho, total, estado, referências do provedor e pedido associado | Model persistido no fluxo de pagamento online; candidato a entidade da capacidade/contexto Pagamentos, fora do agregado Pedido. |
 
-O inventário de models está em [UrbanCandy_back/src/models](../../UrbanCandy_back/src/models/); associações em [Associations.ts](../../UrbanCandy_back/src/models/Associations.ts).
+O inventário de models está em [UrbanCandy_back/src/models](../../../UrbanCandy_back/src/models/); associações em [Associations.ts](../../../UrbanCandy_back/src/models/Associations.ts).
 
 ## Value Objects candidatos
 

@@ -47,4 +47,4 @@ A classificação de um subdomínio como *core* é uma decisão de negócio e de
 
 ## Evidências
 
-[Models](../../UrbanCandy_back/src/models/), [serviço de pedidos](../../UrbanCandy_back/src/service/OrderService.ts), [serviço Mercado Pago](../../UrbanCandy_back/src/service/MercadoPagoService.ts), [serviço de e-mail](../../UrbanCandy_email/src/) e [dashboard web](../../UrbanCandy_front/src/pages/Admin/Dashboard/Dashboard.jsx).
+[Models](../../../UrbanCandy_back/src/models/), [serviço de pedidos](../../../UrbanCandy_back/src/service/OrderService.ts), [serviço Mercado Pago](../../../UrbanCandy_back/src/service/MercadoPagoService.ts), [serviço de e-mail](../../../UrbanCandy_email/src/) e [dashboard web](../../../UrbanCandy_front/src/pages/Admin/Dashboard/Dashboard.jsx).

@@ -68,7 +68,7 @@ ou respostas ambíguas.
 
 1. Inicie o Docker Desktop e aguarde o mecanismo ficar disponível.
 2. Na raiz do projeto, configure o `.env` conforme o
-   [guia do Docker Compose](../infraestrutura/docker-compose.md) e execute:
+   [guia do Docker Compose](../../infraestrutura/docker-compose.md) e execute:
 
    ```powershell
    docker compose up -d urbancandy-backend urbancandy-prometheus urbancandy-grafana
