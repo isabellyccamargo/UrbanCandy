@@ -38,11 +38,40 @@ Estratégias implementadas e parâmetros principais:
   cache falhar, leituras do catálogo usam MySQL; eventos de status ficam na
   outbox até publicação e ACK.
 
-Validar os comportamentos somente em ambiente de teste: continuidade do
-catálogo se Redis falhar; atualização após expiração do cache; timeout,
-resposta e recuperação do circuito ViaCEP; reenvio de e-mail e eventos após
-recuperação dos serviços; e consistência/idempotência de pagamentos em falhas
-ou respostas ambíguas.
+### Evidências de testes automatizados
+
+Esses testes unitários usam dependências simuladas e podem verificar
+comportamentos sem aguardar histórico do Prometheus/Grafana:
+
+- **Cache/Redis:** [CacheAside.test.ts](../../../UrbanCandy_back/__tests__/CacheAside.test.ts)
+  verifica cache hit, cache miss, TTL informado ao gravar e fallback para a
+  origem de dados quando leitura ou gravação no Redis falha. Não simula a
+  expiração real do TTL nem a reconexão do cliente Redis.
+- **ViaCEP:** [ViaCepClient.test.ts](../../../UrbanCandy_back/__tests__/ViaCepClient.test.ts)
+  verifica timeout, nova tentativa após falha transitória e abertura do
+  circuit breaker após falhas, incluindo a chamada de prova após 30 segundos.
+- **Eventos de pedidos:** [OrderEvents.test.ts](../../../UrbanCandy_back/__tests__/OrderEvents.test.ts)
+  verifica o conteúdo publicado e o tratamento de mensagem inválida.
+  [orderStatusConsumer.test.ts](../../../UrbanCandy_email/__tests__/orderStatusConsumer.test.ts)
+  verifica que o evento é persistido antes do ACK e que falha de persistência
+  impede o ACK.
+- **Pagamentos:** [MercadoPagoService.test.ts](../../../UrbanCandy_back/__tests__/MercadoPagoService.test.ts)
+  verifica a assinatura HMAC do webhook; [PaymentAttemptRepository.test.ts](../../../UrbanCandy_back/__tests__/PaymentAttemptRepository.test.ts)
+  verifica a aplicação transacional do status e que uma aprovação repetida
+  não cria outro pedido.
+
+Na execução focada de 29/10/2026, passaram 5 suítes e 21 testes do backend,
+além dos 4 testes do serviço de e-mail. São evidências de testes unitários;
+não comprovam a integração com Redis, MySQL, SMTP ou o Mercado Pago real.
+
+### Cenários ainda sem evidência de teste
+
+Ainda precisam de testes próprios, em ambiente controlado, a expiração efetiva
+do cache, as tentativas de reconexão do Redis, a publicação/reentrega da outbox
+após recuperação do Redis, o retry/backoff do worker SMTP e os timeouts ou
+respostas ambíguas do Mercado Pago. Esses testes não precisam de uma janela de
+30 dias de métricas, mas não devem ser considerados concluídos até serem
+executados e registrados.
 
 ## Observabilidade
 
@@ -86,6 +115,7 @@ Para preencher a janela intermediária, mantenha os serviços ativos por 15 dias
 
 ## Pendências para comprovação
 
+- Completar e registrar os cenários de teste ainda sem evidência listados acima.
 - Registrar testes de carga e resiliência em ambiente representativo, incluindo
   hardware, configuração, duração, concorrência e percentis.
 - Comparar as medições com as metas propostas; não apresentar metas como
