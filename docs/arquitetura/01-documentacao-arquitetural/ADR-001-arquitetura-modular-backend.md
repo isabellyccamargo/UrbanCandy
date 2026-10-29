@@ -11,6 +11,22 @@ Web e Mobile compartilham a API principal Node.js/Express/TypeScript. O backend 
 
 Manter o backend de negócio como **monólito em camadas** e o serviço de e-mail como aplicação separada. Catálogo, usuários, pedidos e pagamentos são capacidades do backend principal; sua organização atual não deve ser chamada de monólito modular nem de Bounded Contexts isolados sem evidência de limites e contratos no código.
 
+## Justificativa arquitetural
+
+O monólito em camadas é a escolha adequada para a estrutura existente: Web e
+Mobile consomem a mesma API, e catálogo, usuários, pedidos e pagamentos
+compartilham processo, modelos e persistência. Essa organização mantém simples
+a implantação e as chamadas entre essas capacidades, sem afirmar isolamento
+que o código não implementa.
+
+Um **modulith** exigiria limites explícitos entre módulos e regras verificáveis
+para suas dependências e contratos internos. Como esses limites não estão
+estabelecidos, classificá-lo como modulith descreveria uma arquitetura futura,
+não a atual. A separação do serviço de e-mail é um serviço independente, mas
+não transforma os domínios do backend principal em módulos isolados. Microsserviços
+para todos os domínios também não se justificam sem necessidade demonstrada
+que compense o custo operacional e de comunicação distribuída.
+
 ## Alternativas consideradas
 
 - **Manter o backend em camadas:** escolhido; atende às interfaces atuais com uma implantação e chamadas internas simples.

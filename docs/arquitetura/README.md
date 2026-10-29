@@ -6,10 +6,11 @@ seção tem sua própria pasta; guias operacionais de infraestrutura permanecem 
 
 ## 1. Documentação arquitetural
 
-Inclui os diagramas C4 disponíveis e os registros de decisões arquiteturais
-(ADRs).
+Inclui os diagramas C4 disponíveis, os registros de decisões arquiteturais
+(ADRs), a justificativa entre monólito e modulith e cenários de qualidade de
+desempenho e disponibilidade.
 
-- [Diagramas C4 e ADRs](01-documentacao-arquitetural/)
+- [Diagramas C4, ADRs e cenários de qualidade](01-documentacao-arquitetural/)
 
 ## 2. Estilos arquiteturais e DDD
 
@@ -29,8 +30,8 @@ que justifica o banco relacional.
 
 ## 4. Qualidade, resiliência e observabilidade
 
-Inclui metas SLI/SLO, estratégias de resiliência, métricas, logs, Prometheus e
-Grafana.
+Detalha as metas SLI/SLO, estratégias de resiliência, métricas, logs,
+Prometheus, Grafana e limites atuais de validação dos cenários arquiteturais.
 
 - [Qualidade e observabilidade](04-qualidade-resiliencia-observabilidade/)
 
