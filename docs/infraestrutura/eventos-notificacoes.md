@@ -10,15 +10,17 @@ mesma transação do pedido e tenta publicar novamente até receber confirmaçã
 serviço.
 
 As notificações de pedidos prontos são associadas ao usuário dono do pedido e
-persistidas no MySQL. No aplicativo mobile, o sino exibe o histórico, contador
-de não lidas e ações para marcar notificações como lidas. Com o app aberto, ele
-consulta novas notificações a cada 10 segundos; isso não é push do sistema
-operacional, então o aviso aparece quando o app é aberto novamente.
+persistidas no MySQL. Nas interfaces web e mobile, o sino exibe o histórico,
+contador de não lidas e ações para marcar notificações como lidas. Com a
+aplicação aberta, novas notificações são consultadas a cada 10 segundos; isso
+não é push do sistema operacional, então o aviso aparece enquanto a aplicação
+está em uso.
 
 As rotas autenticadas de histórico são `GET /api/notificacoes`,
 `PATCH /api/notificacoes/:id_notification/lida` e
 `PATCH /api/notificacoes/lidas`. A rota
-`GET /api/notificacoes/stream` está disponível para uma futura interface web.
+`GET /api/notificacoes/stream` também está disponível para clientes que desejem
+usar Server-Sent Events em vez de consultar o histórico periodicamente.
 
 ## Observar a publicação
 

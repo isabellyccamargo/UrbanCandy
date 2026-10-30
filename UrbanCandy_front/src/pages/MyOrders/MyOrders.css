@@ -54,6 +54,109 @@
   color: #fff;
 }
 
+.order-status-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.order-status-badge.status-preparing {
+  background-color: #e3f2fd;
+  border-color: #bbdefb;
+  color: #1976d2;
+}
+
+.order-status-badge.status-ready {
+  background-color: #f3e5f5;
+  border-color: #e1bee7;
+  color: #7b1fa2;
+}
+
+.order-status-badge.status-delivered {
+  background-color: #e8f5e9;
+  border-color: #c8e6c9;
+  color: #2e7d32;
+}
+
+.order-status-badge.status-canceled {
+  background-color: #fdecec;
+  border-color: #f5b7b1;
+  color: #c0392b;
+}
+
+.order-status-badge.status-pending {
+  background-color: #fff8e1;
+  border-color: #ffe082;
+  color: #f57f17;
+}
+
+.order-details-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(32, 24, 27, 0.55);
+}
+
+.order-details-modal {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: min(80vh, 700px);
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.order-details-modal h2 {
+  margin: 0 36px 20px 0;
+  color: #5d4037;
+}
+
+.order-details-modal h3 {
+  margin: 24px 0 10px;
+}
+
+.order-details-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  border: 0;
+  background: transparent;
+  color: #5d4037;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.order-details-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-details-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0e2e8;
+}
+
+.order-details-total {
+  margin-top: 18px;
+  font-size: 18px;
+}
+
 /* ===== RESPONSIVIDADE ===== */
 
 @media (max-width: 1024px) {
@@ -90,7 +193,8 @@
     font-size: 0.9rem;
   }
 
-  .badge {
+  .badge,
+  .order-status-badge {
     padding: 4px 10px;
     font-size: 0.7rem;
   }
@@ -117,7 +221,8 @@
     margin-bottom: 15px;
   }
 
-  .badge {
+  .badge,
+  .order-status-badge {
     padding: 3px 8px;
     font-size: 0.65rem;
   }

@@ -8,6 +8,7 @@ import { useAuth } from '../../hooks/AuthContext';
 import './Header.css';
 import { useCart } from '../../hooks/UseCart';
 import logoImg from '../../assets/logo.png';
+import { NotificationCenter } from '../Notifications/NotificationCenter';
 
 export const Header = () => {
   const { user, setUser, logout, isLoginModalOpen, setIsLoginModalOpen } = useAuth();
@@ -78,6 +79,8 @@ export const Header = () => {
             <ShoppingCart size={24} color="#5D4037" />
             <span className="cart-badge">{cart.items.length}</span>
           </div>
+
+          <NotificationCenter />
 
           <div data-testid="user-menu-container" className="user-menu-container">
             <div data-testid="user-menu-trigger" className="user-menu-trigger">

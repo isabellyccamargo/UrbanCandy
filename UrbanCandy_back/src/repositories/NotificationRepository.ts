@@ -27,7 +27,7 @@ class NotificationRepository {
         id_user,
         id_order,
         title: 'Seu pedido está pronto!',
-        message: `O pedido #${id_order} está pronto. Venha aproveitar!`,
+        message: `Seu pedido #${id_order} está pronto!`,
       },
     });
     return created ? notification : null;

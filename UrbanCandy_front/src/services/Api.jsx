@@ -239,6 +239,12 @@ export const getMyOrders = (id_people, page = 1, size = 6) => {
   });
 };
 
+export const getMyNotifications = () => api.get('/notificacoes');
+
+export const markNotificationAsRead = (id) => api.patch(`/notificacoes/${id}/lida`);
+
+export const markAllNotificationsAsRead = () => api.patch('/notificacoes/lidas');
+
 export const getAllTypeOfPayment = async (page = 1, size = 6) => {
   return api.get(`/pagamento/listar`, {
     params: { page, size },

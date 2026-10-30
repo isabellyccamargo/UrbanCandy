@@ -42,7 +42,10 @@ export default function NotificationsScreen() {
             if (!notification.read_at) {
                 await markAsRead(notification.id_notification);
             }
-            router.push('/protected/orders');
+            router.push({
+                pathname: '/protected/orders',
+                params: { orderId: String(notification.id_order) },
+            });
         } catch (error) {
             console.error('Não foi possível abrir a notificação:', error);
             showMessage({

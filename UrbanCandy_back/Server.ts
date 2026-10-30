@@ -39,7 +39,7 @@ server.use(
       'http://10.10.54.23:19006',
       'http://10.10.54.23:19000',
     ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true,
   })

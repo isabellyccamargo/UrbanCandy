@@ -10,6 +10,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getUserProfile } from '@/services/auth';
 import { StatusBar } from 'expo-status-bar';
+import { useLocalSearchParams } from 'expo-router';
 
 import { useTheme } from '@/context/Theme';
 import { useAppAlert } from '@/components/common/AppAlert';
@@ -67,6 +68,8 @@ function canCancelOrder(order: Order) {
 export default function OrdersScreen() {
     const { colors, font, fontSize, space } = useTheme();
     const { showMessage, confirm } = useAppAlert();
+    const { orderId: requestedOrderIdParam } = useLocalSearchParams<{ orderId?: string }>();
+    const requestedOrderId = Number(requestedOrderIdParam || 0);
 
     const [orders, setOrders] = useState<Order[]>([]);
     const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
@@ -110,9 +113,17 @@ export default function OrdersScreen() {
 
             idPeopleRef.current = Number(id_people);
 
-            const response = await getMyOrders(Number(id_people), 1, 50);
+            const response = await getMyOrders(Number(id_people), 1, requestedOrderId ? 0 : 50);
             const orderList = response?.data ?? response ?? [];
-            setOrders(Array.isArray(orderList) ? orderList : []);
+            const normalizedOrders = Array.isArray(orderList) ? orderList : [];
+            setOrders(normalizedOrders);
+            setExpandedOrder(
+                requestedOrderId && normalizedOrders.some(
+                    (order: Order) => Number(order.id_orders) === requestedOrderId
+                )
+                    ? requestedOrderId
+                    : null
+            );
 
         } catch (error: any) {
             console.error('Erro ao carregar pedidos:', error);
@@ -125,7 +136,7 @@ export default function OrdersScreen() {
         } finally {
             setLoading(false);
         }
-    }, [showMessage]);
+    }, [requestedOrderId, showMessage]);
 
     useEffect(() => {
         const fetchOrders = async () => {
