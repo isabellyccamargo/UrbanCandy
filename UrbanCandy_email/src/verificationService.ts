@@ -22,19 +22,46 @@ export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+function maskEmail(email: string): string {
+  const [localPart, domain] = email.split('@');
+  return `${localPart.slice(0, 1)}***@${domain}`;
+}
+
 function hashCode(email: string, code: string): string {
   return createHmac('sha256', config.apiKey).update(`${email}:${code}`).digest('hex');
 }
 
-export async function requestEmailVerification(emailInput: string, userId: number) {
+export async function requestEmailVerification(
+  emailInput: string,
+  userId: number | null,
+  forceNewCode = false
+) {
   const email = normalizeEmail(emailInput);
-  if (!Number.isInteger(userId) || userId <= 0 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw new EmailServiceError('A valid user ID and email address are required.', 400);
+  if (
+    (userId !== null && (!Number.isInteger(userId) || userId <= 0)) ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
+    throw new EmailServiceError('A valid email address and optional user ID are required.', 400);
   }
 
   const existing = await VerifiedEmail.findByPk(email);
-  if (existing?.verifiedAt) return { alreadyVerified: true };
-  if (existing && Date.now() - existing.lastRequestedAt.getTime() < RESEND_DELAY_MS) {
+  if (existing?.verifiedAt) {
+    if (existing.userId !== null && existing.userId !== userId) {
+      throw new EmailServiceError(
+        'This verified email address is associated with another account.',
+        409
+      );
+    }
+    if (!forceNewCode) {
+      console.info(`[email-service] Email already verified recipient=${maskEmail(email)}.`);
+      return { alreadyVerified: true };
+    }
+  }
+  if (
+    existing &&
+    (!existing.verifiedAt || forceNewCode) &&
+    Date.now() - existing.lastRequestedAt.getTime() < RESEND_DELAY_MS
+  ) {
     throw new EmailServiceError('Please wait before requesting another verification code.', 429);
   }
 
@@ -43,7 +70,7 @@ export async function requestEmailVerification(emailInput: string, userId: numbe
   const expiresAt = new Date(now.getTime() + CODE_TTL_MS);
   const template = verificationEmail(code);
 
-  await sequelize.transaction(async (transaction) => {
+  const eventId = await sequelize.transaction(async (transaction) => {
     await VerifiedEmail.upsert(
       {
         email,
@@ -56,7 +83,7 @@ export async function requestEmailVerification(emailInput: string, userId: numbe
       },
       { transaction }
     );
-    await EmailDelivery.create(
+    const delivery = await EmailDelivery.create(
       {
         eventId: randomUUID(),
         recipient: email,
@@ -68,7 +95,12 @@ export async function requestEmailVerification(emailInput: string, userId: numbe
       },
       { transaction }
     );
+    return delivery.eventId;
   });
+  console.info(
+    `[email-service] Verification code email queued eventId=${eventId} ` +
+      `recipient=${maskEmail(email)} expiresAt=${expiresAt.toISOString()}.`
+  );
   return { alreadyVerified: false, queued: true };
 }
 
@@ -98,6 +130,9 @@ export async function confirmEmailVerification(emailInput: string, code: string)
   verification.verifiedAt = new Date();
   verification.failedAttempts = 0;
   await verification.save();
+  console.info(
+    `[email-service] Email verification confirmed recipient=${maskEmail(email)}.`
+  );
   return { verified: true };
 }
 
@@ -106,4 +141,36 @@ export async function isEmailVerified(emailInput: string): Promise<boolean> {
     where: { email: normalizeEmail(emailInput), verifiedAt: { [Op.ne]: null } },
   });
   return Boolean(verification);
+}
+
+export async function getVerifiedEmailStatus(emailInput: string) {
+  const verification = await VerifiedEmail.findOne({
+    where: { email: normalizeEmail(emailInput), verifiedAt: { [Op.ne]: null } },
+    attributes: ['userId'],
+  });
+  return { verified: Boolean(verification), userId: verification?.userId ?? null };
+}
+
+export async function associateVerifiedEmail(emailInput: string, userId: number): Promise<void> {
+  const email = normalizeEmail(emailInput);
+  if (!Number.isInteger(userId) || userId <= 0) {
+    throw new EmailServiceError('A valid user ID is required.', 400);
+  }
+
+  await sequelize.transaction(async (transaction) => {
+    const verification = await VerifiedEmail.findByPk(email, {
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+    if (!verification?.verifiedAt) {
+      throw new EmailServiceError('The email address must be verified before association.', 409);
+    }
+    if (verification.userId !== null && verification.userId !== userId) {
+      throw new EmailServiceError('The verified address is associated with another account.', 409);
+    }
+    if (verification.userId !== userId) {
+      verification.userId = userId;
+      await verification.save({ transaction });
+    }
+  });
 }

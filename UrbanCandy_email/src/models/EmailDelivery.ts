@@ -2,7 +2,7 @@ import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../database.js';
 
 export type EmailDeliveryStatus = 'pending' | 'sending' | 'sent' | 'skipped';
-export type EmailDeliveryKind = 'verification' | 'order-status';
+export type EmailDeliveryKind = 'verification' | 'order-created' | 'order-status';
 
 export class EmailDelivery extends Model {
   declare id: number;
@@ -14,6 +14,9 @@ export class EmailDelivery extends Model {
   declare status: EmailDeliveryStatus;
   declare attempts: number;
   declare nextAttemptAt: Date;
+  declare eventOccurredAt: Date | null;
+  declare sentAt: Date | null;
+  declare skipReason: string | null;
   declare lastError: string | null;
 }
 
@@ -33,6 +36,13 @@ EmailDelivery.init(
       defaultValue: DataTypes.NOW,
       field: 'next_attempt_at',
     },
+    eventOccurredAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'event_occurred_at',
+    },
+    sentAt: { type: DataTypes.DATE, allowNull: true, field: 'sent_at' },
+    skipReason: { type: DataTypes.STRING(255), allowNull: true, field: 'skip_reason' },
     lastError: { type: DataTypes.TEXT, allowNull: true, field: 'last_error' },
   },
   {

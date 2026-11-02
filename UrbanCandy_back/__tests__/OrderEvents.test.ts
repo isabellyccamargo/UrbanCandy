@@ -1,7 +1,9 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import {
   consumeOrderStatusChangedMessage,
+  createOrderOutboxEventPublisher,
   createOrderStatusEventPublisher,
+  ORDER_CREATED_CHANNEL,
   ORDER_STATUS_CHANGED_CHANNEL,
   type OrderStatusChangedEvent,
 } from '../src/events/OrderEvents.js';
@@ -58,5 +60,28 @@ describe('Redis Pub/Sub de pedidos', () => {
       `[pubsub] Mensagem inválida em ${ORDER_STATUS_CHANGED_CHANNEL}:`,
       expect.any(SyntaxError)
     );
+  });
+
+  it('publica confirmação de pedido no canal de criação', async () => {
+    let publishedChannel = '';
+    let publishedMessage = '';
+    const publish = createOrderOutboxEventPublisher(async (channel, message) => {
+      publishedChannel = channel;
+      publishedMessage = message;
+    });
+    const event = {
+      eventType: 'order.created' as const,
+      eventId: 'created-event-1',
+      occurredAt: new Date().toISOString(),
+      orderId: 43,
+      recipientUserId: 7,
+      recipientEmail: 'user@example.com',
+      total: 32.5,
+    };
+
+    await publish(event);
+
+    expect(publishedChannel).toBe(ORDER_CREATED_CHANNEL);
+    expect(JSON.parse(publishedMessage)).toEqual(event);
   });
 });

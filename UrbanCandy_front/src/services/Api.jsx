@@ -132,6 +132,21 @@ export const requestEmailVerification = async () => {
   return response.data;
 };
 
+export const requestPreRegistrationEmailVerification = async (email) => {
+  const response = await api.post('/email-verification/pre-registration/request', { email });
+  return response.data;
+};
+
+export const requestEmailChange = async (email) => {
+  const response = await api.post('/email-verification/change/request', { email });
+  return response.data;
+};
+
+export const confirmEmailChange = async (email, code) => {
+  const response = await api.post('/email-verification/change/confirm', { email, code });
+  return response.data;
+};
+
 export const confirmEmailVerification = async (email, code) => {
   const response = await api.post('/email-verification/confirm', { email, code });
   return response.data;

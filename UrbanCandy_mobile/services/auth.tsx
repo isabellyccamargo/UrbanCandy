@@ -97,14 +97,29 @@ export async function confirmEmailVerification(email: string, code: string) {
     return response.data as { verified: boolean };
 }
 
+export async function requestPreRegistrationEmailVerification(email: string) {
+    const response = await api.post('/email-verification/pre-registration/request', { email });
+    return response.data as { queued?: boolean; alreadyVerified?: boolean };
+}
+
 export async function requestEmailVerification() {
     const response = await api.post('/email-verification/request');
     return response.data as { queued?: boolean; alreadyVerified?: boolean };
 }
 
+export async function requestEmailChange(email: string) {
+    const response = await api.post('/email-verification/change/request', { email });
+    return response.data as { queued?: boolean; alreadyVerified?: boolean };
+}
+
+export async function confirmEmailChange(email: string, code: string) {
+    const response = await api.post('/email-verification/change/confirm', { email, code });
+    return response.data as { verified: boolean; email: string };
+}
+
 export async function getEmailVerificationStatus() {
     const response = await api.get('/email-verification/status');
-    return response.data as { verified: boolean };
+    return response.data as { verified: boolean; userId: number | null };
 }
 
 /**
