@@ -21,3 +21,7 @@ suas pastas próprias:
 - [Serviço de e-mail](infraestrutura/servico-email.md)
 - [Eventos e notificações](infraestrutura/eventos-notificacoes.md)
 - [Pagamento Mercado Pago](infraestrutura/pagamento-mercado-pago.md)
+
+## Gestão do projeto
+
+- [Análise Cynefin e abordagem de gestão do UrbanCandy](gestao-projeto/analise-cynefin-e-abordagem-de-gestao.md)
