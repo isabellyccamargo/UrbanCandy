@@ -9,8 +9,11 @@ export const ORDER_STATUS_CHANGED_CHANNEL =
   process.env.ORDER_STATUS_CHANGED_CHANNEL || 'urbancandy:orders:status-changed';
 export const ORDER_STATUS_ACK_CHANNEL =
   process.env.ORDER_STATUS_ACK_CHANNEL || 'urbancandy:orders:email-received';
+export const ORDER_CREATED_CHANNEL =
+  process.env.ORDER_CREATED_CHANNEL || 'urbancandy:orders:created';
 
 export interface OrderStatusChangedEvent {
+  eventType?: 'order.status.changed';
   eventId: string;
   occurredAt: string;
   orderId: number;
@@ -21,7 +24,32 @@ export interface OrderStatusChangedEvent {
   newStatusLabel: string;
 }
 
+export interface OrderCreatedEvent {
+  eventType: 'order.created';
+  eventId: string;
+  occurredAt: string;
+  orderId: number;
+  recipientUserId: number;
+  recipientEmail: string;
+  total: number;
+}
+
+export type OrderOutboxEvent = OrderStatusChangedEvent | OrderCreatedEvent;
+
 type MessagePublisher = (channel: string, message: string) => Promise<unknown>;
+
+export function createOrderOutboxEventPublisher(publishMessage: MessagePublisher) {
+  return async (event: OrderOutboxEvent): Promise<void> => {
+    const channel =
+      event.eventType === 'order.created' ? ORDER_CREATED_CHANNEL : ORDER_STATUS_CHANGED_CHANNEL;
+    await publishMessage(channel, JSON.stringify(event));
+    console.info(
+      `[pubsub] Publicado ${channel}: ` +
+        `eventId=${event.eventId} type=${event.eventType ?? 'order.status.changed'} ` +
+        `orderId=${event.orderId}`
+    );
+  };
+}
 
 export function createOrderStatusEventPublisher(publishMessage: MessagePublisher) {
   return async (
@@ -125,6 +153,15 @@ const publishOrderStatusEvent = createOrderStatusEventPublisher(async (channel, 
   }
   return publisherClient.publish(channel, message);
 });
+const publishOutboxEvent = createOrderOutboxEventPublisher(async (channel, message) => {
+  if (!publisherClient.isReady) {
+    publisherConnection ??= publisherClient.connect().finally(() => {
+      publisherConnection = undefined;
+    });
+    await publisherConnection;
+  }
+  return publisherClient.publish(channel, message);
+});
 
 export async function publishOrderStatusChanged(
   orderId: number,
@@ -146,21 +183,10 @@ export async function publishOrderStatusChanged(
 }
 
 export async function publishOrderStatusOutboxEvent(
-  event: OrderStatusChangedEvent
+  event: OrderOutboxEvent
 ): Promise<void> {
   if (process.env.NODE_ENV === 'test') return;
-  if (!publisherClient.isReady) {
-    publisherConnection ??= publisherClient.connect().finally(() => {
-      publisherConnection = undefined;
-    });
-    await publisherConnection;
-  }
-  await publisherClient.publish(ORDER_STATUS_CHANGED_CHANNEL, JSON.stringify(event));
-  console.info(
-    `[pubsub] Publicado ${ORDER_STATUS_CHANGED_CHANNEL}: ` +
-      `eventId=${event.eventId} orderId=${event.orderId} ` +
-      `status=${event.previousStatusId}->${event.newStatusId}`
-  );
+  await publishOutboxEvent(event);
 }
 
 export async function initializeOrderEventSubscriber(): Promise<void> {

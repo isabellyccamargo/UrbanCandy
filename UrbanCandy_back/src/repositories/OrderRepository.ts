@@ -1,5 +1,6 @@
 import Orders from '../models/Orders.js';
 import People from '../models/People.js';
+import Users from '../models/Users.js';
 import OrderItem from '../models/OrderItem.js';
 import Products from '../models/Products.js';
 import TypeOfPayment from '../models/TypeOfPayment.js';
@@ -10,6 +11,7 @@ import { type Order as SequelizeOrder, Transaction, type FindAndCountOptions } f
 import { randomUUID } from 'node:crypto';
 import { type ICartItem, type IPaginatedResponse } from '../@types/OrdersTypes.js';
 import OrderStatusOutbox, {
+  type OrderCreatedOutboxEvent,
   type OrderStatusOutboxEvent,
 } from '../models/OrderStatusOutbox.js';
 
@@ -60,6 +62,37 @@ class OrderRepository {
       );
 
       await this._createItems(order.id_orders, items, t);
+
+      const person = await People.findByPk(id_people, {
+        attributes: ['id_user'],
+        transaction: t,
+      });
+      const recipient = person
+        ? await Users.findByPk(Number(person.id_user), {
+          attributes: ['id_user', 'email'],
+          transaction: t,
+        })
+        : null;
+      if (recipient) {
+        const event: OrderCreatedOutboxEvent = {
+          eventType: 'order.created',
+          eventId: randomUUID(),
+          occurredAt: new Date().toISOString(),
+          orderId: order.id_orders,
+          recipientUserId: Number(recipient.id_user),
+          recipientEmail: recipient.email,
+          total: Number(total),
+        };
+        await OrderStatusOutbox.create(
+          { eventId: event.eventId, payload: event, acknowledgedAt: null },
+          { transaction: t }
+        );
+      } else {
+        console.warn(
+          `[outbox] Pedido ${order.id_orders} criado sem evento de confirmação: ` +
+            'cliente ou e-mail não encontrado.'
+        );
+      }
 
       if (!transaction) await t.commit();
 
@@ -213,6 +246,7 @@ class OrderRepository {
       if (!order || Number(order.status_id) !== previousStatusId) return null;
 
       const event: OrderStatusOutboxEvent = {
+        eventType: 'order.status.changed',
         eventId: randomUUID(),
         occurredAt: new Date().toISOString(),
         orderId: idOrder,

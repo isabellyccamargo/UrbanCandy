@@ -63,9 +63,13 @@ export async function startOrderStatusOutbox(): Promise<void> {
     void OrderStatusOutbox.update(
       { acknowledgedAt: new Date() },
       { where: { eventId, acknowledgedAt: null } }
-    ).catch((error: unknown) => {
-      console.error(`[outbox] Could not acknowledge event ${eventId}:`, error);
-    });
+    )
+      .then(([updated]) => {
+        if (updated > 0) console.info(`[outbox] Acknowledged eventId=${eventId}.`);
+      })
+      .catch((error: unknown) => {
+        console.error(`[outbox] Could not acknowledge event ${eventId}:`, error);
+      });
   });
 
   const timer = setInterval(() => {

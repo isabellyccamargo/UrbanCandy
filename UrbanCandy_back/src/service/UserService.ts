@@ -137,6 +137,17 @@ class UserService {
     return await UserRepository.updateUser(id_user, userData, personData);
   }
 
+  async updateEmail(id_user: number, email: string): Promise<void> {
+    this.validateEmail(email);
+    const user = await Users.findByPk(id_user);
+    if (!user) throw new ApiException('USER_NOT_FOUND', 404);
+    const existingUser = await UserRepository.findByEmail(email);
+    if (existingUser && existingUser.id_user !== id_user) {
+      throw new ApiException('EMAIL_ALREADY_EXISTS', 409, email);
+    }
+    await user.update({ email });
+  }
+
   async findByIdUser(id_user: number) {
     const user = await UserRepository.findByIdUser(id_user);
     if (!user) throw new ApiException('USER_NOT_FOUND', 404);

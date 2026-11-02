@@ -5,6 +5,7 @@ type EmailServiceResponse = {
   alreadyVerified?: boolean;
   queued?: boolean;
   verified?: boolean;
+  userId?: number | null;
 };
 
 function serviceSettings(): { baseUrl: string; apiKey: string } {
@@ -18,7 +19,7 @@ function serviceSettings(): { baseUrl: string; apiKey: string } {
 
 async function postToEmailService(
   endpoint: string,
-  body: Record<string, string | number>
+  body: Record<string, string | number | boolean | null>
 ): Promise<EmailServiceResponse> {
   const { baseUrl, apiKey } = serviceSettings();
   const startedAt = performance.now();
@@ -52,8 +53,12 @@ async function postToEmailService(
   }
 }
 
-export function requestEmailVerification(email: string, userId: number) {
-  return postToEmailService('/internal/verifications', { email, userId });
+export function requestEmailVerification(
+  email: string,
+  userId: number | null,
+  forceNewCode = false
+) {
+  return postToEmailService('/internal/verifications', { email, userId, forceNewCode });
 }
 
 export function confirmEmailVerification(email: string, code: string) {
@@ -62,4 +67,8 @@ export function confirmEmailVerification(email: string, code: string) {
 
 export function getEmailVerificationStatus(email: string) {
   return postToEmailService('/internal/verifications/status', { email });
+}
+
+export function associateVerifiedEmail(email: string, userId: number) {
+  return postToEmailService('/internal/verifications/associate', { email, userId });
 }

@@ -1,9 +1,10 @@
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { config } from './config.js';
 import {
+  associateVerifiedEmail,
   confirmEmailVerification,
   EmailServiceError,
-  isEmailVerified,
+  getVerifiedEmailStatus,
   requestEmailVerification,
 } from './verificationService.js';
 
@@ -17,11 +18,23 @@ export function createApp() {
     requireServiceKey,
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const { email, userId } = req.body as { email?: unknown; userId?: unknown };
-        if (typeof email !== 'string' || !Number.isInteger(userId)) {
-          return res.status(400).json({ message: 'email and integer userId are required.' });
+        const { email, userId, forceNewCode } = req.body as {
+          email?: unknown;
+          userId?: unknown;
+          forceNewCode?: unknown;
+        };
+        if (
+          typeof email !== 'string' ||
+          (userId !== undefined && userId !== null && !Number.isInteger(userId)) ||
+          (forceNewCode !== undefined && typeof forceNewCode !== 'boolean')
+        ) {
+          return res.status(400).json({ message: 'email and optional integer userId are required.' });
         }
-        const result = await requestEmailVerification(email, Number(userId));
+        const result = await requestEmailVerification(
+          email,
+          userId === undefined || userId === null ? null : Number(userId),
+          forceNewCode === true
+        );
         return res.status(202).json(result);
       } catch (error) {
         next(error);
@@ -55,7 +68,24 @@ export function createApp() {
         if (typeof email !== 'string') {
           return res.status(400).json({ message: 'email is required.' });
         }
-        return res.status(200).json({ verified: await isEmailVerified(email) });
+        return res.status(200).json(await getVerifiedEmailStatus(email));
+      } catch (error) {
+        next(error);
+      }
+    }
+  );
+
+  app.post(
+    '/internal/verifications/associate',
+    requireServiceKey,
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const { email, userId } = req.body as { email?: unknown; userId?: unknown };
+        if (typeof email !== 'string' || !Number.isInteger(userId) || Number(userId) <= 0) {
+          return res.status(400).json({ message: 'email and positive integer userId are required.' });
+        }
+        await associateVerifiedEmail(email, Number(userId));
+        return res.sendStatus(204);
       } catch (error) {
         next(error);
       }

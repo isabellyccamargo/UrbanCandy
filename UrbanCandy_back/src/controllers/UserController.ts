@@ -1,7 +1,11 @@
 import { type Request, type Response, type NextFunction } from 'express';
 import UserService from '../service/UserService.js';
 import { ApiException } from '../exception/ApiException.js';
-import { requestEmailVerification } from '../service/EmailServiceClient.js';
+import {
+  associateVerifiedEmail,
+  getEmailVerificationStatus,
+} from '../service/EmailServiceClient.js';
+import logger from '../utils/logger.js';
 
 class UserController {
   static async login(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -61,34 +65,48 @@ class UserController {
       // Captura a imagem gerada pelo Multer salva na pasta uploads
       const imagePath = req.file ? `uploads/${req.file.filename}` : undefined;
 
-      const newUser = await UserService.createUser({
-        ...req.body,
-        image: imagePath,
-      });
-
-      let verificationEmailQueued = false;
-      let emailAlreadyVerified = false;
+      if (typeof req.body.email !== 'string') {
+        throw new ApiException('INVALID_EMAIL', 400);
+      }
+      const email = req.body.email.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new ApiException('INVALID_EMAIL', 400);
+      }
+      let verification;
       try {
-        const result = await requestEmailVerification(newUser.email, newUser.id_user);
-        verificationEmailQueued = result.queued === true;
-        emailAlreadyVerified = result.alreadyVerified === true;
+        verification = await getEmailVerificationStatus(email);
       } catch (error) {
-        console.error(
-          `[email] Conta criada para usuário ${newUser.id_user}, mas não foi possível enfileirar o código de confirmação:`,
-          error
+        logger.error('[email-verification] Unable to check registration address.', { error });
+        throw new ApiException('EMAIL_VERIFICATION_UNAVAILABLE', 503);
+      }
+      if (!verification.verified || verification.userId !== null) {
+        throw new ApiException(
+          'EMAIL_NOT_VERIFIED',
+          403
         );
       }
 
+      const newUser = await UserService.createUser({
+        ...req.body,
+        email,
+        image: imagePath,
+      });
+
+      try {
+        await associateVerifiedEmail(newUser.email, newUser.id_user);
+      } catch (error) {
+        logger.error('[email] Failed to associate the verified address with the new account.', {
+          userId: newUser.id_user,
+          error,
+        });
+        throw new ApiException('EMAIL_VERIFICATION_UNAVAILABLE', 503);
+      }
+
       res.status(201).json({
-        message: 'Cadastro completo (Usuário, Pessoa e Endereço) realizado com sucesso',
+        message: 'Cadastro realizado com e-mail confirmado.',
         id: newUser.id_user,
-        verificationEmailQueued,
-        emailAlreadyVerified,
-        verificationMessage: emailAlreadyVerified
-          ? 'Este endereço de e-mail já está confirmado.'
-          : verificationEmailQueued
-            ? 'Código de confirmação enviado para o e-mail cadastrado.'
-            : 'Conta criada, mas não foi possível enfileirar o código. Entre e solicite o envio novamente no perfil.',
+        emailVerified: true,
+        verificationLinked: true,
       });
     } catch (error) {
       next(error);

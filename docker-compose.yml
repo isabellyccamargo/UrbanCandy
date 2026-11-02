@@ -43,6 +43,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DOCKER_DB_NAME:-urbancandy_docker}
       REDIS_URL: redis://urbancandy-redis:6379
+      ORDER_CREATED_CHANNEL: urbancandy:docker:orders:created
       ORDER_STATUS_CHANGED_CHANNEL: urbancandy:docker:orders:status-changed
       ORDER_STATUS_ACK_CHANNEL: urbancandy:docker:orders:email-received
       EMAIL_SERVICE_URL: http://urbancandy-email:3040
@@ -164,6 +165,7 @@ services:
       EMAIL_DB_USER: ${EMAIL_DB_USER:-urbancandy_email}
       EMAIL_DB_PASSWORD: ${EMAIL_DB_PASSWORD:-${DB_PASSWORD:?Configure DB_PASSWORD in the root .env}}
       EMAIL_REDIS_URL: redis://urbancandy-redis:6379
+      ORDER_CREATED_CHANNEL: urbancandy:docker:orders:created
       ORDER_STATUS_CHANGED_CHANNEL: urbancandy:docker:orders:status-changed
       ORDER_STATUS_ACK_CHANNEL: urbancandy:docker:orders:email-received
       EMAIL_API_KEY: ${EMAIL_API_KEY:?Configure EMAIL_API_KEY in the root .env}

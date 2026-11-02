@@ -1,7 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
 import { ApiException } from '../exception/ApiException.js';
 import People from '../models/People.js';
+import Users from '../models/Users.js';
 import MercadoPagoService from '../service/MercadoPagoService.js';
+import { requireVerifiedEmail } from '../service/EmailVerificationGuard.js';
 
 class MercadoPagoController {
   static async createCheckout(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -10,6 +12,9 @@ class MercadoPagoController {
       if (!userId) {
         throw new ApiException('UNAUTHORIZED', 401, 'Usuário não autenticado.');
       }
+      const user = await Users.findByPk(userId, { attributes: ['email'] });
+      if (!user) throw new ApiException('USER_NOT_FOUND', 404);
+      await requireVerifiedEmail(user.email, userId);
 
       const person = await People.findOne({
         where: { id_user: userId },

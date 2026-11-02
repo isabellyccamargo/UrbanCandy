@@ -7,6 +7,9 @@ import {
   getEmailVerificationStatus,
   requestEmailVerification,
   confirmEmailVerification,
+  requestPreRegistrationEmailVerification,
+  requestEmailChange,
+  confirmEmailChange,
 } from '../../services/Api';
 import { lookupCep, ViaCepError } from '../../services/ViaCep';
 import { Button } from '../../componentes/Button/Button';
@@ -70,11 +73,18 @@ const MyData = () => {
   const [emailVerified, setEmailVerified] = useState(null);
   const [verificationRequested, setVerificationRequested] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
-  const [accountCreated, setAccountCreated] = useState(false);
+  const [emailChange, setEmailChange] = useState('');
+  const [emailChangeCode, setEmailChangeCode] = useState('');
+  const [emailChangeRequested, setEmailChangeRequested] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: masks[name] ? masks[name](value) : value }));
+    if (name === 'email' && !isEditMode) {
+      setEmailVerified(null);
+      setVerificationRequested(false);
+      setVerificationCode('');
+    }
   };
 
   const handleCepBlur = async (e) => {
@@ -123,8 +133,12 @@ const MyData = () => {
           setIsEditMode(true);
           try {
             const verification = await getEmailVerificationStatus();
-            setEmailVerified(verification.verified);
-            setVerificationRequested(!verification.verified);
+            setEmailVerified(
+              verification.verified &&
+                (verification.userId == null ||
+                  Number(verification.userId) === Number(storedUser.id_user))
+            );
+            setVerificationRequested(false);
           } catch {
             setEmailVerified(null);
           }
@@ -148,6 +162,23 @@ const MyData = () => {
       return toast.warning('O e-mail deve conter @ e terminar com .com');
     if (!isEditMode && formData.password !== formData.confirmPassword)
       return toast.warning('As senhas não coincidem! 🔑');
+
+    if (!isEditMode && emailVerified !== true) {
+      if (!verificationRequested) {
+        try {
+          await requestPreRegistrationEmailVerification(formData.email.trim());
+          setVerificationRequested(true);
+          toast.success('Código enviado. Confirme o e-mail antes de criar sua conta.');
+        } catch (error) {
+          toast.error(
+            error.response?.data?.message || error.message || 'Não foi possível enviar o código.'
+          );
+        }
+      } else {
+        toast.info('Confirme o código enviado para liberar a criação da conta.');
+      }
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -175,25 +206,14 @@ const MyData = () => {
         localStorage.setItem('@UrbanCandy:user', JSON.stringify(updatedUser));
         toast.success('Dados atualizados! ✨');
       } else {
-        const result = await createUser({
+        await createUser({
           ...formData,
           cpf: rawCpf,
           telephone: rawPhone,
           cep: rawCep,
         });
-        setAccountCreated(true);
-        setVerificationRequested(result.verificationEmailQueued === true);
-        setEmailVerified(result.emailAlreadyVerified === true);
-        if (result.emailAlreadyVerified) {
-          toast.success('Cadastro feito! Seu e-mail já está confirmado.');
-        } else if (result.verificationEmailQueued) {
-          toast.success('Cadastro feito! Digite o código enviado ao seu e-mail.');
-        } else {
-          toast.warning(
-            result.verificationMessage ||
-              'Conta criada; entre e solicite o código de confirmação em Meus Dados.'
-          );
-        }
+        toast.success('Cadastro concluído com e-mail confirmado.');
+        setTimeout(() => (window.location.href = '/?login=true'), 1200);
       }
     } catch (err) {
       toast.error(err.message || 'Erro na operação.');
@@ -216,12 +236,40 @@ const MyData = () => {
     try {
       await confirmEmailVerification(formData.email, verificationCode);
       setEmailVerified(true);
-      toast.success('E-mail confirmado! Você receberá atualizações dos pedidos.');
-      if (accountCreated) {
-        setTimeout(() => (window.location.href = '/?login=true'), 1200);
-      }
+      toast.success('E-mail confirmado! Agora você pode concluir o cadastro ou receber atualizações dos pedidos.');
     } catch (error) {
       toast.error(error.response?.data?.message || error.message || 'Código inválido ou expirado.');
+    }
+  };
+
+  const handleRequestEmailChange = async () => {
+    try {
+      await requestEmailChange(emailChange.trim());
+      setEmailChangeRequested(true);
+      setEmailChangeCode('');
+      toast.success('Código enviado para o novo endereço de e-mail.');
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Não foi possível enviar o código.');
+    }
+  };
+
+  const handleConfirmEmailChange = async () => {
+    try {
+      const result = await confirmEmailChange(emailChange.trim(), emailChangeCode);
+      setFormData((prev) => ({ ...prev, email: result.email }));
+      const currentUser = JSON.parse(localStorage.getItem('@UrbanCandy:user') || 'null');
+      if (currentUser) {
+        const updatedUser = { ...currentUser, email: result.email };
+        localStorage.setItem('@UrbanCandy:user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+      setEmailVerified(true);
+      setEmailChange('');
+      setEmailChangeCode('');
+      setEmailChangeRequested(false);
+      toast.success('E-mail atualizado e confirmado.');
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Não foi possível alterar o e-mail.');
     }
   };
 
@@ -359,7 +407,7 @@ const MyData = () => {
             </Button>
           </div>
 
-          {(accountCreated || (isEditMode && emailVerified === false)) && (
+          {(verificationRequested || (isEditMode && emailVerified === false)) && (
             <section aria-live="polite" style={{ margin: '12px 0 20px', width: '100%' }}>
               <p>
                 {emailVerified
@@ -396,6 +444,45 @@ const MyData = () => {
                     </div>
                   )}
                 </>
+              )}
+            </section>
+          )}
+
+          {isEditMode && (
+            <section aria-label="Alterar e-mail" style={{ margin: '12px 0 20px', width: '100%' }}>
+              <h3>Alterar e-mail</h3>
+              <p>O endereço atual só será substituído depois da confirmação do novo e-mail.</p>
+              <FormField
+                label="Novo e-mail"
+                name="emailChange"
+                type="email"
+                value={emailChange}
+                onChange={(event) => {
+                  setEmailChange(event.target.value);
+                  setEmailChangeRequested(false);
+                  setEmailChangeCode('');
+                }}
+              />
+              {!emailChangeRequested ? (
+                <Button type="button" variant="secondary" onClick={handleRequestEmailChange}>
+                  Enviar código para o novo e-mail
+                </Button>
+              ) : (
+                <div className="form-row">
+                  <FormField
+                    label="Código enviado ao novo e-mail"
+                    name="emailChangeCode"
+                    value={emailChangeCode}
+                    onChange={(event) =>
+                      setEmailChangeCode(event.target.value.replace(/\D/g, '').slice(0, 6))
+                    }
+                    inputMode="numeric"
+                    maxLength={6}
+                  />
+                  <Button type="button" variant="primary" onClick={handleConfirmEmailChange}>
+                    Confirmar novo e-mail
+                  </Button>
+                </div>
               )}
             </section>
           )}
