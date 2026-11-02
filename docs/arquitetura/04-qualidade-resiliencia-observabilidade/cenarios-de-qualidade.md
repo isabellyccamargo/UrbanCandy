@@ -87,8 +87,26 @@ executados e registrados.
 - **Alertas:** backend sem coleta; taxa de 5xx acima de 1% por 5 min; p95 do
   catálogo acima de 500 ms por 10 min; e circuito ViaCEP aberto por 1 min.
   Prometheus avalia as regras, mas não há notificações externas configuradas.
-- **Logs:** logs JSON de requisições no stdout incluem método, rota normalizada,
-  status e duração. Não incluem query string, corpo, tokens ou dados pessoais.
+- **Logs:** os logs JSON são escritos no stdout tanto ao executar o backend
+  localmente (`npm run dev`, na pasta `UrbanCandy_back`) quanto nos ambientes
+  conteinerizados. Requisições incluem método, rota normalizada, status e
+  duração. Erros da API geram `api_error` com rota, status e código; falhas
+  internas também incluem os frames da stack, sem a mensagem original. Os logs
+  não incluem query string, corpo, tokens ou dados pessoais.
+- **Exemplos do formato emitido** (duração e stack variam conforme a execução):
+
+  ```json
+  {"event":"http_request","method":"GET","route":"/api/orders/:orderId","statusCode":200,"durationMs":12}
+  {"event":"api_error","method":"GET","route":"/api/orders/:orderId","statusCode":404,"code":"ORDER_NOT_FOUND","errorName":"ApiException"}
+  {"event":"api_error","method":"GET","route":"/api/orders/:orderId","statusCode":500,"code":"INTERNAL_ERROR","errorName":"Error","stackTrace":"    at ..."}
+  ```
+
+  O middleware global de erros retorna somente `{ "code", "message" }` ao
+  cliente; detalhes internos permanecem nos logs do servidor. Os testes
+  [ObservabilityMetrics.test.ts](../../../UrbanCandy_back/__tests__/ObservabilityMetrics.test.ts)
+  e [ErrorHandler.test.ts](../../../UrbanCandy_back/__tests__/ErrorHandler.test.ts)
+  verificam que esses registros são JSON, usam rotas normalizadas e não expõem
+  mensagens internas na resposta.
 - **Limitações:** a coleta depende de o Docker e os serviços permanecerem
   ativos; sem tráfego, gráficos de requisições podem não ter dados. Não há
   probe sintético contínuo do endpoint HTTP.

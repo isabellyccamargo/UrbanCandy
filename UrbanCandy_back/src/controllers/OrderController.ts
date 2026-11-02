@@ -65,7 +65,7 @@ class OrderController {
     }
   }
 
-  static async findByUserId(req: Request, res: Response) {
+  static async findByUserId(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id_people } = req.params;
 
@@ -78,23 +78,14 @@ class OrderController {
       const result = await OrderRepository.findByUserId(Number(id_people), limit, offset);
 
       // Retorna a estrutura com a propriedade data (array de pedidos) e metadados
-      return res.status(200).json({
+      res.status(200).json({
         totalItems: result.count,
         totalPages: limit > 0 ? Math.ceil(result.count / limit) : 1,
         currentPage: page,
         data: result.rows,
       });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Erro ao buscar pedidos do usuário.';
-      const sql =
-        error && typeof error === 'object' && 'sql' in error
-          ? String((error as { sql?: string }).sql)
-          : undefined;
-
-      return res.status(500).json({
-        message,
-        sql,
-      });
+    } catch (error) {
+      next(error);
     }
   }
 

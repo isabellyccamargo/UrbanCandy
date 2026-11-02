@@ -1,14 +1,15 @@
-import { type NextFunction, type Request, type Response } from 'express';
+import { type NextFunction, type Request } from 'express';
 import Users from '../models/Users.js';
 import Role from '../models/Role.js';
 import Permission from '../models/Permission.js';
+import { ApiException } from '../exception/ApiException.js';
 
 // Recebe o nome da permissão necessária (ex: 'cadastrar_produto') e devolve um middleware do Express para validar o acesso dinamicamente em cada rota.
 export function authorizePermission(permissionName: string) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, _res: unknown, next: NextFunction) => {
     try {
       if (!req.userId) {
-        return res.status(401).json({ message: 'Usuário não autenticado' });
+        return next(new ApiException('AUTH_REQUIRED', 401));
       }
 
       const user = await Users.findByPk(req.userId, {
@@ -27,7 +28,7 @@ export function authorizePermission(permissionName: string) {
       });
 
       if (!user) {
-        return res.status(404).json({ message: 'Usuário não encontrado' });
+        return next(new ApiException('USER_NOT_FOUND', 404));
       }
 
       // Consolida todas as permissões do usuário em um único array de strings
@@ -37,17 +38,12 @@ export function authorizePermission(permissionName: string) {
         ) ?? [];
 
       if (!userPermissions.includes(permissionName)) {
-        return res.status(403).json({
-          message: 'Você não possui permissão para realizar esta ação',
-        });
+        return next(new ApiException('FORBIDDEN', 403));
       }
 
       return next();
     } catch (error) {
-      console.error('Erro ao verificar permissão:', error);
-      return res.status(500).json({
-        message: 'Erro ao verificar permissão do usuário',
-      });
+      return next(error);
     }
   };
 }
