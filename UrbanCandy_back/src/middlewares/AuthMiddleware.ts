@@ -1,6 +1,7 @@
-import { type NextFunction, type Request, type Response } from 'express';
+import { type NextFunction, type Request } from 'express';
 import jwt from 'jsonwebtoken';
 import UserRepository from '../repositories/UserRepository.js';
+import { ApiException } from '../exception/ApiException.js';
 
 type TokenPayload = {
   id: number;
@@ -18,11 +19,11 @@ declare global {
 }
 // eslint-enable @typescript-eslint/no-namespace
 
-async function authMiddleware(req: Request, res: Response, next: NextFunction) {
+async function authMiddleware(req: Request, _res: unknown, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(403).json({ message: 'Acesso não permitido' });
+    return next(new ApiException('AUTH_REQUIRED', 403));
   }
 
   //Quebra o bearer e pega só o token
@@ -30,17 +31,22 @@ async function authMiddleware(req: Request, res: Response, next: NextFunction) {
 
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error('JWT_SECRET não configurado no ambiente.');
+    return next(new Error('JWT_SECRET não configurado no ambiente.'));
   }
 
   if (!token) {
-    return res.status(401).json({ message: 'Token malformatado ou ausente' });
+    return next(new ApiException('INVALID_TOKEN', 401));
+  }
+
+  let decoded: TokenPayload;
+  try {
+    //Verifica se o token nao foi modificado ou expirado
+    decoded = jwt.verify(token, secret) as unknown as TokenPayload;
+  } catch {
+    return next(new ApiException('INVALID_TOKEN', 401));
   }
 
   try {
-    //Verifica se o token nao foi modificado ou expirado
-    const decoded = jwt.verify(token, secret) as unknown as TokenPayload;
-
     const user = await UserRepository.findByIdUser(decoded.id);
 
     if (user) {
@@ -48,9 +54,9 @@ async function authMiddleware(req: Request, res: Response, next: NextFunction) {
       return next();
     }
 
-    return res.status(404).json({ message: 'Usuário não encontrado!' });
+    return next(new ApiException('USER_NOT_FOUND', 404));
   } catch (error) {
-    return res.status(401).json({ message: 'Token inválido ou expirado' });
+    return next(error);
   }
 }
 export default authMiddleware;

@@ -5,6 +5,7 @@ import {
   getEmailVerificationStatus,
   requestEmailVerification,
 } from '../service/EmailServiceClient.js';
+import { ApiException } from '../exception/ApiException.js';
 
 function serviceErrorStatus(error: unknown): number {
   if (error && typeof error === 'object' && 'status' in error) {
@@ -18,6 +19,18 @@ function serviceErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
+function toApiException(error: unknown, fallbackMessage: string): ApiException {
+  const status = serviceErrorStatus(error);
+  if (status === 503) {
+    return new ApiException('EMAIL_SERVICE_UNAVAILABLE', 503);
+  }
+  return new ApiException(
+    'EMAIL_VERIFICATION_ERROR',
+    status,
+    serviceErrorMessage(error, fallbackMessage)
+  );
+}
+
 class EmailVerificationController {
   static async requestForAuthenticatedUser(
     req: Request,
@@ -27,22 +40,16 @@ class EmailVerificationController {
     try {
       const user = await Users.findByPk(Number(req.userId), { attributes: ['id_user', 'email'] });
       if (!user) {
-        res.status(404).json({ message: 'Usuário não encontrado.' });
-        return;
+        throw new ApiException('USER_NOT_FOUND', 404);
       }
-      const result = await requestEmailVerification(user.email, user.id_user);
-      res.status(202).json(result);
+      try {
+        const result = await requestEmailVerification(user.email, user.id_user);
+        res.status(202).json(result);
+      } catch (error) {
+        next(toApiException(error, 'Não foi possível solicitar o código.'));
+      }
     } catch (error) {
-      const status = serviceErrorStatus(error);
-      if (status === 503) {
-        res.status(503).json({
-          message: 'Não foi possível solicitar o código agora. Tente novamente mais tarde.',
-        });
-        return;
-      }
-      res.status(status).json({
-        message: serviceErrorMessage(error, 'Não foi possível solicitar o código.'),
-      });
+      next(error);
     }
   }
 
@@ -50,22 +57,16 @@ class EmailVerificationController {
     try {
       const { email, code } = req.body as { email?: unknown; code?: unknown };
       if (typeof email !== 'string' || typeof code !== 'string') {
-        res.status(400).json({ message: 'Informe o e-mail e o código de 6 dígitos.' });
-        return;
+        throw new ApiException('INVALID_EMAIL_VERIFICATION_REQUEST', 400);
       }
-      const result = await confirmEmailVerification(email, code);
-      res.status(200).json(result);
+      try {
+        const result = await confirmEmailVerification(email, code);
+        res.status(200).json(result);
+      } catch (error) {
+        next(toApiException(error, 'Código inválido ou expirado.'));
+      }
     } catch (error) {
-      const status = serviceErrorStatus(error);
-      if (status === 503) {
-        res.status(503).json({
-          message: 'Não foi possível confirmar o código agora. Tente novamente mais tarde.',
-        });
-        return;
-      }
-      res.status(status).json({
-        message: serviceErrorMessage(error, 'Código inválido ou expirado.'),
-      });
+      next(error);
     }
   }
 
@@ -73,18 +74,15 @@ class EmailVerificationController {
     try {
       const user = await Users.findByPk(Number(req.userId), { attributes: ['email'] });
       if (!user) {
-        res.status(404).json({ message: 'Usuário não encontrado.' });
-        return;
+        throw new ApiException('USER_NOT_FOUND', 404);
       }
-      const result = await getEmailVerificationStatus(user.email);
-      res.status(200).json(result);
+      try {
+        const result = await getEmailVerificationStatus(user.email);
+        res.status(200).json(result);
+      } catch (error) {
+        next(toApiException(error, 'Não foi possível consultar a confirmação do e-mail.'));
+      }
     } catch (error) {
-      if (serviceErrorStatus(error) === 503) {
-        res.status(503).json({
-          message: 'Não foi possível consultar a confirmação do e-mail agora.',
-        });
-        return;
-      }
       next(error);
     }
   }

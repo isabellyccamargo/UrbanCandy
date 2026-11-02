@@ -11,6 +11,7 @@ import { initializeRedisCache } from './src/config/RedisCache.js';
 import { initializeOrderEventSubscriber } from './src/events/OrderEvents.js';
 import { startOrderStatusOutbox } from './src/events/OrderStatusOutbox.js';
 import { httpMetricsMiddleware, metricsHandler } from './src/observability/metrics.js';
+import { ApiException } from './src/exception/ApiException.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -72,6 +73,10 @@ server.get('/api/health', (req, res) => {
 // Altere para usar process.cwd() para apontar para a raiz (/app)
 server.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 server.use('/api', publico);
+
+server.use((req, _res, next) => {
+  next(new ApiException('ROUTE_NOT_FOUND', 404));
+});
 
 // Middleware de tratamento de erros - DEVE ser o último middleware
 server.use(errorHandler);
