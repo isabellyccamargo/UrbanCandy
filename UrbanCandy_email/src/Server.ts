@@ -2,11 +2,13 @@ import { createApp } from './app.js';
 import { config } from './config.js';
 import { sequelize } from './database.js';
 import { startDeliveryWorker } from './deliveryWorker.js';
+import { ensureEmailDeliveryAuditSchema } from './migrations/ensureEmailDeliveryAuditSchema.js';
 import { startOrderStatusConsumer } from './orderStatusConsumer.js';
 
 async function startServer() {
   await sequelize.authenticate();
   await sequelize.sync();
+  await ensureEmailDeliveryAuditSchema();
   await startOrderStatusConsumer();
   startDeliveryWorker();
 

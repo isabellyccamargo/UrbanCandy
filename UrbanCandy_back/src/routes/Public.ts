@@ -17,6 +17,10 @@ const routes = Router();
 
 routes.post('/login', UserController.login);
 routes.post('/usuario/salvar', upload.single('image'), UserController.createUser);
+routes.post(
+  '/email-verification/pre-registration/request',
+  EmailVerificationController.requestForRegistration
+);
 routes.post('/pagamento/webhook', MercadoPagoController.webhook);
 routes.post('/email-verification/confirm', EmailVerificationController.confirm);
 

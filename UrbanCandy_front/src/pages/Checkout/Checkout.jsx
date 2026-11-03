@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/UseCart';
-import { createOrder, getUserProfile, getAllTypeOfPayment } from '../../services/Api';
+import {
+  createOrder,
+  getUserProfile,
+  getAllTypeOfPayment,
+  getEmailVerificationStatus,
+} from '../../services/Api';
 import { Button } from '../../componentes/Button/Button';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/AuthContext';
@@ -18,6 +23,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(null);
 
   const formatBRL = (val) =>
     Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -49,6 +55,17 @@ const Checkout = () => {
               : 'Endereço não cadastrado',
             cityState: addr.city ? `${addr.city} ` : 'Cidade não informada',
           });
+        }
+        try {
+          const verification = await getEmailVerificationStatus();
+          const currentUserId = user?.id_user || user?.id;
+          setEmailVerified(
+            verification.verified &&
+              (verification.userId == null ||
+                Number(verification.userId) === Number(currentUserId))
+          );
+        } catch (verificationError) {
+          console.warn('Não foi possível consultar a confirmação do e-mail:', verificationError);
         }
         setPaymentOptions(resPayments.data?.data || resPayments.data || []);
       } catch {
@@ -88,6 +105,11 @@ const Checkout = () => {
       clearCart();
       setShowSuccessModal(true);
     } catch (error) {
+      if ((error.code || error.response?.data?.code) === 'EMAIL_NOT_VERIFIED') {
+        setEmailVerified(false);
+        toast.error(error.response.data.message);
+        return navigate('/perfil');
+      }
       const errorMsg =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -107,6 +129,18 @@ const Checkout = () => {
   return (
     <div className="checkout-container animate-entrance">
       <div className="checkout-content">
+        {emailVerified === false && (
+          <section className="checkout-section card-candy" role="alert">
+            <h3>Confirme seu e-mail para continuar</h3>
+            <p>
+              A confirmação é necessária para receber atualizações importantes sobre a preparação e
+              entrega do seu pedido.
+            </p>
+            <Button variant="primary" onClick={() => navigate('/perfil')}>
+              Validar e-mail
+            </Button>
+          </section>
+        )}
         <section className="checkout-section card-candy">
           <h3>
             <i className="fas fa-user"></i> Dados Pessoais
@@ -188,7 +222,7 @@ const Checkout = () => {
         <Button
           onClick={handleFinalizeOrder}
           variant="primary"
-          disabled={isSubmitting || cart.items.length === 0}
+          disabled={isSubmitting || cart.items.length === 0 || emailVerified === false}
         >
           {isSubmitting ? 'Processando...' : 'Finalizar Pedido'}
         </Button>

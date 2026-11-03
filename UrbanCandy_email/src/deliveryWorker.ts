@@ -6,8 +6,23 @@ const MAX_BACKOFF_MS = 60 * 60 * 1000;
 const LEASE_MS = 2 * 60 * 1000;
 const inFlight = new Set<number>();
 
+type DeliveryRecord = Pick<
+  EmailDelivery,
+  | 'id'
+  | 'eventId'
+  | 'recipient'
+  | 'subject'
+  | 'text'
+  | 'kind'
+  | 'status'
+  | 'attempts'
+  | 'nextAttemptAt'
+  | 'sentAt'
+  | 'lastError'
+> & { save: () => Promise<unknown> };
+
 export function createDeliveryProcessor(sender: MailSender) {
-  return async (delivery: EmailDelivery) => {
+  return async (delivery: DeliveryRecord) => {
     if (inFlight.has(delivery.id)) return;
     inFlight.add(delivery.id);
     try {
@@ -23,13 +38,24 @@ export function createDeliveryProcessor(sender: MailSender) {
       });
 
       delivery.status = 'sent';
+      delivery.sentAt = new Date();
       delivery.lastError = null;
       if (delivery.kind === 'verification') delivery.text = '';
       await delivery.save();
-      console.info(`[email-service] Sent delivery id=${delivery.id} kind=${delivery.kind}`);
+      const deliveryLabel =
+        delivery.kind === 'verification'
+          ? 'verification email'
+          : delivery.kind === 'order-created'
+            ? 'order confirmation email'
+            : 'order status email';
+      console.info(
+        `[email-service] Sent ${deliveryLabel} id=${delivery.id} ` +
+          `eventId=${delivery.eventId ?? 'none'} sentAt=${delivery.sentAt.toISOString()}`
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       delivery.status = 'pending';
+      delivery.sentAt = null;
       delivery.lastError = message.slice(0, 2000);
       const backoff = Math.min(1000 * 2 ** Math.min(delivery.attempts, 12), MAX_BACKOFF_MS);
       delivery.nextAttemptAt = new Date(Date.now() + backoff);

@@ -27,6 +27,9 @@ import {
     getEmailVerificationStatus,
     requestEmailVerification,
     confirmEmailVerification,
+    requestPreRegistrationEmailVerification,
+    requestEmailChange,
+    confirmEmailChange,
 } from '@/services/auth';
 import { updateAddress } from '@/services/address';
 import api, { API_BASE_URL } from '@/services/api';
@@ -57,6 +60,30 @@ function getFullImageUrl(imagePath?: string | null) {
     return `${baseUrl}${cleanPath}`;
 }
 
+function getEmailVerificationErrorMessage(error: unknown) {
+    const status = (
+        error as { response?: { status?: number } } | null
+    )?.response?.status;
+
+    if (status === 400) {
+        return 'O código está incorreto ou expirou. Confira o código ou solicite um novo.';
+    }
+
+    if (status === 429) {
+        return 'O limite de tentativas foi atingido. Solicite um novo código e tente novamente.';
+    }
+
+    if (status === 503) {
+        return 'Não foi possível confirmar o código agora. Tente novamente mais tarde.';
+    }
+
+    if (!status) {
+        return 'Não foi possível conectar ao serviço de confirmação. Verifique sua conexão e tente novamente.';
+    }
+
+    return 'Não foi possível confirmar o código. Confira os dados e tente novamente.';
+}
+
 export default function CadastroScreen() {
     const router = useRouter();
     const { colors, font, fontSize, space, radius } = useTheme();
@@ -72,6 +99,9 @@ export default function CadastroScreen() {
     const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
     const [verificationCode, setVerificationCode] = useState('');
     const [verificationRequested, setVerificationRequested] = useState(false);
+    const [emailChange, setEmailChange] = useState('');
+    const [emailChangeCode, setEmailChangeCode] = useState('');
+    const [emailChangeRequested, setEmailChangeRequested] = useState(false);
 
     // Guardar a URI local/remota da imagem
     const [imageUri, setImageUri] = useState<string | null>(null);
@@ -103,6 +133,11 @@ export default function CadastroScreen() {
 
     const change = (field: keyof typeof form, value: string) => {
         setForm(prev => ({ ...prev, [field]: value }));
+        if (field === 'email' && !editing) {
+            setEmailVerified(null);
+            setVerificationRequested(false);
+            setVerificationCode('');
+        }
 
         if (value.trim()) {
             setErrors(prev => {
@@ -236,7 +271,11 @@ export default function CadastroScreen() {
                 setAuthenticated(true);
                 try {
                     const verification = await getEmailVerificationStatus();
-                    setEmailVerified(verification.verified);
+                    setEmailVerified(
+                        verification.verified &&
+                        (verification.userId == null ||
+                            Number(verification.userId) === Number(userId))
+                    );
                 } catch {
                     console.warn('Não foi possível consultar a confirmação do e-mail.');
                 }
@@ -347,6 +386,36 @@ export default function CadastroScreen() {
     async function save() {
         if (!validate()) return;
 
+        if (!editing && emailVerified !== true) {
+            if (!verificationRequested) {
+                try {
+                    await requestPreRegistrationEmailVerification(form.email.trim());
+                    setVerificationRequested(true);
+                    showMessage(
+                        'Código enviado',
+                        'Confirme seu e-mail antes de criar a conta.',
+                        undefined,
+                        'success'
+                    );
+                } catch (error: any) {
+                    showMessage(
+                        'Não foi possível enviar',
+                        error?.response?.data?.message ?? error?.message ?? 'Tente novamente mais tarde.',
+                        undefined,
+                        'error'
+                    );
+                }
+            } else {
+                showMessage(
+                    'Confirme seu e-mail',
+                    'Digite o código enviado para liberar a criação da conta.',
+                    undefined,
+                    'warning'
+                );
+            }
+            return;
+        }
+
         try {
             setLoading(true);
 
@@ -377,20 +446,15 @@ export default function CadastroScreen() {
                     } as any);
                 }
 
-                const created = await createUser(formData as any);
+                await createUser(formData as any);
 
                 setImageUri(null);
-                router.replace({
-                    pathname: '/email-confirmation',
-                    params: {
-                        email: form.email.trim(),
-                        queued: created?.emailAlreadyVerified
-                            ? '2'
-                            : created?.verificationEmailQueued
-                                ? '1'
-                                : '0',
-                    },
-                } as any);
+                showMessage(
+                    'Cadastro concluído',
+                    'Seu e-mail está confirmado e sua conta foi criada.',
+                    () => router.replace('/welcome' as any),
+                    'success'
+                );
 
                 return;
             }
@@ -530,6 +594,50 @@ export default function CadastroScreen() {
             fontSize: fontSize.md,
             color: errorColor,
         },
+        verificationCard: {
+            marginTop: space.md,
+            padding: space.md,
+            gap: space.sm,
+            borderRadius: radius.md,
+            backgroundColor: colors.white,
+        },
+        verificationTitle: {
+            color: colors.text,
+            fontFamily: font.semibold,
+            fontSize: fontSize.md,
+        },
+        verificationDescription: {
+            color: colors.textSecondary,
+            fontFamily: font.regular,
+            fontSize: fontSize.sm,
+        },
+        verificationFieldLabel: {
+            color: colors.text,
+            fontFamily: font.medium,
+            fontSize: fontSize.sm,
+        },
+        verificationInput: {
+            minHeight: 48,
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: radius.md,
+            padding: space.md,
+            color: colors.text,
+        },
+        verificationButton: {
+            minHeight: 48,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: space.md,
+            borderRadius: radius.md,
+            backgroundColor: colors.primary,
+        },
+        verificationButtonText: {
+            color: colors.white,
+            fontFamily: font.semibold,
+            fontSize: fontSize.md,
+            textAlign: 'center',
+        },
     });
 
     return (
@@ -572,14 +680,66 @@ export default function CadastroScreen() {
                         onSubmit={save}
                     />
 
+                    {!editing && verificationRequested && (
+                        <View style={styles.verificationCard}>
+                            <Text style={styles.verificationTitle}>
+                                Confirmação de e-mail
+                            </Text>
+                            <Text style={styles.verificationDescription}>
+                                {emailVerified
+                                    ? 'E-mail confirmado. Agora finalize o formulário para criar sua conta.'
+                                    : 'Confirme seu e-mail antes de criar a conta para receber atualizações dos pedidos.'}
+                            </Text>
+                            {!emailVerified && (
+                                <>
+                                    <Text style={styles.verificationFieldLabel}>
+                                        Código de confirmação
+                                    </Text>
+                                    <Text style={styles.verificationDescription}>
+                                        Digite o código de 6 dígitos enviado para {form.email}.
+                                    </Text>
+                                    <TextInput
+                                        value={verificationCode}
+                                        onChangeText={value => setVerificationCode(value.replace(/\D/g, '').slice(0, 6))}
+                                        keyboardType="number-pad"
+                                        maxLength={6}
+                                        placeholder="Digite o código"
+                                        style={styles.verificationInput}
+                                    />
+                                    <Pressable
+                                        style={styles.verificationButton}
+                                        onPress={async () => {
+                                            if (verificationCode.length !== 6) {
+                                                showMessage('Código incompleto', 'Digite os 6 dígitos enviados para seu e-mail.', undefined, 'warning');
+                                                return;
+                                            }
+                                            try {
+                                                await confirmEmailVerification(form.email, verificationCode);
+                                                setEmailVerified(true);
+                                                showMessage('E-mail confirmado', 'Agora você pode concluir seu cadastro.', undefined, 'success');
+                                            } catch (error: any) {
+                                                showMessage('Código não confirmado', getEmailVerificationErrorMessage(error), undefined, 'error');
+                                            }
+                                        }}
+                                    >
+                                        <Text style={styles.verificationButtonText}>Confirmar e-mail</Text>
+                                    </Pressable>
+                                </>
+                            )}
+                        </View>
+                    )}
+
                     {editing && emailVerified === false && (
-                        <View style={{ marginTop: space.md, gap: space.sm }}>
-                            <Text style={{ color: colors.text, fontFamily: font.medium }}>
+                        <View style={styles.verificationCard}>
+                            <Text style={styles.verificationTitle}>
+                                Confirmação de e-mail
+                            </Text>
+                            <Text style={styles.verificationDescription}>
                                 Confirme seu e-mail uma vez para receber atualizações dos pedidos.
                             </Text>
                             {!verificationRequested ? (
                                 <Pressable
-                                    style={styles.logoutButton}
+                                    style={styles.verificationButton}
                                     onPress={async () => {
                                         try {
                                             await requestEmailVerification();
@@ -590,37 +750,41 @@ export default function CadastroScreen() {
                                         }
                                     }}
                                 >
-                                    <Text style={styles.logoutText}>Enviar código de confirmação</Text>
+                                    <Text style={styles.verificationButtonText}>Enviar código de confirmação</Text>
                                 </Pressable>
                             ) : (
                                 <>
+                                    <Text style={styles.verificationFieldLabel}>
+                                        Código de confirmação
+                                    </Text>
+                                    <Text style={styles.verificationDescription}>
+                                        Digite o código de 6 dígitos enviado para {form.email}.
+                                    </Text>
                                     <TextInput
                                         value={verificationCode}
                                         onChangeText={value => setVerificationCode(value.replace(/\D/g, '').slice(0, 6))}
                                         keyboardType="number-pad"
                                         maxLength={6}
-                                        placeholder="Código de 6 dígitos"
-                                        style={{
-                                            borderWidth: 1,
-                                            borderColor: '#B8A99A',
-                                            borderRadius: radius.md,
-                                            padding: space.md,
-                                            color: colors.text,
-                                        }}
+                                        placeholder="Digite o código"
+                                        style={styles.verificationInput}
                                     />
                                     <Pressable
-                                        style={styles.logoutButton}
+                                        style={styles.verificationButton}
                                         onPress={async () => {
+                                            if (verificationCode.length !== 6) {
+                                                showMessage('Código incompleto', 'Digite os 6 dígitos enviados para seu e-mail.', undefined, 'warning');
+                                                return;
+                                            }
                                             try {
                                                 await confirmEmailVerification(form.email, verificationCode);
                                                 setEmailVerified(true);
                                                 showMessage('E-mail confirmado', 'Você receberá atualizações dos pedidos neste endereço.', undefined, 'success');
                                             } catch (error: any) {
-                                                showMessage('Código não confirmado', error?.response?.data?.message ?? error?.message ?? 'Verifique o código e tente novamente.', undefined, 'error');
+                                                showMessage('Código não confirmado', getEmailVerificationErrorMessage(error), undefined, 'error');
                                             }
                                         }}
                                     >
-                                        <Text style={styles.logoutText}>Confirmar e-mail</Text>
+                                        <Text style={styles.verificationButtonText}>Confirmar e-mail</Text>
                                     </Pressable>
                                     <Pressable
                                         onPress={async () => {
@@ -633,6 +797,97 @@ export default function CadastroScreen() {
                                         }}
                                     >
                                         <Text style={{ color: '#9B542E', textAlign: 'center' }}>Reenviar código</Text>
+                                    </Pressable>
+                                </>
+                            )}
+                        </View>
+                    )}
+
+                    {editing && (
+                        <View style={styles.verificationCard}>
+                            <Text style={styles.verificationTitle}>
+                                Alterar e-mail
+                            </Text>
+                            <Text style={styles.verificationDescription}>
+                                O endereço atual só será substituído depois da confirmação do novo e-mail.
+                            </Text>
+                            <Text style={styles.verificationFieldLabel}>
+                                Novo e-mail
+                            </Text>
+                            <TextInput
+                                value={emailChange}
+                                onChangeText={value => {
+                                    setEmailChange(value);
+                                    setEmailChangeRequested(false);
+                                    setEmailChangeCode('');
+                                }}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                placeholder="Digite o novo e-mail"
+                                style={styles.verificationInput}
+                            />
+                            {!emailChangeRequested ? (
+                                <Pressable
+                                    style={styles.verificationButton}
+                                    onPress={async () => {
+                                        if (!emailChange.trim()) {
+                                            showMessage('E-mail necessário', 'Digite o novo endereço de e-mail para continuar.', undefined, 'warning');
+                                            return;
+                                        }
+                                        try {
+                                            await requestEmailChange(emailChange.trim());
+                                            setEmailChangeRequested(true);
+                                            showMessage('Código enviado', 'Confira o novo endereço de e-mail.', undefined, 'success');
+                                        } catch (error: any) {
+                                            showMessage('Não foi possível enviar', error?.response?.data?.message ?? error?.message ?? 'Tente novamente mais tarde.', undefined, 'error');
+                                        }
+                                    }}
+                                >
+                                    <Text style={styles.verificationButtonText}>Enviar código para o novo e-mail</Text>
+                                </Pressable>
+                            ) : (
+                                <>
+                                    <Text style={styles.verificationFieldLabel}>
+                                        Código de confirmação
+                                    </Text>
+                                    <Text style={styles.verificationDescription}>
+                                        Digite o código enviado para {emailChange.trim()}.
+                                    </Text>
+                                    <TextInput
+                                        value={emailChangeCode}
+                                        onChangeText={value => setEmailChangeCode(value.replace(/\D/g, '').slice(0, 6))}
+                                        keyboardType="number-pad"
+                                        maxLength={6}
+                                        placeholder="Digite o código"
+                                        style={styles.verificationInput}
+                                    />
+                                    <Pressable
+                                        style={styles.verificationButton}
+                                        onPress={async () => {
+                                            if (emailChangeCode.length !== 6) {
+                                                showMessage('Código incompleto', 'Digite os 6 dígitos enviados para o novo e-mail.', undefined, 'warning');
+                                                return;
+                                            }
+                                            try {
+                                                const result = await confirmEmailChange(emailChange.trim(), emailChangeCode);
+                                                setForm(prev => ({ ...prev, email: result.email }));
+                                                const storedUser = await AsyncStorage.getItem('@UrbanCandy:user');
+                                                if (storedUser) {
+                                                    const updatedUser = { ...JSON.parse(storedUser), email: result.email };
+                                                    await AsyncStorage.setItem('@UrbanCandy:user', JSON.stringify(updatedUser));
+                                                    await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+                                                }
+                                                setEmailVerified(true);
+                                                setEmailChange('');
+                                                setEmailChangeCode('');
+                                                setEmailChangeRequested(false);
+                                                showMessage('E-mail atualizado', 'O novo endereço foi confirmado.', undefined, 'success');
+                                            } catch (error: any) {
+                                                showMessage('Não foi possível alterar', getEmailVerificationErrorMessage(error), undefined, 'error');
+                                            }
+                                        }}
+                                    >
+                                        <Text style={styles.verificationButtonText}>Confirmar novo e-mail</Text>
                                     </Pressable>
                                 </>
                             )}

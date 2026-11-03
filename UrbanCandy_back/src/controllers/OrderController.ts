@@ -4,7 +4,9 @@ import { ApiException } from '../exception/ApiException.js';
 import { type ICart, type IOrderCheckout } from '../@types/OrdersTypes.js';
 import OrderRepository from '../repositories/OrderRepository.js';
 import People from '../models/People.js';
+import Users from '../models/Users.js';
 import TypeOfPayment from '../models/TypeOfPayment.js';
+import { requireVerifiedEmail } from '../service/EmailVerificationGuard.js';
 class OrderController {
   private static validateRequest(cart: ICart): void {
     if (!cart || !cart.items) {
@@ -26,6 +28,9 @@ class OrderController {
       if (!userId) {
         throw new ApiException('UNAUTHORIZED', 401, 'Usuário não autenticado.');
       }
+      const user = await Users.findByPk(userId, { attributes: ['email'] });
+      if (!user) throw new ApiException('USER_NOT_FOUND', 404);
+      await requireVerifiedEmail(user.email, userId);
       const person = await People.findOne({
         where: { id_user: userId },
         attributes: ['id_people'],

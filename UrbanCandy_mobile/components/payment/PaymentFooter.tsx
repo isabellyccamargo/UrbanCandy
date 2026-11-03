@@ -11,6 +11,7 @@ import { useTheme } from '@/context/Theme';
 type PaymentFooterProps = {
     total: number;
     disabled?: boolean;
+    visuallyDisabled?: boolean;
     buttonLabel?: string;
     onPress: () => void;
 };
@@ -18,6 +19,7 @@ type PaymentFooterProps = {
 export default function PaymentFooter({
     total,
     disabled = false,
+    visuallyDisabled = false,
     buttonLabel = 'Finalizar pagamento',
     onPress,
 }: PaymentFooterProps) {
@@ -75,11 +77,16 @@ export default function PaymentFooter({
             alignItems: 'center',
         },
 
+        buttonVisuallyDisabled: {
+            backgroundColor: colors.textSecondary,
+        },
+
         buttonText: {
             fontFamily: font.semibold,
             fontSize: fontSize.md,
             color: colors.white,
         },
+
     });
 
     return (
@@ -98,6 +105,7 @@ export default function PaymentFooter({
                 <Pressable
                     style={[
                         styles.button,
+                        visuallyDisabled && styles.buttonVisuallyDisabled,
                     ]}
                     onPress={onPress}
                     disabled={disabled}

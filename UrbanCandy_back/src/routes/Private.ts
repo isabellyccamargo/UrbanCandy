@@ -23,6 +23,8 @@ privateRoutes.use(authMiddleware);
 privateRoutes.get('/notificacoes', NotificationController.list);
 privateRoutes.get('/email-verification/status', EmailVerificationController.status);
 privateRoutes.post('/email-verification/request', EmailVerificationController.requestForAuthenticatedUser);
+privateRoutes.post('/email-verification/change/request', EmailVerificationController.requestEmailChange);
+privateRoutes.post('/email-verification/change/confirm', EmailVerificationController.confirmEmailChange);
 privateRoutes.get('/notificacoes/stream', NotificationController.stream);
 privateRoutes.patch('/notificacoes/lidas', NotificationController.markAllAsRead);
 privateRoutes.patch('/notificacoes/:id_notification/lida', NotificationController.markAsRead);

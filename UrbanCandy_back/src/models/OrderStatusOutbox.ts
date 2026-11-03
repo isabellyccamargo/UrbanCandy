@@ -2,6 +2,7 @@ import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/Config.js';
 
 export interface OrderStatusOutboxEvent {
+  eventType?: 'order.status.changed';
   eventId: string;
   occurredAt: string;
   orderId: number;
@@ -12,9 +13,21 @@ export interface OrderStatusOutboxEvent {
   newStatusLabel: string;
 }
 
+export interface OrderCreatedOutboxEvent {
+  eventType: 'order.created';
+  eventId: string;
+  occurredAt: string;
+  orderId: number;
+  recipientUserId: number;
+  recipientEmail: string;
+  total: number;
+}
+
+export type OrderOutboxEvent = OrderStatusOutboxEvent | OrderCreatedOutboxEvent;
+
 class OrderStatusOutbox extends Model {
   declare eventId: string;
-  declare payload: OrderStatusOutboxEvent;
+  declare payload: OrderOutboxEvent;
   declare acknowledgedAt: Date | null;
 }
 

@@ -13,7 +13,11 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/Theme';
-import { getUserProfile, UserProfile } from '@/services/auth';
+import {
+    getUserProfile,
+    getEmailVerificationStatus,
+    UserProfile,
+} from '@/services/auth';
 import { createOrder } from '@/services/orders';
 import {
     createPaymentCheckout,
@@ -46,6 +50,7 @@ export default function PaymentScreen() {
     const { showMessage } = useAppAlert();
 
     const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
     const [selectedPayment, setSelectedPayment] = useState<PaymentType | null>(
         null,
     );
@@ -74,6 +79,19 @@ export default function PaymentScreen() {
 
                 const data = await getUserProfile(user.id_user);
                 setProfile(data);
+                try {
+                    const verification = await getEmailVerificationStatus();
+                    setEmailVerified(
+                        verification.verified &&
+                        (verification.userId == null ||
+                            Number(verification.userId) === Number(user.id_user)),
+                    );
+                } catch (verificationError) {
+                    console.warn(
+                        'Não foi possível consultar a confirmação do e-mail:',
+                        verificationError,
+                    );
+                }
 
                 if (id_delivery) {
                     const response = await getAllDeliveryTypes();
@@ -145,6 +163,16 @@ export default function PaymentScreen() {
     }
 
     async function handleFinishPayment() {
+        if (emailVerified === false) {
+            showMessage(
+                'Confirme seu e-mail',
+                'A confirmação é necessária para receber atualizações importantes sobre a preparação e entrega do pedido.',
+                () => router.push('/cadastro' as any),
+                'warning',
+            );
+            return;
+        }
+
         if (!id_delivery) {
             showMessage(
                 'Atenção',
@@ -229,6 +257,19 @@ export default function PaymentScreen() {
             completionHandled.current = false;
             await openCheckout(checkout.checkoutUrl);
         } catch (err) {
+            if ((err as any)?.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+                setEmailVerified(false);
+                showMessage(
+                    'Confirme seu e-mail',
+                    getApiErrorMessage(
+                        err,
+                        'Confirme seu e-mail para receber atualizações importantes do pedido.',
+                    ),
+                    () => router.push('/cadastro' as any),
+                    'warning',
+                );
+                return;
+            }
             showMessage(
                 'Não foi possível finalizar',
                 getApiErrorMessage(
@@ -459,6 +500,25 @@ export default function PaymentScreen() {
                             )}
                     </View>
                 )}
+
+                {emailVerified === false && (
+                    <View style={styles.checkoutStatus}>
+                            <Text style={styles.checkoutStatusTitle}>
+                                Confirme seu e-mail para continuar
+                            </Text>
+                            <Text style={styles.checkoutStatusMessage}>
+                                Isso permite receber atualizações importantes sobre a preparação e entrega do pedido.
+                            </Text>
+                            <Pressable
+                                style={styles.checkoutAction}
+                                onPress={() => router.push('/cadastro' as any)}
+                            >
+                                <Text style={styles.checkoutActionText}>
+                                    Validar e-mail
+                                </Text>
+                            </Pressable>
+                    </View>
+                )}
             </ScrollView>
 
             <PaymentFooter
@@ -466,9 +526,10 @@ export default function PaymentScreen() {
                 disabled={
                     finishing ||
                     (activeCheckout !== null &&
-                        (checkoutStatus?.status === 'pending' ||
-                            checkoutStatus?.status === 'approved'))
+                            (checkoutStatus?.status === 'pending' ||
+                                checkoutStatus?.status === 'approved'))
                 }
+                visuallyDisabled={emailVerified === false}
                 buttonLabel={
                     activeCheckout && checkoutStatus?.status === 'pending'
                         ? 'Continuar pagamento'

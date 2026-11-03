@@ -13,7 +13,7 @@ final.
 | `urbancandy-backend`    | API Express                                                               | Conecta ao MySQL pelo host de serviço `urbancandy-db:3306`                              |
 | `urbancandy-db`         | MySQL 8                                                                   | Usa o banco isolado `urbancandy_docker` e o volume `mysql_data`                         |
 | `urbancandy-redis`      | Cache de produtos e mensageria de pedidos                                 | Backend Compose usa `urbancandy-redis:6379`; backend local usa `127.0.0.1:6380`         |
-| `urbancandy-email`      | Serviço independente de confirmação e envio de e-mails                    | Recebe atualizações dos pedidos via Redis Pub/Sub e usa SMTP do Gmail                   |
+| `urbancandy-email`      | Serviço independente de confirmação e envio de e-mails                    | Recebe confirmações e atualizações de pedidos via Redis Pub/Sub e usa SMTP do Gmail      |
 | `urbancandy-email-db`   | MySQL exclusivo do serviço de e-mail                                      | Persiste códigos de confirmação e tentativas de envio no volume `email_mysql_data`      |
 | `urbancandy-prometheus` | Coleta métricas do backend, mantém histórico por 35 dias e avalia alertas | Acessa a porta interna `9464`; interface limitada ao loopback do host                   |
 | `urbancandy-blackbox-exporter` | Executa probes HTTP de saúde da API | Acessível ao Prometheus pela rede privada do Compose |
