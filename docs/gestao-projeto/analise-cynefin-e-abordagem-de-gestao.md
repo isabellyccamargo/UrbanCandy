@@ -1,126 +1,120 @@
 # Análise Cynefin e abordagem de gestão do UrbanCandy
 
-## Objetivo e escopo
+## Resposta direta
 
-Este documento analisa o contexto de desenvolvimento do UrbanCandy pelo
-framework Cynefin e justifica a adoção de uma abordagem híbrida de gestão. A
-classificação se refere às situações de decisão do projeto, não é um rótulo
-permanente para o produto ou para a equipe. Diferentes atividades podem
-pertencer a domínios distintos e a classificação deve ser revista quando o
-contexto mudar.
+> **Classificação pelo Cynefin:** domínio **Complexo**.
+>
+> **Abordagem de gestão escolhida:** **Híbrida**, combinando planejamento e
+> controle com entregas incrementais, validação e adaptação.
 
-## Características do projeto consideradas
+Esta análise atende ao item da rubrica em um único documento. Não é necessário
+criar um aplicativo Cynefin: o framework é um modelo para analisar situações
+e orientar a forma de agir.
+
+## 1. O que está sendo analisado
+
+O Cynefin ajuda a entender o tipo de contexto em que uma decisão acontece. Ele
+não é uma metodologia de desenvolvimento e não escolhe, por si só, entre
+gestão preditiva, ágil ou híbrida.
+
+São duas decisões relacionadas, mas diferentes:
+
+1. **Cynefin:** que tipo de situação predomina na evolução do UrbanCandy?
+2. **Gestão:** qual abordagem organiza melhor o trabalho diante desse contexto?
+
+## 2. Contexto do UrbanCandy
 
 O UrbanCandy é uma plataforma de comércio eletrônico com aplicações Web e
-Mobile, um backend principal organizado em camadas e um serviço de e-mail
-separado. O fluxo de negócio integra catálogo, pedidos, pagamento externo e
-comunicação assíncrona. Essas partes têm dependências e riscos diferentes:
+Mobile, um backend principal e um serviço de e-mail separado. Seu fluxo envolve
+catálogo, pedidos, pagamentos e notificações.
 
-- Há decisões técnicas que podem ser analisadas com práticas conhecidas, como
-  organização em camadas, persistência relacional, cache e integração com
-  serviços externos.
-- Há incerteza sobre necessidades e experiência do usuário, especialmente nos
-  fluxos de compra, confirmação de e-mail e acompanhamento de pedidos. Essas
-  decisões se beneficiam de implementação incremental, validação e ajustes com
-  base no retorno obtido.
-- Há atividades operacionais repetíveis, como seguir instruções documentadas
-  para iniciar o ambiente e verificar a disponibilidade dos serviços.
-- Pagamentos e alterações de pedidos exigem planejamento, validação e controle
-  de riscos; mudanças nesses fluxos não devem ser tratadas como experimentos
-  sem limites.
+Há decisões cuja solução depende de observar o resultado e receber feedback,
+como ajustes na experiência dos fluxos de compra, confirmação de e-mail e
+acompanhamento de pedidos. Também há integrações e riscos que exigem análise
+técnica, critérios de aceite e validações antes de disponibilizar mudanças.
 
-As evidências técnicas incluem a [ADR sobre a arquitetura do backend e o
-serviço de e-mail](../arquitetura/01-documentacao-arquitetural/ADR-001-arquitetura-modular-backend.md),
-os [cenários de qualidade, resiliência e observabilidade](../arquitetura/04-qualidade-resiliencia-observabilidade/cenarios-de-qualidade.md)
+Essa combinação de descoberta, dependências e necessidade de validação é a
+base da classificação abaixo. Como evidências do contexto técnico, consulte a
+[ADR sobre o backend e o serviço de e-mail](../arquitetura/01-documentacao-arquitetural/ADR-001-arquitetura-modular-backend.md),
+os [cenários de qualidade e observabilidade](../arquitetura/04-qualidade-resiliencia-observabilidade/cenarios-de-qualidade.md)
 e os [guias de infraestrutura e integração](../infraestrutura/).
 
-## Classificação pelo Cynefin
+## 3. Classificação Cynefin: Complexo
 
-**Classificação principal do contexto de evolução: Complexo.**
+**A classificação principal da evolução do UrbanCandy é o domínio Complexo.**
 
-Essa é a classificação que responde ao critério da rubrica. No UrbanCandy, parte
-das necessidades e regras de experiência — por exemplo, nos fluxos de compra,
-confirmação de e-mail e notificações — precisa ser descoberta e validada com
-incrementos e observação dos resultados. A solução ideal nem sempre pode ser
-definida completamente antes de experimentar e receber feedback.
+No domínio Complexo, não é possível determinar antecipadamente a melhor
+solução para todas as situações. É preciso fazer uma mudança pequena e
+controlada, observar o resultado e então decidir o próximo passo. Para o
+UrbanCandy, isso se aplica principalmente a requisitos e experiências que
+precisam de validação nos fluxos de compra, confirmação de e-mail e
+notificações.
 
-Isso não quer dizer que todos os aspectos do projeto sejam complexos. A tabela
-abaixo mostra atividades que podem exigir respostas de outros domínios; elas
-são contextos secundários e **não mudam a classificação principal do projeto**.
+Em termos simples:
 
-| Contexto secundário de atividade | Exemplo no UrbanCandy | Resposta adequada |
-|---|---|---|
-| **Complicado** | Decisões técnicas que podem ser resolvidas por análise especializada, como integração com Mercado Pago, consistência da outbox, persistência e observabilidade. | Analisar alternativas, consultar especialização técnica, registrar decisões e validar com testes. |
-| **Simples (Claro)** | Procedimentos estáveis, como iniciar serviços seguindo o guia e executar verificações conhecidas. | Padronizar, documentar e automatizar quando apropriado; monitorar exceções. |
-| **Caótico (contingência)** | Não é a situação normal do projeto. Poderia ocorrer em uma indisponibilidade grave, incidente de segurança ou perda de dados. | Conter e estabilizar primeiro; depois diagnosticar e definir ações preventivas. |
+**experimentar em pequena escala → observar o resultado → ajustar a próxima
+entrega.**
 
-O domínio **Simples** também é chamado de **Claro**. **Desordem** não é uma
-classificação adicional do UrbanCandy: é uma situação temporária em que ainda
-não se sabe qual domínio se aplica e é preciso investigar antes de escolher a
-resposta. Pagamentos, autenticação e dados pessoais requerem controles
-explícitos; não devem ser tratados como experimentos sem limites.
+Isso não significa que cada parte do sistema seja complexa. Integrações como
+pagamentos podem exigir análise especializada; procedimentos estáveis podem
+ser documentados e repetidos. Esses exemplos são contextos de atividades
+específicas, não classificações adicionais do projeto. A rubrica pede a
+classificação do contexto do projeto, e a classificação predominante adotada
+nesta análise é **Complexo**.
 
-## Comparação das abordagens de gestão
+Pagamentos, autenticação e dados pessoais continuam exigindo critérios de
+aceite, testes e controles de risco. “Experimentar” não significa testar sem
+limites em produção.
 
-Cynefin ajuda a entender **que tipo de situação estamos enfrentando**. As
-abordagens preditiva, ágil e híbrida ajudam a decidir **como organizar e
-conduzir o trabalho**. Portanto, classificar o contexto como Complexo não
-significa automaticamente escolher uma abordagem puramente ágil.
+## 4. Comparação das abordagens de gestão
 
-| Abordagem avaliada | Vantagens no UrbanCandy | Limitações no UrbanCandy | Decisão |
+Esta comparação responde a uma pergunta diferente da classificação Cynefin:
+como organizar o desenvolvimento do UrbanCandy?
+
+| Abordagem | Como funciona | Vantagens para o UrbanCandy | Limitações para o UrbanCandy |
 |---|---|---|---|
-| **Preditiva** | Permite planejar escopo, dependências, critérios de aceite, riscos e marcos; é útil para integrações críticas e entregas documentais. | Um plano detalhado fixado no início pode ficar desatualizado quando validações de experiência ou integração revelarem necessidades novas; feedback tardio encarece ajustes. | **Não escolhida como abordagem única**; seus mecanismos de planejamento e controle são aproveitados no modelo híbrido. |
-| **Ágil** | Favorece incrementos, feedback frequente, repriorização e aprendizado nos fluxos cuja solução ainda precisa ser validada. | Sem planejamento mínimo, critérios de aceite e controles técnicos, pode reduzir previsibilidade e deixar riscos de integração, segurança ou documentação para o fim. | **Não escolhida como abordagem única**; práticas iterativas são aproveitadas no modelo híbrido. |
-| **Híbrida** | Combina planejamento e controle de dependências e riscos com ciclos curtos de implementação, validação e adaptação. Adequa-se às atividades previsíveis e às situações complexas do projeto. | Requer clareza sobre o que precisa de controle antecipado e o que pode ser ajustado a cada ciclo; sem isso, pode gerar excesso de cerimônias ou mudanças sem controle. | **Escolhida** para orientar a gestão do desenvolvimento do UrbanCandy. |
+| **Preditiva** | Planeja previamente escopo, etapas, dependências e entregas. | Ajuda a coordenar integrações, riscos, critérios de aceite e entregas documentais. | Um plano muito rígido pode não acompanhar requisitos que só ficam claros depois da validação. |
+| **Ágil** | Divide o trabalho em incrementos, coleta feedback e reprioriza com frequência. | Ajuda a aprender e ajustar os fluxos de compra, e-mail e notificações conforme os resultados. | Sem planejamento e controles suficientes, pode deixar dependências, riscos e documentação para o fim. |
+| **Híbrida — escolhida** | Planeja o que exige coordenação e controle, mas executa e valida funcionalidades em incrementos. | Combina previsibilidade para integrações e riscos com adaptação onde os requisitos precisam de feedback. | Exige decidir claramente o que precisa ser controlado e o que pode ser ajustado a cada incremento. |
 
-## Abordagem escolhida: híbrida
+## 5. Por que a abordagem escolhida é híbrida
 
-Adota-se a abordagem **híbrida** para a gestão do desenvolvimento do
-UrbanCandy. O planejamento preditivo orienta o que precisa de coordenação ou
-controle antecipado: objetivos e critérios de aceite, dependências entre
-backend, aplicações e serviços, riscos de pagamento e dados, requisitos de
-infraestrutura, documentação e validação antes de uma entrega.
+A abordagem **Híbrida** é a mais adequada porque o projeto reúne trabalho
+planejável e situações que precisam de descoberta:
 
-As práticas ágeis orientam o trabalho que precisa de feedback: dividir o escopo
-em entregas pequenas, priorizar o backlog, validar os fluxos implementados,
-registrar problemas encontrados e ajustar as próximas atividades. Uma mudança
-identificada durante a validação pode alterar a prioridade ou o desenho do
-próximo incremento, sem dispensar os critérios de aceite e os controles de
-risco acordados.
+- **Planejamento e controle:** definir objetivos, escopo, dependências,
+  critérios de aceite e riscos, especialmente para pagamentos, dados,
+  integrações e disponibilização de mudanças.
+- **Execução iterativa:** entregar funcionalidades em partes menores, testar
+  os fluxos afetados, observar os resultados e incorporar feedback nas próximas
+  prioridades.
 
-Na prática, a combinação recomendada é:
+Assim, o projeto não depende de um plano imutável definido antes de conhecer
+todos os resultados, nem fica sem planejamento e controle. A abordagem híbrida
+aproveita práticas preditivas e ágeis conforme a necessidade de cada atividade.
 
-1. **Antes de um incremento:** registrar objetivo, escopo, dependências, riscos
+## 6. Aplicação prática no projeto
+
+1. **Planejar o incremento:** registrar objetivo, escopo, dependências, riscos
    e critérios verificáveis de aceite.
-2. **Durante a implementação:** entregar partes pequenas e testar os fluxos e
-   integrações afetados, mantendo rastreabilidade entre tarefa e evidência.
-3. **Na validação:** comparar o resultado com os critérios, coletar feedback e
-   atualizar prioridades ou requisitos quando necessário.
-4. **Antes de disponibilizar mudanças críticas:** executar as verificações
-   pertinentes, revisar efeitos em pagamento, dados e operação e manter um
-   caminho de recuperação adequado.
-
-Essa escolha evita tanto a rigidez de tentar especificar antecipadamente cada
-detalhe sujeito a descoberta quanto a falta de controle de uma execução sem
-planejamento. A adequação da abordagem depende de manter o equilíbrio: mais
-adaptação onde há incerteza real e mais análise, padronização e controle onde
-as consequências de falha são previsíveis e relevantes.
-
-O repositório comprova características técnicas e decisões arquiteturais, mas
-não registra, por si só, a frequência de cerimônias, a duração de ciclos ou
-outros indicadores de processo da equipe. Esses elementos não são apresentados
-aqui como fatos medidos; a abordagem híbrida está formalizada como modelo de
-gestão escolhido para orientar o projeto.
+2. **Implementar em partes pequenas:** reduzir o tamanho das mudanças e testar
+   os fluxos e integrações afetados.
+3. **Validar o resultado:** comparar a entrega com os critérios, observar
+   problemas e considerar feedback.
+4. **Adaptar o próximo passo:** atualizar prioridades ou requisitos sem
+   abandonar os controles necessários para pagamentos, dados e operação.
 
 ## Conclusão
 
-O UrbanCandy é classificado predominantemente no domínio **Complexo** do
-Cynefin para a gestão da evolução, pois parte das necessidades e soluções deve
-ser descoberta e validada durante o desenvolvimento. Integrações e decisões
-arquiteturais específicas pertencem ao domínio **Complicado**, enquanto
-procedimentos estáveis pertencem ao domínio **Simples (Claro)**. A abordagem **híbrida**
-é a mais adequada: combina planejamento, critérios e controles com ciclos
-iterativos de implementação, feedback e adaptação.
+Para a rubrica, a conclusão é: **o contexto de evolução do UrbanCandy é
+classificado predominantemente como Complexo pelo Cynefin, e a abordagem de
+gestão escolhida é Híbrida**. A primeira conclusão descreve o tipo de contexto;
+a segunda explica como o trabalho será organizado para lidar com ele.
+
+Esta é uma análise fundamentada nas características técnicas e funcionais
+documentadas do projeto. O repositório não registra a frequência real de
+cerimônias, a duração de ciclos ou métricas de processo da equipe; por isso,
+esses dados não são apresentados como resultados medidos.
 
 ## Referência conceitual
 
