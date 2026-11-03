@@ -36,50 +36,57 @@ e os [guias de infraestrutura e integração](../infraestrutura/).
 
 ## Classificação pelo Cynefin
 
-O contexto predominante de evolução do UrbanCandy é **Complexo**, com
-atividades relevantes nos domínios **Complicado** e **Claro**. Isso não
-significa que toda a plataforma seja imprevisível: significa que parte
-importante das decisões de produto e da interação entre fluxos só pode ser
-validada adequadamente por incrementos e observação do resultado.
+**Classificação principal do contexto de evolução: Complexo.**
 
-| Domínio | Aplicação no UrbanCandy | Resposta adequada |
+Essa é a classificação que responde ao critério da rubrica. No UrbanCandy, parte
+das necessidades e regras de experiência — por exemplo, nos fluxos de compra,
+confirmação de e-mail e notificações — precisa ser descoberta e validada com
+incrementos e observação dos resultados. A solução ideal nem sempre pode ser
+definida completamente antes de experimentar e receber feedback.
+
+Isso não quer dizer que todos os aspectos do projeto sejam complexos. A tabela
+abaixo mostra atividades que podem exigir respostas de outros domínios; elas
+são contextos secundários e **não mudam a classificação principal do projeto**.
+
+| Contexto secundário de atividade | Exemplo no UrbanCandy | Resposta adequada |
 |---|---|---|
-| **Complexo** | Ajustes de experiência e regras que dependem do comportamento observado nos fluxos Web/Mobile, checkout, confirmação de e-mail e notificações. A resposta ideal nem sempre é conhecida antes de experimentar e receber feedback. | Trabalhar em incrementos pequenos, explicitar hipóteses, validar com pessoas usuárias e adaptar o backlog. Usar experimentos limitados e reversíveis; proteger pagamentos e dados com critérios de segurança e validação. |
-| **Complicado** | Decisões com causa e efeito compreensíveis após análise especializada, como integração com Mercado Pago, consistência da outbox, persistência e observabilidade. | Analisar alternativas, consultar especialização técnica, registrar decisões e validar com testes. |
-| **Simples (Claro)** | Procedimentos estáveis e repetíveis, como iniciar serviços conforme o guia, executar verificações conhecidas e seguir convenções já estabelecidas. | Padronizar, documentar e automatizar quando apropriado; monitorar exceções. |
-| **Caótico** | Não é o estado normal de desenvolvimento identificado. Poderia ocorrer diante de indisponibilidade grave, incidente de segurança ou perda de dados. | Em incidente, primeiro conter e estabilizar, depois diagnosticar e definir ações preventivas. |
-| **Desordem** | Surge quando ainda não se sabe qual domínio descreve uma situação específica. | Separar a situação em partes menores, identificar riscos e incertezas e então escolher a resposta correspondente. |
+| **Complicado** | Decisões técnicas que podem ser resolvidas por análise especializada, como integração com Mercado Pago, consistência da outbox, persistência e observabilidade. | Analisar alternativas, consultar especialização técnica, registrar decisões e validar com testes. |
+| **Simples (Claro)** | Procedimentos estáveis, como iniciar serviços seguindo o guia e executar verificações conhecidas. | Padronizar, documentar e automatizar quando apropriado; monitorar exceções. |
+| **Caótico (contingência)** | Não é a situação normal do projeto. Poderia ocorrer em uma indisponibilidade grave, incidente de segurança ou perda de dados. | Conter e estabilizar primeiro; depois diagnosticar e definir ações preventivas. |
 
-O domínio **Complexo** é a classificação dominante para a gestão da evolução do
-projeto; não é uma afirmação de que o sistema esteja em crise ou de que a
-arquitetura seja tecnicamente inexplicável. As decisões de engenharia mais
-conhecidas continuam sendo tratadas como complicadas ou claras, conforme o
-caso. O domínio Simples também é chamado de Claro em versões mais recentes do
-framework. Em particular, pagamentos, autenticação e dados pessoais requerem
-controles explícitos, e não devem ser submetidos a experimentação irrestrita.
+O domínio **Simples** também é chamado de **Claro**. **Desordem** não é uma
+classificação adicional do UrbanCandy: é uma situação temporária em que ainda
+não se sabe qual domínio se aplica e é preciso investigar antes de escolher a
+resposta. Pagamentos, autenticação e dados pessoais requerem controles
+explícitos; não devem ser tratados como experimentos sem limites.
 
 ## Comparação das abordagens de gestão
 
-| Abordagem | Vantagens neste projeto | Limitações neste projeto |
-|---|---|---|
-| **Preditiva** | Facilita definir escopo, dependências, critérios de aceite, riscos e marcos para integrações críticas e entregas documentais. Ajuda a prever atividades repetíveis e a manter rastreabilidade. | Um plano detalhado fixado no início pode ficar desatualizado quando validações de UX ou integração revelarem necessidades novas. Feedback tardio aumenta o custo de ajustes. |
-| **Ágil** | Favorece entregas incrementais, feedback frequente, repriorização do backlog e aprendizado nos fluxos cuja solução não é totalmente conhecida de antemão. | Sem critérios de aceite, planejamento mínimo e controles técnicos, pode reduzir previsibilidade e deixar riscos de integração, segurança ou documentação para o fim. |
-| **Híbrida** | Combina planejamento e controles para dependências, riscos e critérios de aceite com ciclos curtos de implementação, validação e adaptação. Atende tanto às tarefas previsíveis quanto às situações complexas. | Exige clareza sobre quais decisões são controladas por marcos e quais podem ser ajustadas a cada ciclo. Sem essa distinção, pode acumular cerimônias ou gerar mudanças de escopo sem controle. |
+Cynefin ajuda a entender **que tipo de situação estamos enfrentando**. As
+abordagens preditiva, ágil e híbrida ajudam a decidir **como organizar e
+conduzir o trabalho**. Portanto, classificar o contexto como Complexo não
+significa automaticamente escolher uma abordagem puramente ágil.
+
+| Abordagem avaliada | Vantagens no UrbanCandy | Limitações no UrbanCandy | Decisão |
+|---|---|---|---|
+| **Preditiva** | Permite planejar escopo, dependências, critérios de aceite, riscos e marcos; é útil para integrações críticas e entregas documentais. | Um plano detalhado fixado no início pode ficar desatualizado quando validações de experiência ou integração revelarem necessidades novas; feedback tardio encarece ajustes. | **Não escolhida como abordagem única**; seus mecanismos de planejamento e controle são aproveitados no modelo híbrido. |
+| **Ágil** | Favorece incrementos, feedback frequente, repriorização e aprendizado nos fluxos cuja solução ainda precisa ser validada. | Sem planejamento mínimo, critérios de aceite e controles técnicos, pode reduzir previsibilidade e deixar riscos de integração, segurança ou documentação para o fim. | **Não escolhida como abordagem única**; práticas iterativas são aproveitadas no modelo híbrido. |
+| **Híbrida** | Combina planejamento e controle de dependências e riscos com ciclos curtos de implementação, validação e adaptação. Adequa-se às atividades previsíveis e às situações complexas do projeto. | Requer clareza sobre o que precisa de controle antecipado e o que pode ser ajustado a cada ciclo; sem isso, pode gerar excesso de cerimônias ou mudanças sem controle. | **Escolhida** para orientar a gestão do desenvolvimento do UrbanCandy. |
 
 ## Abordagem escolhida: híbrida
 
 Adota-se a abordagem **híbrida** para a gestão do desenvolvimento do
-UrbanCandy. O planejamento preditivo é aplicado ao que precisa de coordenação
-ou controle antecipado: objetivos e critérios de aceite, dependências entre
+UrbanCandy. O planejamento preditivo orienta o que precisa de coordenação ou
+controle antecipado: objetivos e critérios de aceite, dependências entre
 backend, aplicações e serviços, riscos de pagamento e dados, requisitos de
 infraestrutura, documentação e validação antes de uma entrega.
 
-O trabalho é executado de forma iterativa nas funcionalidades e decisões que
-precisam de feedback: dividir o escopo em entregas pequenas, priorizar o
-backlog, validar os fluxos implementados, registrar problemas encontrados e
-ajustar as próximas atividades. Uma mudança identificada durante a validação
-pode alterar a prioridade ou o desenho do próximo incremento, sem dispensar os
-critérios de aceite e os controles de risco acordados.
+As práticas ágeis orientam o trabalho que precisa de feedback: dividir o escopo
+em entregas pequenas, priorizar o backlog, validar os fluxos implementados,
+registrar problemas encontrados e ajustar as próximas atividades. Uma mudança
+identificada durante a validação pode alterar a prioridade ou o desenho do
+próximo incremento, sem dispensar os critérios de aceite e os controles de
+risco acordados.
 
 Na prática, a combinação recomendada é:
 
