@@ -130,7 +130,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 '@UrbanCandy:token',
                 '@UrbanCandy:user',
                 'token',
-                'user'
+                'user',
+                'user_token'
             ]);
         } catch (error) {
             console.error('Erro ao deslogar:', error);

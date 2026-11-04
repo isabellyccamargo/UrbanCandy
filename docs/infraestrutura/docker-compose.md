@@ -8,7 +8,7 @@ final.
 
 | Serviço                 | Função                                                                    | Comunicação                                                                             |
 | ----------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `urbancandy-nginx`      | Entrada HTTP/HTTPS e proxy reverso                                        | Publica as portas do host; encaminha `/` ao frontend e `/api/` e `/uploads/` ao backend |
+| `urbancandy-nginx`      | Entrada HTTP/HTTPS e proxy reverso                                        | Publica as portas do host; encaminha `/` ao frontend por HTTPS e `/api/` e `/uploads/` ao backend |
 | `urbancandy-frontend`   | Build e servidor dos arquivos da aplicação web                            | Recebe tráfego do Nginx; usa `/api` para chamar a API pela mesma origem                 |
 | `urbancandy-backend`    | API Express                                                               | Conecta ao MySQL pelo host de serviço `urbancandy-db:3306`                              |
 | `urbancandy-db`         | MySQL 8                                                                   | Usa o banco isolado `urbancandy_docker` e o volume `mysql_data`                         |
@@ -64,7 +64,7 @@ dados. Detalhes de conexão do backend local estão em
 - `80` e `443`: HTTP/HTTPS publicados pelo Nginx.
 - `3307`: MySQL principal no host; internamente, os containers usam `3306`.
 - `3308`: MySQL de e-mail, acessível somente pelo computador local.
-- `3030`: API Docker para acesso direto, por exemplo, pelo aplicativo mobile.
+- `3030`: API Docker publicada no host para diagnóstico; o app mobile usa o Nginx.
 - `3041`: serviço de e-mail Docker no host; internamente usa `3040`.
 - `6380`: Redis publicado somente no loopback; internamente usa `6379`.
 - `3001` e `9090`: Grafana e Prometheus, publicados somente no loopback.
@@ -76,15 +76,26 @@ As portas publicadas podem ser alteradas no `.env` raiz com `HTTP_PORT`,
 
 ## Acesso pelo aplicativo mobile
 
-Para acessar a API em um celular físico, configure uma vez
-`EXPO_PUBLIC_API_URL=http://<IP-do-computador>:3000` em
-`UrbanCandy_mobile/.env`. O celular e o computador precisam estar na mesma
-rede, e o firewall deve permitir a conexão. Ao selecionar modo local
-(`npm run dev` no backend) ou Docker (`scripts/start-docker.ps1`), o script
-`set-api-mode.ps1` mantém a porta do Expo sincronizada: `3000` para o backend
-local e `BACKEND_PORT` (padrão `3030`) para o Docker. Reinicie o Expo após a
-troca de modo para carregar a URL atualizada. No emulador Android padrão, use
-`http://10.0.2.2:3000` como URL inicial.
+Para acessar a API pelo Nginx em um celular físico, configure uma vez
+`EXPO_PUBLIC_API_URL=http://<IP-do-computador>:80` em
+`UrbanCandy_mobile/.env`. O celular e o computador devem estar na mesma rede,
+e o firewall deve permitir conexões à porta HTTP publicada pelo Nginx. Essa
+porta encaminha `/api/` e `/uploads/` à API; as demais rotas HTTP continuam
+redirecionando para HTTPS. Ao selecionar modo local (`npm run dev` no backend)
+ou Docker (`scripts/start-docker.ps1`), `set-api-mode.ps1` mantém o endereço do
+Expo na porta `HTTP_PORT` (padrão `80`); o Nginx seleciona o upstream local ou
+Docker, então o celular não precisa mudar de URL. Reinicie o Expo após a troca
+de modo. No emulador Android padrão, use
+`http://10.0.2.2:80` como URL inicial.
+
+Antes de abrir o app, valide no navegador do celular
+`http://<IP-do-computador>:<HTTP_PORT>/api/health`; a resposta deve conter
+`"status":"ok"`. Use o IP do computador na rede Wi-Fi atual.
+
+O acesso HTTP do app é destinado somente ao desenvolvimento em uma rede local
+confiável: tráfego e tokens não são criptografados entre o celular e o Nginx.
+Não use essa URL em redes públicas ou para dados reais. Para produção, publique
+a API por HTTPS com um certificado confiável pelo dispositivo.
 
 ## Verificar, acompanhar e parar
 
@@ -147,11 +158,16 @@ Para desenvolver no celular sem conectar o backend ao MySQL do Compose:
    configuração está em `UrbanCandy_back/.env.example`. Se `REDIS_PORT` foi
    alterado no `.env` da raiz, use a porta correspondente no `REDIS_URL`.
 3. Configure a URL inicial no `.env` do mobile conforme o dispositivo: use
-   `http://10.0.2.2:3000` no emulador Android padrão ou
-   `http://<IP-do-computador>:3000` em um celular físico. Inicie a API local;
-   o `predev` seleciona o modo local. Para voltar ao backend Docker, execute
-   `scripts/start-docker.ps1`. A porta no `.env` do mobile é atualizada em cada
-   troca; reinicie o Expo para carregar a configuração nova.
+   `http://10.0.2.2:80` no emulador Android padrão ou
+   `http://<IP-do-computador>:80` em um celular físico. Inicie a API local;
+   o `predev` seleciona o modo local e configura o Nginx para encaminhar a API
+   ao backend local. Para voltar ao backend Docker, execute
+   `scripts/start-docker.ps1`. A porta no `.env` do mobile é atualizada conforme
+   `HTTP_PORT`; reinicie o Expo para carregar a configuração nova.
+
+Esse acesso HTTP é apenas para desenvolvimento em rede local confiável. Não
+use em rede pública ou com dados reais: credenciais e tokens não são
+criptografados entre o dispositivo e o Nginx.
 
 O Redis não é o banco de dados: o backend local continua usando o MySQL indicado
 em `UrbanCandy_back/.env`; o backend do Compose continua usando

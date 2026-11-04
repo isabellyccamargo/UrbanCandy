@@ -15,11 +15,9 @@ export function formatImageUrl(imagePath?: string): string {
         return imagePath.replace('http://', 'https://');
     }
 
-    // Pega a baseURL do seu Axios (ex: 'https://sua-api.com' ou 'http://192.168.0.10:3000')
+    // Imagens são servidas em /uploads, fora do prefixo /api.
     const baseURL = api.defaults.baseURL || '';
-
-    // Remove barra duplicada se necessário
-    const cleanBaseUrl = baseURL.endsWith('/') ? baseURL.slice(0, -1) : baseURL;
+    const cleanBaseUrl = baseURL.replace(/\/api\/?$/, '').replace(/\/$/, '');
     const cleanPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
 
     return `${cleanBaseUrl}${cleanPath}`;

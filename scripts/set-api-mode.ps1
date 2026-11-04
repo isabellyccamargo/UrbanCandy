@@ -46,6 +46,22 @@ $encoding = [System.Text.UTF8Encoding]::new($hasUtf8Bom)
 $originalContent = [System.IO.File]::ReadAllText($envPath, $encoding)
 $lineEnding = if ($originalContent.Contains("`r`n")) { "`r`n" } else { "`n" }
 $updatedContent = $originalContent
+$httpPortMatches = [regex]::Matches($originalContent, '(?m)^\s*HTTP_PORT\s*=\s*(.*?)\s*$')
+if ($httpPortMatches.Count -gt 1) {
+  throw 'O .env da raiz contém mais de uma definição HTTP_PORT. Remova a duplicata e tente novamente.'
+}
+
+$configuredHttpPort = if ($httpPortMatches.Count -eq 1) {
+  $httpPortMatches[0].Groups[1].Value.Trim().Trim('"').Trim("'")
+} else {
+  '80'
+}
+$mobileApiPort = 80
+if (-not [int]::TryParse($configuredHttpPort, [ref]$mobileApiPort) -or
+  $mobileApiPort -lt 1 -or $mobileApiPort -gt 65535) {
+  throw 'HTTP_PORT no .env da raiz deve ser um número entre 1 e 65535.'
+}
+
 $mobileEnvPath = Join-Path $repositoryRoot 'UrbanCandy_mobile\.env'
 $mobileEnvUpdatedContent = $null
 $mobileEnvEncoding = $null
@@ -67,24 +83,6 @@ if (Test-Path $mobileEnvPath) {
   }
 
   if ($mobileApiUrlMatches.Count -eq 1) {
-    $mobileApiPort = 3000
-    if ($Mode -eq 'docker') {
-      $backendPortMatches = [regex]::Matches($originalContent, '(?m)^\s*BACKEND_PORT\s*=\s*(.*?)\s*$')
-      if ($backendPortMatches.Count -gt 1) {
-        throw 'O .env da raiz contém mais de uma definição BACKEND_PORT. Remova a duplicata e tente novamente.'
-      }
-
-      $configuredBackendPort = if ($backendPortMatches.Count -eq 1) {
-        $backendPortMatches[0].Groups[1].Value.Trim().Trim('"').Trim("'")
-      } else {
-        '3030'
-      }
-      if (-not [int]::TryParse($configuredBackendPort, [ref]$mobileApiPort) -or
-        $mobileApiPort -lt 1 -or $mobileApiPort -gt 65535) {
-        throw 'BACKEND_PORT no .env da raiz deve ser um número entre 1 e 65535.'
-      }
-    }
-
     $configuredMobileApiUrl = $mobileApiUrlMatches[0].Groups[1].Value.Trim()
     try {
       $mobileApiUri = [Uri]::new($configuredMobileApiUrl)
@@ -98,6 +96,26 @@ if (Test-Path $mobileEnvPath) {
     }
 
     $mobileApiUriBuilder = [System.UriBuilder]::new($mobileApiUri)
+    $mobileApiAddress = $null
+    if ([System.Net.IPAddress]::TryParse($mobileApiUri.Host, [ref]$mobileApiAddress) -and
+      $mobileApiAddress.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetwork -and
+      -not $mobileApiAddress.IsLoopback -and
+      $mobileApiAddress.IPAddressToString -ne '10.0.2.2') {
+      $mobileLanAddress = Get-NetIPConfiguration |
+        Where-Object { $_.NetAdapter.Status -eq 'Up' -and $_.IPv4DefaultGateway -and $_.IPv4Address } |
+        ForEach-Object {
+          $_.IPv4Address |
+            Where-Object { $_.IPAddress -notmatch '^169\.254\.' } |
+            Select-Object -First 1 -ExpandProperty IPAddress
+        } |
+        Select-Object -First 1
+
+      if (-not $mobileLanAddress) {
+        throw 'Não foi possível detectar o IP IPv4 ativo do computador para configurar o acesso mobile pelo Nginx.'
+      }
+
+      $mobileApiUriBuilder.Host = $mobileLanAddress
+    }
     $mobileApiUriBuilder.Port = $mobileApiPort
     $updatedMobileApiUrl = $mobileApiUriBuilder.Uri.GetLeftPart([System.UriPartial]::Path).TrimEnd('/')
     $mobileEnvUpdatedContent = [regex]::Replace(
@@ -185,12 +203,17 @@ try {
       Start-Sleep -Seconds 2
     }
     if (-not $healthy) { throw "A verificação de saúde da API pelo domínio urbancandy.local falhou (HTTP $lastStatus)." }
+
+    $mobileApiStatus = (& curl.exe --silent --max-time 5 --output NUL --write-out '%{http_code}' "http://127.0.0.1:$mobileApiPort/api/health" | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $mobileApiStatus -ne '200') {
+      throw "A rota HTTP da API pelo Nginx para o mobile falhou (HTTP $mobileApiStatus)."
+    }
   }
 
   if ($null -ne $mobileEnvUpdatedContent) {
     $mobileEnvWriteAttempted = $true
     [System.IO.File]::WriteAllText($mobileEnvPath, $mobileEnvUpdatedContent, $mobileEnvEncoding)
-    Write-Host "API mobile selecionada na porta $mobileApiPort."
+    Write-Host "API mobile roteada pelo Nginx na porta HTTP $mobileApiPort."
   }
 
   Write-Host "Modo $Mode ativo em https://urbancandy.local."

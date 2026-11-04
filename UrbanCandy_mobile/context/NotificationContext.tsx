@@ -6,6 +6,7 @@ import React, {
     useRef,
     useState,
 } from 'react';
+import { isAxiosError } from 'axios';
 import { AppState, type AppStateStatus } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -29,7 +30,7 @@ type NotificationContextValue = {
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
-    const { user } = useAuth();
+    const { user, signOut } = useAuth();
     const { showMessage } = useAppAlert();
     const [notificationState, setNotificationState] = useState<{
         userId: number;
@@ -117,6 +118,21 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             });
             requestErrorLogged.current = false;
         } catch (error) {
+            const status = isAxiosError(error) ? error.response?.status : undefined;
+            if (status === 401 || status === 403) {
+                try {
+                    await signOut();
+                } catch (signOutError) {
+                    console.error('Não foi possível limpar a sessão expirada:', signOutError);
+                }
+                showMessage({
+                    title: 'Sessão expirada',
+                    message: 'Entre novamente para carregar suas notificações.',
+                    type: 'warning',
+                });
+                return;
+            }
+
             if (!requestErrorLogged.current) {
                 console.error('Não foi possível carregar as notificações:', error);
                 requestErrorLogged.current = true;
@@ -124,7 +140,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         } finally {
             requestInProgress.current = false;
         }
-    }, [showMessage, userId]);
+    }, [showMessage, signOut, userId]);
 
     useEffect(() => {
         seenNotificationIds.current.clear();
