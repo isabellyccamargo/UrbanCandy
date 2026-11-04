@@ -15,6 +15,7 @@ tags:
   - name: Catálogo
   - name: Pedidos
   - name: Pagamentos
+  - name: Administração
 paths:
   /health:
     get:
@@ -125,6 +126,10 @@ paths:
         - name: size
           in: query
           schema: { type: integer, default: 6 }
+        - name: id_category
+          in: query
+          description: Filtra os produtos por ID de categoria
+          schema: { type: integer, minimum: 1 }
       responses:
         '200':
           description: Lista paginada de produtos
@@ -335,6 +340,177 @@ paths:
         '200': { description: Notificação processada }
         '400': { $ref: '#/components/responses/BadRequest' }
 
+  /admin/usuarios:
+    get:
+      tags: [Administração]
+      summary: Lista usuários com dados pessoais e papéis
+      description: Requer autenticação e papel manager, gerente, admin ou nome numérico 3.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: size
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 6 }
+        - name: role
+          in: query
+          description: Filtra pelo perfil atribuído ao usuário
+          schema:
+            type: string
+            enum: [all, customer, employee, manager]
+            default: all
+      responses:
+        '200':
+          description: Página de usuários sem dados de senha
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalItems: { type: integer }
+                  totalPages: { type: integer }
+                  currentPage: { type: integer }
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id_user: { type: integer }
+                        email: { type: string, format: email }
+                        people:
+                          type: object
+                          nullable: true
+                          properties:
+                            id_people: { type: integer }
+                            name: { type: string }
+                            cpf: { type: string }
+                            telephone: { type: string, nullable: true }
+                        roles:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id_role: { type: integer }
+                              name: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/usuarios/{id_user}/roles:
+    put:
+      tags: [Administração]
+      summary: Substitui papéis de um usuário
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id_user
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [id_roles]
+              properties:
+                id_roles:
+                  type: array
+                  uniqueItems: true
+                  items: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Papéis substituídos }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/pessoas/{id_people}:
+    put:
+      tags: [Administração]
+      summary: Atualiza nome e telefone de uma pessoa
+      description: Outros campos, incluindo CPF e endereço, não são aceitos.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id_people
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1 }
+                telephone: { type: string, nullable: true }
+      responses:
+        '200': { description: Dados pessoais atualizados }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /admin/papeis:
+    get:
+      tags: [Administração]
+      summary: Lista papéis e permissões associadas
+      security:
+        - bearerAuth: []
+      responses:
+        '200': { description: Lista de papéis com permissões }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/permissoes:
+    get:
+      tags: [Administração]
+      summary: Lista todas as permissões
+      security:
+        - bearerAuth: []
+      responses:
+        '200': { description: Lista de permissões }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /admin/papeis/{id_role}/permissoes:
+    put:
+      tags: [Administração]
+      summary: Substitui permissões de um papel
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id_role
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [id_permissions]
+              properties:
+                id_permissions:
+                  type: array
+                  uniqueItems: true
+                  items: { type: integer, minimum: 1 }
+      responses:
+        '200': { description: Permissões substituídas }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
 components:
   securitySchemes:
     bearerAuth:
@@ -437,6 +613,15 @@ components:
             properties:
               id_product: { type: integer }
               quantity: { type: integer }
+        offers:
+          type: array
+          description: Active offers are priced by the server using the current offer price.
+          items:
+            type: object
+            required: [id_offer, quantity]
+            properties:
+              id_offer: { type: integer }
+              quantity: { type: integer, minimum: 1, maximum: 99 }
     PaginatedOrders:
       type: object
       properties:

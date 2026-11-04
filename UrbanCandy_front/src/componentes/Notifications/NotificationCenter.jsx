@@ -20,10 +20,15 @@ export function NotificationCenter() {
     unreadCount: 0,
   });
   const [openForUserId, setOpenForUserId] = useState(null);
+  const notificationCenterRef = useRef(null);
   const seenNotificationIds = useRef(new Set());
   const hasLoaded = useRef(false);
   const requestInProgress = useRef(false);
   const requestErrorLogged = useRef(false);
+  const isOpen = Boolean(userId) && openForUserId === userId;
+  const notifications =
+    notificationState.userId === userId ? notificationState.notifications : [];
+  const unreadCount = notificationState.userId === userId ? notificationState.unreadCount : 0;
 
   const loadNotifications = useCallback(async () => {
     if (!userId || requestInProgress.current) return;
@@ -80,6 +85,26 @@ export function NotificationCenter() {
     };
   }, [loadNotifications, userId]);
 
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const closeOnOutsideClick = (event) => {
+      if (!notificationCenterRef.current?.contains(event.target)) {
+        setOpenForUserId(null);
+      }
+    };
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setOpenForUserId(null);
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isOpen]);
+
   const openNotification = async (notification) => {
     try {
       if (!notification.read_at) {
@@ -128,13 +153,8 @@ export function NotificationCenter() {
     }
   };
 
-  const isOpen = Boolean(userId) && openForUserId === userId;
-  const notifications =
-    notificationState.userId === userId ? notificationState.notifications : [];
-  const unreadCount = notificationState.userId === userId ? notificationState.unreadCount : 0;
-
   return (
-    <div className="notification-center">
+    <div ref={notificationCenterRef} className="notification-center">
       <button
         className="notification-trigger"
         type="button"

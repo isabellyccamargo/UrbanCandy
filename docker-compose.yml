@@ -237,7 +237,8 @@ services:
     restart: unless-stopped
     environment:
       BACKEND_UPSTREAM: ${BACKEND_UPSTREAM:-urbancandy-backend:3030}
-      NGINX_ENVSUBST_FILTER: ^BACKEND_UPSTREAM$
+      FRONTEND_UPSTREAM: ${FRONTEND_UPSTREAM:-urbancandy-frontend:5173}
+      NGINX_ENVSUBST_FILTER: ^(BACKEND_UPSTREAM|FRONTEND_UPSTREAM)$
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"

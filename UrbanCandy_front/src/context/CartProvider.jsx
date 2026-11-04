@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CartContext } from './CartContext';
 
 //Essa função vai buscar itens que o ususario adcionou antes de logar, apartir do momento que ele loga esa função entra em ação para que o usuario
@@ -12,13 +12,17 @@ export const CartProvider = ({ children }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
+  const getItemKey = (item) =>
+    item.isOffer ? `offer-${item.id_offer}` : `product-${item.id_product}`;
+
   useEffect(() => {
     localStorage.setItem('@UrbanCandy:cart', JSON.stringify(cart));
   }, [cart]);
 
   const addToCart = (product) => {
     setCart((prevCart) => {
-      const index = prevCart.items.findIndex((i) => i.id_product === product.id_product);
+      const itemKey = getItemKey(product);
+      const index = prevCart.items.findIndex((item) => getItemKey(item) === itemKey);
       let newItems = [...prevCart.items];
 
       if (index > -1) {
@@ -30,6 +34,12 @@ export const CartProvider = ({ children }) => {
       } else {
         newItems.push({
           id_product: product.id_product,
+          ...(product.isOffer
+            ? {
+                isOffer: true,
+                id_offer: product.id_offer,
+              }
+            : {}),
           quantity: 1,
           products: product,
           sub_total: Number(product.price),
@@ -41,18 +51,18 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  const removeItem = (idProduct) => {
+  const removeItem = (itemKey) => {
     setCart((prevCart) => {
-      const newItems = prevCart.items.filter((i) => i.id_product !== idProduct);
+      const newItems = prevCart.items.filter((item) => getItemKey(item) !== itemKey);
       const newTotal = newItems.reduce((acc, item) => acc + Number(item.sub_total), 0);
       return { items: newItems, total: newTotal };
     });
   };
 
-  const updateQuantity = (idProduct, newQuantity) => {
+  const updateQuantity = (itemKey, newQuantity) => {
     setCart((prevCart) => {
       const newItems = prevCart.items.map((item) => {
-        if (item.id_product === idProduct) {
+        if (getItemKey(item) === itemKey) {
           const price = Number(item.products.price);
           return {
             ...item,
@@ -68,10 +78,10 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart({ items: [], total: 0 });
     localStorage.removeItem('@UrbanCandy:cart');
-  };
+  }, []);
 
   return (
     <CartContext.Provider
@@ -85,6 +95,7 @@ export const CartProvider = ({ children }) => {
         isLoginModalOpen,
         setIsLoginModalOpen,
         clearCart,
+        getCartItemKey: getItemKey,
       }}
     >
       {children}

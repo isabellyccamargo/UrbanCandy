@@ -1,23 +1,133 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingCart, User, Users } from 'lucide-react';
 import LoginModal from '../../componentes/Login/LoginModal';
 import { Button } from '../Button/Button';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/AuthContext';
+import { getUserRole } from '../../hooks/userRole';
 import './Header.css';
 import { useCart } from '../../hooks/UseCart';
+import { getUserProfile } from '../../services/Api';
 import logoImg from '../../assets/logo.png';
 import { NotificationCenter } from '../Notifications/NotificationCenter';
 
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return '';
+  if (/^https?:\/\//i.test(imagePath)) return imagePath;
+
+  const baseUrl = (import.meta.env.VITE_API_URL || window.location.origin)
+    .replace(/\/api\/?$/, '')
+    .replace(/\/$/, '');
+  return `${baseUrl}/${String(imagePath).replace(/^\/+/, '')}`;
+};
+
+const UserAvatar = ({ user, userName }) => {
+  const userId = user?.id_user || user?.id;
+  const [userImage, setUserImage] = useState(() =>
+    getImageUrl(user?.people?.image || user?.people?.foto || user?.image || user?.foto)
+  );
+  const [avatarColor, setAvatarColor] = useState(() =>
+    userId && localStorage.getItem(`@UrbanCandy:avatarColor:${userId}`) === 'pink'
+      ? 'pink'
+      : 'dark'
+  );
+  const [useInitialAvatar, setUseInitialAvatar] = useState(() =>
+    userId && localStorage.getItem(`@UrbanCandy:avatarMode:${userId}`) === 'initial'
+  );
+
+  useEffect(() => {
+    if (!userId) return undefined;
+    let active = true;
+
+    const handleAvatarColorChange = (event) => {
+      if (Number(event.detail?.userId) === Number(userId)) {
+        setAvatarColor(event.detail.color === 'pink' ? 'pink' : 'dark');
+      }
+    };
+    const handleAvatarModeChange = (event) => {
+      if (Number(event.detail?.userId) === Number(userId)) {
+        setUseInitialAvatar(event.detail.mode === 'initial');
+      }
+    };
+    window.addEventListener('avatarColorChange', handleAvatarColorChange);
+    window.addEventListener('avatarModeChange', handleAvatarModeChange);
+
+    getUserProfile(userId)
+      .then((profile) => {
+        if (!active) return;
+        const person = profile?.people || profile || {};
+        const imagePath =
+          person.image || person.foto || profile?.image || profile?.foto ||
+          user?.image || user?.foto;
+        setUserImage(getImageUrl(imagePath));
+      })
+      .catch((error) => {
+        if (active) {
+          console.error('Erro ao carregar foto do perfil no cabeçalho:', error);
+        }
+      });
+
+    return () => {
+      active = false;
+      window.removeEventListener('avatarColorChange', handleAvatarColorChange);
+      window.removeEventListener('avatarModeChange', handleAvatarModeChange);
+    };
+  }, [user, userId]);
+
+  if (userImage && !useInitialAvatar) {
+    return (
+      <img
+        className="user-avatar-image"
+        src={userImage}
+        alt=""
+        onError={() => setUserImage('')}
+      />
+    );
+  }
+
+  return user ? (
+    <span className={`user-avatar-initial user-avatar-${avatarColor}`} aria-hidden="true">
+      {userName.trim().charAt(0).toUpperCase() || '?'}
+    </span>
+  ) : (
+    <User size={24} color="#5D4037" aria-hidden="true" />
+  );
+};
+
 export const Header = () => {
   const { user, setUser, logout, isLoginModalOpen, setIsLoginModalOpen } = useAuth();
+  const userRole = getUserRole(user);
 
   const { setIsCartOpen, cart, clearCart } = useCart();
 
   const navigate = useNavigate();
   const location = useLocation();
   const [intendedPath, setIntendedPath] = useState(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+  const userName = user?.nome || user?.name || user?.people?.name || '';
+  const userId = user?.id_user || user?.id;
+
+  useEffect(() => {
+    if (!isUserMenuOpen) return undefined;
+
+    const closeOnOutsideClick = (event) => {
+      if (!userMenuRef.current?.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setIsUserMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isUserMenuOpen]);
 
   useEffect(() => {
     // 1. Cria um objeto com os parâmetros da URL
@@ -33,6 +143,7 @@ export const Header = () => {
 
   const handleProtectedLink = (e, path) => {
     e.preventDefault();
+    setIsUserMenuOpen(false);
     if (!user) {
       setIntendedPath(path);
       setIsLoginModalOpen(true);
@@ -71,27 +182,45 @@ export const Header = () => {
         </Link>
 
         <div className="header-actions">
-          <div
+          <button
+            type="button"
             className="icon-btn"
+            aria-label={`Abrir carrinho com ${cart.items.length} itens`}
             onClick={() => setIsCartOpen(true)}
-            style={{ cursor: 'pointer' }}
           >
-            <ShoppingCart size={24} color="#5D4037" />
-            <span className="cart-badge">{cart.items.length}</span>
-          </div>
+            <ShoppingCart size={24} color="#5D4037" aria-hidden="true" />
+            <span className="cart-badge" aria-hidden="true">
+              {cart.items.length}
+            </span>
+          </button>
 
           <NotificationCenter />
 
-          <div data-testid="user-menu-container" className="user-menu-container">
-            <div data-testid="user-menu-trigger" className="user-menu-trigger">
-              <User size={24} color="#5D4037" />
+          <div
+            ref={userMenuRef}
+            data-testid="user-menu-container"
+            className={`user-menu-container${isUserMenuOpen ? ' is-open' : ''}`}
+          >
+            <button
+              data-testid="user-menu-trigger"
+              className="user-menu-trigger"
+              type="button"
+              aria-expanded={isUserMenuOpen}
+              aria-haspopup="true"
+              onClick={() => setIsUserMenuOpen((isOpen) => !isOpen)}
+            >
+              <UserAvatar key={userId || 'guest'} user={user} userName={userName} />
 
               {user && (
-                <span data-testid="logged-user">Olá, {user.nome?.split(' ')[0] || 'Usuário'}</span>
+                <span data-testid="logged-user" className="user-name-text">
+                  Olá, {userName.split(' ')[0] || 'Usuário'}
+                </span>
               )}
 
-              <span className="arrow-down">▼</span>
-            </div>
+              <span className="arrow-down" aria-hidden="true">
+                ▼
+              </span>
+            </button>
 
             <div className="dropdown-menu">
               <a
@@ -108,13 +237,17 @@ export const Header = () => {
               >
                 Meus Pedidos
               </a>
-              <a
-                href="#"
-                onClick={(e) => handleProtectedLink(e, '/admin')}
-                className="dropdown-item"
-              >
-                Área Administrador
-              </a>
+              {userRole && (
+                <a
+                  href="#"
+                  onClick={(e) =>
+                    handleProtectedLink(e, userRole === 'manager' ? '/admin' : '/admin/pedidos')
+                  }
+                  className="dropdown-item"
+                >
+                  {userRole === 'manager' ? 'Painel do gerente' : 'Gerenciar pedidos'}
+                </a>
+              )}
               <hr />
               {user ? (
                 <Button onClick={handleLogout} variant="primary">
@@ -139,6 +272,7 @@ export const Header = () => {
         onClose={() => setIsLoginModalOpen(false)}
         onLoginSuccess={(userData) => {
           setIsLoginModalOpen(false);
+          setIsUserMenuOpen(false);
 
           setUser(userData);
 

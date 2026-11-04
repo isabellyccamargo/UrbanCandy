@@ -2,6 +2,8 @@
   background-color: #fff5f8;
   min-height: 50vh;
   padding: 40px 20px;
+  width: 100%;
+  min-width: 0;
 }
 
 .admin-table-container {
@@ -9,9 +11,88 @@
   border-radius: 15px;
   padding: 25px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-  max-width: 100%;
+  width: min(100%, 1280px);
+  min-width: 0;
   margin: 0 auto;
   margin-bottom: 50px;
+}
+
+.orders-page .admin-table-container {
+  overflow-x: auto;
+}
+
+.orders-page > .admin-table-container {
+  width: 100%;
+  max-width: none;
+}
+
+.orders-page .admin-table {
+  width: 100%;
+  min-width: 980px;
+  table-layout: fixed;
+}
+
+.orders-page .admin-table th:nth-child(1),
+.orders-page .admin-table td:nth-child(1) {
+  width: 7%;
+}
+
+.orders-page .admin-table th:nth-child(2),
+.orders-page .admin-table td:nth-child(2) {
+  width: 10%;
+}
+
+.orders-page .admin-table th:nth-child(3),
+.orders-page .admin-table td:nth-child(3) {
+  width: 11%;
+}
+
+.orders-page .admin-table th:nth-child(4),
+.orders-page .admin-table td:nth-child(4) {
+  width: 9%;
+}
+
+.orders-page .admin-table th:nth-child(5),
+.orders-page .admin-table td:nth-child(5) {
+  width: 16%;
+}
+
+.orders-page .admin-table th:nth-child(6),
+.orders-page .admin-table td:nth-child(6) {
+  width: 17%;
+}
+
+.orders-page .admin-table th:nth-child(7),
+.orders-page .admin-table td:nth-child(7) {
+  width: 16%;
+}
+
+.orders-page .admin-table th:nth-child(8),
+.orders-page .admin-table td:nth-child(8) {
+  width: 14%;
+}
+
+.orders-page .admin-table td {
+  overflow-wrap: anywhere;
+}
+
+.orders-page .admin-table td:last-child .btn-universal {
+  min-width: 0;
+  padding: 9px 14px;
+  white-space: nowrap;
+}
+
+.orders-page .pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.orders-page .page-info {
+  text-align: center;
 }
 
 .orders-header h1 {
@@ -111,11 +192,86 @@
   position: relative;
   width: min(560px, 100%);
   max-height: min(80vh, 700px);
+  max-height: min(80dvh, 700px);
   overflow-y: auto;
   padding: 28px;
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.order-cancel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(32, 24, 27, 0.38);
+}
+
+.order-cancel-confirmation {
+  width: min(420px, 100%);
+  padding: 28px;
+  border-radius: 18px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+  animation: order-confirmation-enter 160ms ease-out;
+}
+
+.order-cancel-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #fff0f4;
+  color: #d81b60;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.order-cancel-confirmation h2 {
+  margin: 0 0 10px;
+  color: #5d4037;
+  font-size: 1.35rem;
+}
+
+.order-cancel-confirmation p {
+  margin: 0;
+  color: #6b625f;
+  line-height: 1.55;
+}
+
+.order-cancel-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.order-cancel-actions .btn-universal {
+  min-width: 0;
+  padding: 10px 20px;
+}
+
+.order-cancel-actions .btn-universal:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+@keyframes order-confirmation-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .order-details-modal h2 {
@@ -147,9 +303,19 @@
 .order-details-items li {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 12px;
   padding: 10px 0;
   border-bottom: 1px solid #f0e2e8;
+}
+
+.order-details-items li span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.order-details-items li strong {
+  flex-shrink: 0;
 }
 
 .order-details-total {
@@ -182,6 +348,9 @@
   .admin-table-container {
     padding: 15px;
     margin-bottom: 30px;
+  }
+
+  .orders-page .admin-table-container {
     overflow-x: auto;
   }
 
@@ -208,8 +377,6 @@
   .admin-table-container {
     padding: 12px;
     margin-bottom: 25px;
-    overflow-x: auto;
-    max-width: calc(100vw - 20px);
   }
 
   .orders-header h1 {
@@ -226,6 +393,93 @@
     padding: 3px 8px;
     font-size: 0.65rem;
   }
+
+  .orders-page .admin-table,
+  .orders-page .admin-table tbody {
+    display: block;
+  }
+
+  .orders-page .admin-table {
+    min-width: 0;
+    table-layout: auto;
+  }
+
+  .orders-page .admin-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .orders-page .admin-table tbody tr {
+    display: grid;
+    gap: 0;
+    margin-bottom: 14px;
+    padding: 8px 12px;
+    border: 1px solid #f0e2e8;
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .orders-page .admin-table tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .orders-page .admin-table tbody td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    padding: 9px 0;
+    border: 0;
+    border-bottom: 1px solid #f5edf0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .orders-page .admin-table tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .orders-page .admin-table tbody td[data-label]::before {
+    content: attr(data-label);
+    flex: 0 0 38%;
+    color: #6b4c45;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .orders-page .admin-table tbody td[colspan] {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .orders-page .admin-table tbody td[colspan]::before {
+    content: none;
+  }
+
+  .orders-page .admin-table tbody td .order-status-badge {
+    white-space: normal;
+  }
+
+  .order-details-overlay {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .order-details-modal {
+    width: 100%;
+    max-height: min(85vh, 700px);
+    max-height: min(85dvh, 700px);
+    padding: 22px 18px;
+    border-radius: 16px 16px 12px 12px;
+  }
 }
 
 @media (max-width: 320px) {
@@ -235,5 +489,18 @@
 
   .admin-table-container {
     padding: 10px;
+  }
+
+  .orders-page .admin-table tbody tr {
+    padding: 6px 10px;
+  }
+
+  .orders-page .admin-table tbody td {
+    gap: 8px;
+    font-size: 0.85rem;
+  }
+
+  .orders-page .admin-table tbody td[data-label]::before {
+    flex-basis: 34%;
   }
 }

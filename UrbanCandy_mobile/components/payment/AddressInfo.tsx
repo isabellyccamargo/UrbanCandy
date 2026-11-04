@@ -17,10 +17,14 @@ export type AddressData = {
 
 type AddressInfoProps = {
     data: AddressData;
+    isComplete: boolean;
+    isPickup: boolean;
 };
 
 export default function AddressInfo({
     data,
+    isComplete,
+    isPickup,
 }: AddressInfoProps) {
     const {
         colors,
@@ -41,94 +45,23 @@ export default function AddressInfo({
             elevation: 8,
         },
 
-        row: {
-            flexDirection: 'row',
-            minHeight: 40,
-            borderBottomWidth: 1,
-            borderBottomColor: colors.border,
-        },
-
-        lastRow: {
-            borderBottomWidth: 0,
-        },
-
-        fullCell: {
-            flex: 1,
-            justifyContent: 'center',
-            paddingHorizontal: space.md,
-        },
-
-        cell: {
-            flex: 1,
-            justifyContent: 'center',
-            paddingHorizontal: space.md,
-            borderRightWidth: 1,
-            borderRightColor: colors.border,
-        },
-
-        lastCell: {
-            borderRightWidth: 0,
-        },
-
         text: {
             fontFamily: font.regular,
             fontSize: fontSize.base,
             color: colors.text,
+            padding: space.md,
         },
     });
 
     return (
         <View style={styles.container}>
-            <View style={styles.row}>
-                <View style={styles.fullCell}>
-                    <Text style={styles.text}>
-                        CEP: {data.cep}
-                    </Text>
-                </View>
-            </View>
-
-            <View style={styles.row}>
-                <View style={styles.cell}>
-                    <Text style={styles.text}>
-                        Cidade: {data.city}
-                    </Text>
-                </View>
-
-                <View
-                    style={[
-                        styles.cell,
-                        styles.lastCell,
-                    ]}
-                >
-                    <Text style={styles.text}>
-                        Bairro: {data.neighborhood}
-                    </Text>
-                </View>
-            </View>
-
-            <View
-                style={[
-                    styles.row,
-                    styles.lastRow,
-                ]}
-            >
-                <View style={styles.cell}>
-                    <Text style={styles.text}>
-                        Rua: {data.street}
-                    </Text>
-                </View>
-
-                <View
-                    style={[
-                        styles.cell,
-                        styles.lastCell,
-                    ]}
-                >
-                    <Text style={styles.text}>
-                        Nº: {data.number}
-                    </Text>
-                </View>
-            </View>
+            <Text style={styles.text}>
+                {isPickup
+                    ? 'Seu pedido estará disponível para retirada no local.'
+                    : isComplete
+                      ? `${data.street}, ${data.number}${data.neighborhood ? ` - ${data.neighborhood}` : ''} - ${data.city} - CEP ${data.cep}`
+                      : 'Endereço incompleto. Atualize seus dados para receber o pedido.'}
+            </Text>
         </View>
     );
 }

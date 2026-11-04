@@ -50,7 +50,8 @@ class UserService {
   }
 
   async login(email: string, password: string) {
-    const user = (await UserRepository.findByEmail(email)) as UserWithProfile;
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = (await UserRepository.findByEmail(normalizedEmail)) as UserWithProfile;
     if (!user) throw new ApiException('INVALID_CREDENTIALS', 401);
 
     const isPasswordValid = await bcrypt.compare(password, user.password);

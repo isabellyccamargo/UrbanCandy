@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 
 import { useTheme } from '@/context/Theme';
+import { useAuth } from '@/context/AuthContext';
 import { useAppAlert } from '@/components/common/AppAlert';
 import { Menu } from '@/components/home/Menu';
 
@@ -88,6 +89,7 @@ export default function CadastroScreen() {
     const router = useRouter();
     const { colors, font, fontSize, space, radius } = useTheme();
     const { showMessage } = useAppAlert();
+    const { signOut } = useAuth();
     const { mode } = useLocalSearchParams<{ mode?: string }>();
 
     const isCreating = mode === 'create';
@@ -105,6 +107,8 @@ export default function CadastroScreen() {
 
     // Guardar a URI local/remota da imagem
     const [imageUri, setImageUri] = useState<string | null>(null);
+    const [avatarColor, setAvatarColor] = useState<'dark' | 'pink'>('dark');
+    const [useInitialAvatar, setUseInitialAvatar] = useState(false);
 
     const [ids, setIds] = useState({
         user: null as number | null,
@@ -172,37 +176,49 @@ export default function CadastroScreen() {
         }
     }
 
-    async function initialize() {
-        setImageUri(null);
-
-        if (isCreating) {
-            setEditing(false);
-            setAuthenticated(true);
-            setChecking(false);
-            return;
-        }
-
-        try {
-            const token =
-                (await AsyncStorage.getItem('@UrbanCandy:token')) ||
-                (await AsyncStorage.getItem('token'));
-
-            if (!token) {
-                setAuthenticated(false);
-                setChecking(false);
-                return;
+    async function handleAvatarColorChange(color: 'dark' | 'pink') {
+        const previousColor = avatarColor;
+        setAvatarColor(color);
+        const userId = ids.user;
+        if (userId) {
+            try {
+                await AsyncStorage.setItem(`@UrbanCandy:avatarColor:${userId}`, color);
+            } catch (error) {
+                console.error('Não foi possível salvar a cor do avatar:', error);
+                setAvatarColor(previousColor);
+                showMessage(
+                    'Erro ao salvar',
+                    'Não foi possível salvar a cor do avatar. Tente novamente.',
+                    undefined,
+                    'warning'
+                );
             }
-
-            await loadAccount();
-        } catch (error) {
-            console.error('Erro na inicialização:', error);
-            setAuthenticated(false);
-        } finally {
-            setChecking(false);
         }
     }
 
-    async function loadAccount() {
+    async function handleUseInitialAvatarChange(enabled: boolean) {
+        setUseInitialAvatar(enabled);
+        const userId = ids.user;
+        if (userId) {
+            try {
+                await AsyncStorage.setItem(
+                    `@UrbanCandy:avatarMode:${userId}`,
+                    enabled ? 'initial' : 'photo'
+                );
+            } catch (error) {
+                console.error('Não foi possível salvar a preferência do avatar:', error);
+                setUseInitialAvatar(!enabled);
+                showMessage(
+                    'Erro ao salvar',
+                    'Não foi possível salvar a preferência do avatar. Tente novamente.',
+                    undefined,
+                    'warning'
+                );
+            }
+        }
+    }
+
+    const loadAccount = useCallback(async () => {
         try {
             const stored =
                 (await AsyncStorage.getItem('@UrbanCandy:user')) ||
@@ -222,6 +238,16 @@ export default function CadastroScreen() {
             }
 
             setEditing(true);
+            setAvatarColor(
+                (await AsyncStorage.getItem(
+                    `@UrbanCandy:avatarColor:${userId}`
+                )) === 'pink'
+                    ? 'pink'
+                    : 'dark'
+            );
+            setUseInitialAvatar(
+                (await AsyncStorage.getItem(`@UrbanCandy:avatarMode:${userId}`)) === 'initial'
+            );
 
             try {
                 const profile = await getUserProfile(userId);
@@ -307,7 +333,37 @@ export default function CadastroScreen() {
             console.error('Erro crítico no loadAccount:', error);
             setAuthenticated(false);
         }
-    }
+    }, []);
+
+    const initialize = useCallback(async () => {
+        setImageUri(null);
+
+        if (isCreating) {
+            setEditing(false);
+            setAuthenticated(true);
+            setChecking(false);
+            return;
+        }
+
+        try {
+            const token =
+                (await AsyncStorage.getItem('@UrbanCandy:token')) ||
+                (await AsyncStorage.getItem('token'));
+
+            if (!token) {
+                setAuthenticated(false);
+                setChecking(false);
+                return;
+            }
+
+            await loadAccount();
+        } catch (error) {
+            console.error('Erro na inicialização:', error);
+            setAuthenticated(false);
+        } finally {
+            setChecking(false);
+        }
+    }, [isCreating, loadAccount]);
 
     useEffect(() => {
         const initializeTimer = setTimeout(() => {
@@ -315,19 +371,15 @@ export default function CadastroScreen() {
         }, 0);
 
         return () => clearTimeout(initializeTimer);
-    }, [mode]);
+    }, [initialize, mode]);
 
     async function handleLogout() {
         try {
             setImageUri(null);
-            await AsyncStorage.multiRemove([
-                '@UrbanCandy:token',
-                'token',
-                '@UrbanCandy:user',
-                'user',
-            ]);
+            await signOut();
             router.replace('/welcome' as any);
         } catch (error) {
+            console.error('Não foi possível sair da conta:', error);
             showMessage(
                 'Erro',
                 'Não foi possível sair da conta.',
@@ -447,6 +499,14 @@ export default function CadastroScreen() {
                 }
 
                 await createUser(formData as any);
+                await AsyncStorage.setItem(
+                    `@UrbanCandy:avatarColor:pending:${form.email.trim().toLowerCase()}`,
+                    avatarColor
+                );
+                await AsyncStorage.setItem(
+                    `@UrbanCandy:avatarMode:pending:${form.email.trim().toLowerCase()}`,
+                    useInitialAvatar ? 'initial' : 'photo'
+                );
 
                 setImageUri(null);
                 showMessage(
@@ -485,6 +545,11 @@ export default function CadastroScreen() {
                     complement: form.complement.trim(),
                 });
             }
+
+            await AsyncStorage.setItem(
+                `@UrbanCandy:avatarMode:${ids.user}`,
+                useInitialAvatar ? 'initial' : 'photo'
+            );
 
             let newUploadedImage = null;
 
@@ -664,6 +729,10 @@ export default function CadastroScreen() {
                         {...form}
                         imageUri={imageUri}
                         onPickImage={handlePickImage}
+                        avatarColor={avatarColor}
+                        onChangeAvatarColor={handleAvatarColorChange}
+                        useInitialAvatar={useInitialAvatar}
+                        onChangeUseInitialAvatar={handleUseInitialAvatarChange}
                         loading={loading}
                         onChangeName={value => change('name', value)}
                         onChangeCpf={value => change('cpf', value)}

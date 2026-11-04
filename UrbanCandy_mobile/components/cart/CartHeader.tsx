@@ -25,8 +25,9 @@ export default function CartHeader() {
         header: {
             flexDirection: 'row',
             alignItems: 'center',
-            paddingTop: 60,
+            paddingTop: 16,
             paddingHorizontal: space.xl,
+            paddingBottom: 16,
         },
 
         backButton: {
@@ -38,7 +39,7 @@ export default function CartHeader() {
 
         title: {
             fontSize: fontSize.xxl,
-            color: colors.white,
+            color: colors.text,
             fontFamily: font.regular,
         },
     });
@@ -52,7 +53,7 @@ export default function CartHeader() {
                 <Ionicons
                     name="arrow-back"
                     size={26}
-                    color={colors.white}
+                    color={colors.text}
                 />
             </Pressable>
 

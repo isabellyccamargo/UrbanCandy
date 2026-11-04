@@ -14,23 +14,40 @@ export const Categorias = () => {
   const [idDel, setIdDel] = useState(null);
   const navigate = useNavigate();
 
+  const fetchPage = (page) => getAllCategory(page, 6);
+  const applyPage = (res) => {
+    const { data, totalPages: total } = res.data;
+    setCategorias(data || []);
+    setTotalPages(total || 1);
+  };
+
+  useEffect(() => {
+    let active = true;
+    fetchPage(currentPage)
+      .then((res) => {
+        if (active) applyPage(res);
+      })
+      .catch(() => {
+        if (active) toast.error('Erro ao carregar categorias. 🍬');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [currentPage]);
+
   const load = async (page = 1) => {
     try {
-      setLoading(true);
-      const res = await getAllCategory(page, 6);
-      const { data, totalPages: total } = res.data;
-      setCategorias(data || []);
-      setTotalPages(total || 1);
+      applyPage(await fetchPage(page));
     } catch {
       toast.error('Erro ao carregar categorias. 🍬');
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    load(currentPage);
-  }, [currentPage]);
 
   const confirmDelete = async () => {
     const idT = toast.loading('Removendo...');
@@ -42,6 +59,7 @@ export const Categorias = () => {
         isLoading: false,
         autoClose: 2000,
       });
+      setLoading(true);
       categorias.length === 1 && currentPage > 1 ? setCurrentPage((p) => p - 1) : load(currentPage);
     } catch (err) {
       const msg = err.response?.data?.message || 'Erro ao excluir.';
@@ -112,7 +130,10 @@ export const Categorias = () => {
           <Button
             variant="secondary"
             disabled={currentPage === 1 || loading}
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            onClick={() => {
+              setLoading(true);
+              setCurrentPage((p) => Math.max(p - 1, 1));
+            }}
           >
             Anterior
           </Button>
@@ -122,7 +143,10 @@ export const Categorias = () => {
           <Button
             variant="secondary"
             disabled={currentPage === totalPages || loading || totalPages === 0}
-            onClick={() => setCurrentPage((p) => p + 1)}
+            onClick={() => {
+              setLoading(true);
+              setCurrentPage((p) => p + 1);
+            }}
           >
             Próximo
           </Button>

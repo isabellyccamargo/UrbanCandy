@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api, { createCategory } from '../../../services/Api';
 import { toast } from 'react-toastify';
@@ -9,14 +9,8 @@ export const CategoriesForm = () => {
   const { state } = useLocation();
   const categoriaParaEditar = state?.categoria;
 
-  const [nameCategory, setNameCategory] = useState('');
+  const [nameCategory, setNameCategory] = useState(categoriaParaEditar?.name_category || '');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (categoriaParaEditar) {
-      setNameCategory(categoriaParaEditar.name_category);
-    }
-  }, [categoriaParaEditar]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

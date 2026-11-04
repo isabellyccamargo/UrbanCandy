@@ -70,6 +70,12 @@ export function HomeHeader() {
     const [userImage, setUserImage] =
         useState<string | null>(null);
 
+    const [avatarColor, setAvatarColor] =
+        useState<'dark' | 'pink'>('dark');
+
+    const [useInitialAvatar, setUseInitialAvatar] =
+        useState(false);
+
     useFocusEffect(
         useCallback(() => {
             async function loadUserData() {
@@ -81,6 +87,10 @@ export function HomeHeader() {
                         (await AsyncStorage.getItem('user'));
 
                     if (!stored) {
+                        setUserName('Visitante');
+                        setUserImage(null);
+                        setAvatarColor('dark');
+                        setUseInitialAvatar(false);
                         return;
                     }
 
@@ -101,6 +111,27 @@ export function HomeHeader() {
                     const userId =
                         user?.id_user ||
                         user?.id;
+
+                    setAvatarColor(
+                        userId && (await AsyncStorage.getItem(
+                            `@UrbanCandy:avatarColor:${userId}`
+                        )) === 'pink'
+                            ? 'pink'
+                            : 'dark'
+                    );
+                    setUseInitialAvatar(
+                        userId && (await AsyncStorage.getItem(
+                            `@UrbanCandy:avatarMode:${userId}`
+                        )) === 'initial'
+                    );
+
+                    const cachedImage =
+                        user?.people?.image ||
+                        user?.people?.foto ||
+                        user?.image ||
+                        user?.foto ||
+                        null;
+                    setUserImage(getFullImageUrl(cachedImage));
 
                     if (!userId) {
                         return;
@@ -203,19 +234,24 @@ export function HomeHeader() {
             width: 44,
             height: 44,
             borderRadius: 22,
-            backgroundColor:
-                colors.background || '#F0F0F0',
+            backgroundColor: avatarColor === 'pink' ? '#D63384' : '#222222',
             justifyContent: 'center',
             alignItems: 'center',
             overflow: 'hidden',
             borderWidth: 1.5,
-            borderColor: colors.primary,
+            borderColor: avatarColor === 'pink' ? '#D63384' : '#222222',
         },
 
         avatarImage: {
-            width: '100%',
-            height: '100%',
+            width: '100%' as const,
+            height: '100%' as const,
             borderRadius: 22,
+        },
+
+        avatarInitial: {
+            color: '#FFFFFF',
+            fontFamily: font?.bold || 'System',
+            fontSize: 18,
         },
 
         actions: {
@@ -304,7 +340,7 @@ export function HomeHeader() {
                         style={styles.avatarPressable}
                         onPress={handleProfilePress}
                     >
-                        {userImage ? (
+                        {userImage && !useInitialAvatar ? (
                             <Image
                                 source={userImage}
                                 style={styles.avatarImage}
@@ -314,11 +350,9 @@ export function HomeHeader() {
                                 onError={() => setUserImage(null)}
                             />
                         ) : (
-                            <Ionicons
-                                name="person"
-                                size={20}
-                                color={colors.primary}
-                            />
+                            <Text style={styles.avatarInitial}>
+                                {userName.trim().charAt(0).toUpperCase() || '?'}
+                            </Text>
                         )}
                     </Pressable>
                 </View>

@@ -16,6 +16,10 @@
 
         imageUri?: string | null;
         onPickImage?: () => void;
+        avatarColor: 'dark' | 'pink';
+        onChangeAvatarColor: (color: 'dark' | 'pink') => void;
+        useInitialAvatar: boolean;
+        onChangeUseInitialAvatar: (enabled: boolean) => void;
 
         name: string;
         cpf: string;
@@ -58,6 +62,10 @@
 
         imageUri,
         onPickImage,
+        avatarColor,
+        onChangeAvatarColor,
+        useInitialAvatar,
+        onChangeUseInitialAvatar,
 
         name,
         cpf,
@@ -126,6 +134,10 @@
 
                         imageUri={imageUri}
                         onPickImage={onPickImage}
+                        avatarColor={avatarColor}
+                        onChangeAvatarColor={onChangeAvatarColor}
+                        useInitialAvatar={useInitialAvatar}
+                        onChangeUseInitialAvatar={onChangeUseInitialAvatar}
 
                         name={name}
                         cpf={cpf}

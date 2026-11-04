@@ -1,12 +1,15 @@
 import React from 'react';
 import {
     FlatList,
+    Pressable,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
 
 import { StatusBar } from 'expo-status-bar';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/context/Theme';
@@ -14,15 +17,15 @@ import { useTheme } from '@/context/Theme';
 import CartHeader from '@/components/cart/CartHeader';
 import CartItem from '@/components/cart/CartItem';
 import CartSummary from '@/components/cart/CartSumary';
-import { Menu } from '@/components/home/Menu';
 
 export default function CartScreen() {
+    const router = useRouter();
+    const insets = useSafeAreaInsets();
     const {
         colors,
         font,
         fontSize,
         space,
-        radius,
     } = useTheme();
 
     const {
@@ -36,26 +39,53 @@ export default function CartScreen() {
     const styles = StyleSheet.create({
         container: {
             flex: 1,
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+        },
+
+        backdrop: {
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+        },
+
+        drawer: {
+            width: '90%',
+            maxWidth: 420,
+            height: '100%',
             backgroundColor: colors.background,
+            overflow: 'hidden',
+            elevation: 18,
+            shadowColor: '#000',
+            shadowOffset: { width: -4, height: 0 },
+            shadowOpacity: 0.18,
+            shadowRadius: 12,
         },
 
         topSection: {
-            height: 125,
-            backgroundColor: colors.secondary,
-            borderBottomLeftRadius: radius.xxl,
-            borderBottomRightRadius: radius.xxl,
+            backgroundColor: colors.white,
+            paddingTop: insets.top,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
         },
 
         list: {
-            paddingTop: space.xl,
+            paddingTop: space.lg,
             paddingBottom: space.xl,
+            flexGrow: 1,
+        },
+        itemList: {
+            flex: 1,
         },
 
         empty: {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            paddingHorizontal: space.xxxl,
+            paddingHorizontal: space.xl,
         },
 
         emptyIcon: {
@@ -100,70 +130,56 @@ export default function CartScreen() {
         <View style={styles.container}>
             <StatusBar style="dark" />
 
-            <View style={styles.topSection}>
-                <CartHeader />
-            </View>
+            <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Fechar carrinho"
+                onPress={() => router.back()}
+                style={styles.backdrop}
+            />
 
-            {items.length === 0 ? (
-                <View style={styles.empty}>
-                    <Text style={styles.emptyIcon}>
-                        🛒
-                    </Text>
-
-                    <Text style={styles.emptyTitle}>
-                        Seu carrinho está vazio
-                    </Text>
-
-                    <Text style={styles.emptyText}>
-                        Adicione produtos deliciosos!
-                    </Text>
+            <View style={styles.drawer}>
+                <View style={styles.topSection}>
+                    <CartHeader />
                 </View>
-            ) : (
-                <FlatList
-                    data={items}
-                    keyExtractor={getItemId}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.list}
-                    renderItem={({ item }) => {
-                        const itemId =
-                            getItemId(item);
 
-                        return (
-                            <CartItem
-                                product={item.product}
-                                quantity={item.quantity}
+                {items.length === 0 ? (
+                    <View style={styles.empty}>
+                        <Text style={styles.emptyIcon}>🛒</Text>
+                        <Text style={styles.emptyTitle}>
+                            Seu carrinho está vazio
+                        </Text>
+                        <Text style={styles.emptyText}>
+                            Adicione produtos deliciosos!
+                        </Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={items}
+                        keyExtractor={getItemId}
+                        showsVerticalScrollIndicator={false}
+                        style={styles.itemList}
+                        contentContainerStyle={styles.list}
+                        renderItem={({ item }) => {
+                            const itemId = getItemId(item);
 
-                                onIncrease={() =>
-                                    increaseQuantity(
-                                        itemId
-                                    )
-                                }
+                            return (
+                                <CartItem
+                                    product={item.product}
+                                    quantity={item.quantity}
+                                    isOffer={item.isOffer}
+                                    onIncrease={() => increaseQuantity(itemId)}
+                                    onDecrease={() => decreaseQuantity(itemId)}
+                                    onRemove={() => removeFromCart(itemId)}
+                                />
+                            );
+                        }}
+                    />
+                )}
 
-                                onDecrease={() =>
-                                    decreaseQuantity(
-                                        itemId
-                                    )
-                                }
-
-                                onRemove={() =>
-                                    removeFromCart(
-                                        itemId
-                                    )
-                                }
-                            />
-                        );
-                    }}
-                />
-            )}
-
-            {items.length > 0 && (
-                <CartSummary
-                    subtotal={total}
-                    onCheckout={() => {}}
-                />
-            )}
-
-            <Menu />
+                {items.length > 0 && (
+                    <CartSummary subtotal={total} bottomInset={insets.bottom} />
+                )}
+            </View>
         </View>
     );
 }

@@ -11,6 +11,7 @@ export type CustomerData = {
     name: string;
     cpf: string;
     phone: string;
+    email: string;
 };
 
 type CustomerInfoProps = {
@@ -72,6 +73,12 @@ export default function CustomerInfo({
                 </Text>
             </View>
 
+            <View style={styles.row}>
+                <Text style={styles.text}>
+                    Telefone: {data.phone}
+                </Text>
+            </View>
+
             <View
                 style={[
                     styles.row,
@@ -79,7 +86,7 @@ export default function CustomerInfo({
                 ]}
             >
                 <Text style={styles.text}>
-                    Telefone: {data.phone}
+                    E-mail: {data.email || 'Não informado'}
                 </Text>
             </View>
         </View>

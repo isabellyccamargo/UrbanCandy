@@ -19,11 +19,21 @@ $backendUpstream = if ($Mode -eq 'local') {
 } else {
   'urbancandy-backend:3030'
 }
+$frontendUpstream = if ($Mode -eq 'local') {
+  'host.docker.internal:5173'
+} else {
+  'urbancandy-frontend:5173'
+}
 
 if ($Mode -eq 'local' -and -not $SkipApiHealthCheck) {
   & curl.exe --fail --silent --show-error --max-time 5 --output NUL http://127.0.0.1:3000/api/health
   if ($LASTEXITCODE -ne 0) {
     throw 'Backend local não respondeu em http://127.0.0.1:3000/api/health. Inicie-o com NODE_ENV=development antes de trocar o modo.'
+  }
+
+  & curl.exe --fail --silent --show-error --max-time 5 --output NUL http://127.0.0.1:5173/
+  if ($LASTEXITCODE -ne 0) {
+    throw 'Frontend Vite local não respondeu em http://127.0.0.1:5173. Inicie-o em UrbanCandy_front antes de trocar o modo.'
   }
 }
 
@@ -35,36 +45,41 @@ $hasUtf8Bom = $originalBytes.Length -ge 3 -and
 $encoding = [System.Text.UTF8Encoding]::new($hasUtf8Bom)
 $originalContent = [System.IO.File]::ReadAllText($envPath, $encoding)
 $lineEnding = if ($originalContent.Contains("`r`n")) { "`r`n" } else { "`n" }
-$matchingLines = [regex]::Matches($originalContent, '(?m)^\s*BACKEND_UPSTREAM\s*=.*$')
-
-if ($matchingLines.Count -gt 1) {
-  throw 'O .env contém mais de uma definição BACKEND_UPSTREAM. Remova a duplicata e tente novamente.'
-}
-
-$upstreamLine = "BACKEND_UPSTREAM=$backendUpstream"
 $updatedContent = $originalContent
-if ($matchingLines.Count -eq 1) {
-  $updatedContent = [regex]::Replace(
-    $originalContent,
-    '(?m)^\s*BACKEND_UPSTREAM\s*=.*$',
-    [System.Text.RegularExpressions.MatchEvaluator]{ param($match) $upstreamLine },
-    1
-  )
-} else {
-  if ($updatedContent.Length -gt 0 -and -not $updatedContent.EndsWith("`n")) {
-    $updatedContent += $lineEnding
+
+foreach ($setting in @{
+    BACKEND_UPSTREAM = $backendUpstream
+    FRONTEND_UPSTREAM = $frontendUpstream
+  }.GetEnumerator()) {
+  $settingPattern = "(?m)^\s*$([regex]::Escape($setting.Key))\s*=.*$"
+  $matchingLines = [regex]::Matches($updatedContent, $settingPattern)
+
+  if ($matchingLines.Count -gt 1) {
+    throw "O .env contém mais de uma definição $($setting.Key). Remova a duplicata e tente novamente."
   }
-  $updatedContent += $upstreamLine
-  if ($originalContent.EndsWith("`n")) { $updatedContent += $lineEnding }
+
+  $settingLine = "$($setting.Key)=$($setting.Value)"
+  if ($matchingLines.Count -eq 1) {
+    $updatedContent = [regex]::Replace(
+      $updatedContent,
+      $settingPattern,
+      [System.Text.RegularExpressions.MatchEvaluator]{ param($match) $settingLine },
+      1
+    )
+  } else {
+    if ($updatedContent.Length -gt 0 -and -not $updatedContent.EndsWith("`n")) {
+      $updatedContent += $lineEnding
+    }
+    $updatedContent += $settingLine
+    if ($originalContent.EndsWith("`n")) { $updatedContent += $lineEnding }
+  }
 }
 
 [System.IO.File]::WriteAllText($envPath, $updatedContent, $encoding)
 
 try {
-  if ($Mode -eq 'local') {
-    & docker compose up -d --no-deps urbancandy-frontend
-    if ($LASTEXITCODE -ne 0) { throw 'Docker Compose não conseguiu iniciar o frontend necessário para urbancandy.local.' }
-  }
+  & docker compose up -d --no-deps urbancandy-frontend
+  if ($LASTEXITCODE -ne 0) { throw 'Docker Compose não conseguiu iniciar o frontend do UrbanCandy.' }
 
   & docker compose up -d --no-deps --force-recreate urbancandy-nginx
   if ($LASTEXITCODE -ne 0) { throw 'Docker Compose não conseguiu recriar o Nginx.' }
@@ -75,9 +90,19 @@ try {
   if (-not ($nginxConfig -match [regex]::Escape("proxy_pass http://$backendUpstream;"))) {
     throw 'O Nginx não aplicou o backend selecionado.'
   }
+  if (-not ($nginxConfig -match [regex]::Escape("set `$frontend_upstream $frontendUpstream;"))) {
+    throw 'O Nginx não aplicou o frontend selecionado.'
+  }
 
   & docker compose exec -T urbancandy-nginx nginx -t
   if ($LASTEXITCODE -ne 0) { throw 'A configuração gerada do Nginx é inválida.' }
+
+  if ($Mode -eq 'local') {
+    & docker compose exec -T urbancandy-nginx wget --quiet --spider --header='Host: urbancandy.local' "http://$frontendUpstream/"
+    if ($LASTEXITCODE -ne 0) {
+      throw 'O Nginx não conseguiu acessar o Vite local em host.docker.internal:5173.'
+    }
+  }
 
   if (-not $SkipApiHealthCheck) {
     $healthy = $false

@@ -29,12 +29,9 @@ export async function loginUser(
     email: string,
     password: string
 ) {
-    console.log('[AUTH.TSX] Iniciando loginUser para o e-mail:', email);
-    console.log('[AUTH.TSX] URL da API:', api.defaults.baseURL);
-
     try {
         const response = await api.post('/login', {
-            email,
+            email: email.trim().toLowerCase(),
             password,
         });
 
@@ -47,7 +44,6 @@ export async function loginUser(
 
         if (error.response) {
             console.log('Status HTTP:', error.response.status);
-            console.log('Corpo da resposta:', error.response.data);
         } else if (error.request) {
             console.log('A requisição saiu, mas não obteve resposta do servidor.');
             console.log('Detalhe técnico:', error.message);

@@ -1,29 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/UseCart';
 import {
   createOrder,
   getUserProfile,
   getAllTypeOfPayment,
+  getAllDeliveryTypes,
+  createPaymentCheckout,
+  getPaymentCheckoutStatus,
   getEmailVerificationStatus,
 } from '../../services/Api';
 import { Button } from '../../componentes/Button/Button';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/AuthContext';
+import { Banknote, Store, Truck, WalletCards } from 'lucide-react';
 import './Checkout.css';
+
+const getPaymentMethodKind = (name) => {
+  const normalizedName = String(name || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  return normalizedName.includes('dinheiro') || normalizedName.includes('cash')
+    ? 'cash'
+    : 'online';
+};
+
+const getDeliveryDetails = (name) => {
+  const normalizedName = String(name || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  return normalizedName.includes('retirada') || normalizedName.includes('pickup')
+    ? { icon: Store, description: 'Retire seu pedido no local.' }
+    : { icon: Truck, description: 'Receba seu pedido no endereço cadastrado.' };
+};
 
 const Checkout = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { cart, clearCart } = useCart();
 
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [paymentOptions, setPaymentOptions] = useState([]);
+  const [deliveryOptions, setDeliveryOptions] = useState([]);
+  const [deliveryId, setDeliveryId] = useState('');
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [emailVerified, setEmailVerified] = useState(null);
+  const [activeCheckout, setActiveCheckout] = useState(null);
+  const [checkoutStatus, setCheckoutStatus] = useState(null);
+  const completionHandled = useRef(false);
 
   const formatBRL = (val) =>
     Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -38,9 +69,10 @@ const Checkout = () => {
 
     (async () => {
       try {
-        const [resProfile, resPayments] = await Promise.all([
+        const [resProfile, resPayments, resDeliveryTypes] = await Promise.all([
           getUserProfile(userId),
           getAllTypeOfPayment(),
+          getAllDeliveryTypes(),
         ]);
 
         if (resProfile) {
@@ -68,6 +100,7 @@ const Checkout = () => {
           console.warn('Não foi possível consultar a confirmação do e-mail:', verificationError);
         }
         setPaymentOptions(resPayments.data?.data || resPayments.data || []);
+        setDeliveryOptions(resDeliveryTypes.data?.data || resDeliveryTypes.data || []);
       } catch {
         toast.error('Erro ao carregar dados do checkout. 🌐');
       } finally {
@@ -76,38 +109,93 @@ const Checkout = () => {
     })();
   }, [user, navigate]);
 
+  useEffect(() => {
+    if (!activeCheckout) return undefined;
+
+    let active = true;
+    let requestInProgress = false;
+    let interval;
+
+    const refreshStatus = async () => {
+      if (requestInProgress) return;
+      requestInProgress = true;
+      try {
+        const status = await getPaymentCheckoutStatus(activeCheckout.attemptId);
+        if (!active) return;
+        setCheckoutStatus(status);
+        if (status.status !== 'pending') clearInterval(interval);
+        if (status.status === 'approved' && !completionHandled.current) {
+          completionHandled.current = true;
+          clearCart();
+        }
+      } catch (statusError) {
+        console.error('Não foi possível consultar o pagamento:', statusError);
+      } finally {
+        requestInProgress = false;
+      }
+    };
+
+    const initialCheck = setTimeout(() => void refreshStatus(), 0);
+    interval = setInterval(() => void refreshStatus(), 5000);
+    return () => {
+      active = false;
+      clearTimeout(initialCheck);
+      clearInterval(interval);
+    };
+  }, [activeCheckout, clearCart]);
+
   const handleFinalizeOrder = async () => {
-    if (!paymentMethod) return toast.warning('Selecione uma forma de pagamento! 💳');
+    if (!deliveryId) return toast.warning('Selecione um tipo de entrega ou retirada.');
+    if (!selectedPayment) return toast.warning('Selecione uma forma de pagamento! 💳');
     if (cart.items.length === 0) return toast.error('Seu carrinho está vazio!');
+
+    const cartPayload = {
+      total: Number(cart.total),
+      items: cart.items.filter((item) => !item.isOffer).map((item) => ({
+        id_product: Number(item.id_product),
+        quantity: Number(item.quantity || 1),
+      })),
+      offers: cart.items.filter((item) => item.isOffer).map((item) => ({
+        id_offer: Number(item.id_offer),
+        quantity: Number(item.quantity || 1),
+      })),
+    };
 
     setIsSubmitting(true);
     try {
-      const orderPayload = {
-        id_people: Number(userData.id_people),
-        id_payment: Number(paymentMethod),
-        cart: {
-          total: Number(cart.total),
-          items: cart.items.map((item) => ({
-            id_product: Number(item.id_product),
-            quantity: Number(item.quantity || 1),
-            sub_total: Number(
-              item.sub_total || Number(item.products?.price || 0) * Number(item.quantity || 1)
-            ),
-            products: {
-              price: Number(item.products?.price || 0),
-              name: item.products?.name || 'Produto',
-            },
-          })),
-        },
-      };
+      if (getPaymentMethodKind(selectedPayment.name_payment) === 'cash') {
+        await createOrder({
+          id_payment: Number(selectedPayment.id_payment),
+          id_type_delivery: Number(deliveryId),
+          cart: cartPayload,
+        });
+        clearCart();
+        setShowSuccessModal(true);
+      } else {
+        if (activeCheckout && checkoutStatus?.status === 'pending') return;
 
-      await createOrder(orderPayload);
-      clearCart();
-      setShowSuccessModal(true);
+        const checkout = await createPaymentCheckout({
+          id_payment: 0,
+          id_type_delivery: Number(deliveryId),
+          payment_method: 'both',
+          cart: cartPayload,
+        });
+        setActiveCheckout({
+          attemptId: checkout.attemptId,
+          checkoutUrl: checkout.checkoutUrl,
+        });
+        setCheckoutStatus({
+          id: checkout.attemptId,
+          status: 'pending',
+          id_order: null,
+          total: checkout.total,
+        });
+        completionHandled.current = false;
+      }
     } catch (error) {
       if ((error.code || error.response?.data?.code) === 'EMAIL_NOT_VERIFIED') {
         setEmailVerified(false);
-        toast.error(error.response.data.message);
+        toast.error(error.response?.data?.message || error.message);
         return navigate('/perfil');
       }
       const errorMsg =
@@ -125,6 +213,18 @@ const Checkout = () => {
 
   if (loading) return <div className="loading-screen">Carregando dados... 🍬</div>;
   if (!userData) return null;
+
+  const selectedDelivery = deliveryOptions.find(
+    (option) => Number(option.id_type_delivery) === Number(deliveryId)
+  );
+  const isPickup = /retirada|pickup/i.test(selectedDelivery?.name || '');
+  const cashPayment = paymentOptions.find(
+    (option) => getPaymentMethodKind(option.name_payment) === 'cash'
+  );
+  const availablePaymentOptions = [
+    ...(cashPayment ? [cashPayment] : []),
+    { id_payment: 0, name_payment: 'Mercado Pago' },
+  ];
 
   return (
     <div className="checkout-container animate-entrance">
@@ -163,33 +263,148 @@ const Checkout = () => {
 
         <section className="checkout-section card-candy">
           <h3>
-            <i className="fas fa-truck"></i> Entrega
+            <i className="fas fa-truck"></i> Como deseja receber? *
           </h3>
-          <p className="address-text">{userData.addressFull}</p>
-          <p className="city-text">{userData.cityState}</p>
-        </section>
-
-        <section className="checkout-section card-candy">
-          <h3>
-            <i className="fas fa-credit-card"></i> Pagamento
-          </h3>
-          <div className="payment-options">
-            {paymentOptions.map((option) => (
+          <div
+            className="delivery-options"
+            role="radiogroup"
+            aria-label="Tipo de entrega"
+            aria-required="true"
+          >
+            {deliveryOptions.map((option) => (
               <label
-                key={option.id_payment}
-                className={`radio-label ${paymentMethod === option.id_payment ? 'selected' : ''}`}
+                key={option.id_type_delivery}
+                className={`radio-label ${
+                  Number(deliveryId) === Number(option.id_type_delivery) ? 'selected' : ''
+                }`}
               >
                 <input
                   type="radio"
-                  name="payment"
-                  checked={paymentMethod === option.id_payment}
-                  onChange={() => setPaymentMethod(option.id_payment)}
+                  name="delivery"
+                  value={option.id_type_delivery}
+                  checked={Number(deliveryId) === Number(option.id_type_delivery)}
+                  onChange={() => setDeliveryId(String(option.id_type_delivery))}
                 />
-                <span>{option.name_payment}</span>
+                {(() => {
+                  const { icon: Icon, description } = getDeliveryDetails(option.name);
+                  return (
+                    <>
+                      <Icon className="checkout-option-icon" size={22} aria-hidden="true" />
+                      <span className="checkout-option-copy">
+                        <span className="checkout-option-title">{option.name}</span>
+                        <span className="checkout-option-description">{description}</span>
+                      </span>
+                    </>
+                  );
+                })()}
               </label>
             ))}
           </div>
         </section>
+
+        <section className="checkout-section card-candy">
+          <h3>
+            <i className="fas fa-map-marker-alt"></i>{' '}
+            {isPickup ? 'Retirada no local' : 'Endereço de entrega'}
+          </h3>
+          {isPickup ? (
+            <p>Seu pedido estará disponível para retirada no local.</p>
+          ) : (
+            <>
+              <p className="address-text">{userData.addressFull}</p>
+              <p className="city-text">{userData.cityState}</p>
+            </>
+          )}
+        </section>
+
+        <section className="checkout-section card-candy">
+          <h3>
+            <i className="fas fa-credit-card"></i> Selecione a forma de pagamento *
+          </h3>
+          <div className="payment-options" role="radiogroup" aria-label="Forma de pagamento" aria-required="true">
+            {availablePaymentOptions.map((option) => (
+              <label
+                key={option.id_payment}
+                className={`radio-label ${
+                  selectedPayment?.id_payment === option.id_payment ? 'selected' : ''
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  value={option.id_payment}
+                  checked={selectedPayment?.id_payment === option.id_payment}
+                  onChange={() => setSelectedPayment(option)}
+                />
+                {(() => {
+                  const isCash = getPaymentMethodKind(option.name_payment) === 'cash';
+                  const Icon = isCash ? Banknote : WalletCards;
+                  return (
+                    <>
+                      <Icon className="checkout-option-icon" size={22} aria-hidden="true" />
+                      <span className="checkout-option-copy">
+                        <span className="checkout-option-title">
+                          {isCash ? 'Dinheiro' : 'Pagar com Mercado Pago'}
+                        </span>
+                        <span className="checkout-option-description">
+                          {isCash
+                            ? 'Pagamento na entrega ou retirada.'
+                            : 'Pix, cartão de crédito ou débito no checkout seguro.'}
+                        </span>
+                      </span>
+                    </>
+                  );
+                })()}
+              </label>
+            ))}
+          </div>
+        </section>
+        {activeCheckout && (
+          <section className="checkout-section checkout-payment-status" aria-live="polite">
+            <h3>
+              {checkoutStatus?.status === 'approved'
+                ? 'Pagamento confirmado'
+                : ['rejected', 'cancelled', 'failed'].includes(checkoutStatus?.status)
+                  ? 'Pagamento não concluído'
+                  : 'Aguardando confirmação do Mercado Pago'}
+            </h3>
+            <p>
+              {checkoutStatus?.status === 'approved'
+                ? `Pedido #${checkoutStatus.id_order} confirmado.`
+                : ['rejected', 'cancelled', 'failed'].includes(checkoutStatus?.status)
+                  ? 'Você pode tentar novamente ou escolher outra forma de pagamento.'
+                  : 'Se você ainda não concluiu o pagamento, continue no Mercado Pago. O pedido só será criado após a confirmação.'}
+            </p>
+            {checkoutStatus?.status === 'pending' && (
+              <a
+                className="checkout-payment-link"
+                href={activeCheckout.checkoutUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Continuar no Mercado Pago
+              </a>
+            )}
+            {checkoutStatus?.status === 'approved' && (
+              <Button variant="primary" onClick={() => navigate('/pedidos')}>
+                Ver meus pedidos
+              </Button>
+            )}
+            {checkoutStatus &&
+              ['rejected', 'cancelled', 'failed'].includes(checkoutStatus.status) && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setActiveCheckout(null);
+                    setCheckoutStatus(null);
+                    completionHandled.current = false;
+                  }}
+                >
+                  Tentar novamente
+                </Button>
+              )}
+          </section>
+        )}
       </div>
 
       <aside className="checkout-summary card-candy">
@@ -198,7 +413,7 @@ const Checkout = () => {
           {cart.items.map((item) => (
             <div key={item.id_product} className="summary-item">
               <img
-                src={`https://urbancandy.local/uploads/${item.products?.image}`}
+                src={`${import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, '') || window.location.origin}/uploads/${item.products?.image}`}
                 alt={item.products?.name}
                 onError={(e) => {
                   e.target.src = 'https://via.placeholder.com/50';
@@ -222,9 +437,18 @@ const Checkout = () => {
         <Button
           onClick={handleFinalizeOrder}
           variant="primary"
-          disabled={isSubmitting || cart.items.length === 0 || emailVerified === false}
+          disabled={
+            isSubmitting ||
+            cart.items.length === 0 ||
+            emailVerified === false ||
+            (activeCheckout && ['pending', 'approved'].includes(checkoutStatus?.status))
+          }
         >
-          {isSubmitting ? 'Processando...' : 'Finalizar Pedido'}
+          {isSubmitting
+            ? 'Processando...'
+            : selectedPayment && getPaymentMethodKind(selectedPayment.name_payment) !== 'cash'
+              ? 'Pagar com Mercado Pago'
+              : 'Finalizar Pedido'}
         </Button>
       </aside>
 

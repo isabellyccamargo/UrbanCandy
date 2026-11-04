@@ -16,6 +16,7 @@ type Product = {
 type CartItemProps = {
     product: Product;
     quantity: number;
+    isOffer?: boolean;
     onIncrease: () => void;
     onDecrease: () => void;
     onRemove: () => void;
@@ -24,6 +25,7 @@ type CartItemProps = {
 export default function CartItem({
     product,
     quantity,
+    isOffer = false,
     onIncrease,
     onDecrease,
     onRemove,
@@ -91,6 +93,13 @@ export default function CartItem({
             fontSize: fontSize.md,
             color: colors.primary,
             marginTop: 5,
+        },
+        offerLabel: {
+            alignSelf: 'flex-start',
+            marginTop: space.xs,
+            color: colors.primary,
+            fontFamily: font.medium,
+            fontSize: fontSize.xs,
         },
         bottomRow: {
             marginTop: space.md,
@@ -177,6 +186,9 @@ export default function CartItem({
                 <Text style={styles.price}>
                     R$ {Number(product.price).toFixed(2).replace('.', ',')}
                 </Text>
+                {isOffer && (
+                    <Text style={styles.offerLabel}>Oferta especial</Text>
+                )}
 
                 <View style={styles.bottomRow}>
                     <View style={styles.quantity}>

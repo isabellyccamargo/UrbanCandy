@@ -2,11 +2,13 @@ import { Router } from 'express';
 
 import authMiddleware from '../middlewares/AuthMiddleware.js';
 import { authorizePermission } from '../middlewares/AuthorizationMiddleware.js';
+import managerAuthorizationMiddleware from '../middlewares/ManagerAuthorizationMiddleware.js';
 
 import ProductController from '../controllers/ProductController.js';
 import CategoryController from '../controllers/CategoryController.js';
 import UserController from '../controllers/UserController.js';
 import PeopleController from '../controllers/PeopleController.js';
+import AdminController from '../controllers/AdminController.js';
 import OrderController from '../controllers/OrderController.js';
 import AddressController from '../controllers/AddressController.js';
 import TypeOfPaymentController from '../controllers/TypeOfPaymentController.js';
@@ -19,12 +21,29 @@ import { upload } from '../config/MulterConfig.js';
 const privateRoutes = Router();
 
 privateRoutes.use(authMiddleware);
+privateRoutes.use('/admin', managerAuthorizationMiddleware);
+
+privateRoutes.get('/admin/usuarios', AdminController.findUsers);
+privateRoutes.put('/admin/usuarios/:id_user/roles', AdminController.replaceUserRoles);
+privateRoutes.put('/admin/pessoas/:id_people', PeopleController.updateAdminPeople);
+privateRoutes.get('/admin/papeis', AdminController.findRoles);
+privateRoutes.get('/admin/permissoes', AdminController.findPermissions);
+privateRoutes.put('/admin/papeis/:id_role/permissoes', AdminController.replaceRolePermissions);
 
 privateRoutes.get('/notificacoes', NotificationController.list);
 privateRoutes.get('/email-verification/status', EmailVerificationController.status);
-privateRoutes.post('/email-verification/request', EmailVerificationController.requestForAuthenticatedUser);
-privateRoutes.post('/email-verification/change/request', EmailVerificationController.requestEmailChange);
-privateRoutes.post('/email-verification/change/confirm', EmailVerificationController.confirmEmailChange);
+privateRoutes.post(
+  '/email-verification/request',
+  EmailVerificationController.requestForAuthenticatedUser
+);
+privateRoutes.post(
+  '/email-verification/change/request',
+  EmailVerificationController.requestEmailChange
+);
+privateRoutes.post(
+  '/email-verification/change/confirm',
+  EmailVerificationController.confirmEmailChange
+);
 privateRoutes.get('/notificacoes/stream', NotificationController.stream);
 privateRoutes.patch('/notificacoes/lidas', NotificationController.markAllAsRead);
 privateRoutes.patch('/notificacoes/:id_notification/lida', NotificationController.markAsRead);
@@ -75,13 +94,13 @@ privateRoutes.delete(
 
 // --- USUÁRIO E PESSOA ---
 
-privateRoutes.get('/usuario/listar', UserController.findAllUsers);
+privateRoutes.get('/usuario/listar', managerAuthorizationMiddleware, UserController.findAllUsers);
 
 privateRoutes.get('/usuario/listarPorId/:id_user', UserController.findByIdUser);
 
 privateRoutes.put('/usuario/atualizar/:id_user', UserController.updateUser);
 
-privateRoutes.get('/pessoa/listar', PeopleController.findAllPeople);
+privateRoutes.get('/pessoa/listar', managerAuthorizationMiddleware, PeopleController.findAllPeople);
 
 privateRoutes.put('/pessoa/atualizar/:id_people', PeopleController.updatePeople);
 

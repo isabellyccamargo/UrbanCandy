@@ -54,11 +54,15 @@ export const setHeaderToken = (token) => {
   }
 };
 
-export const getAllProducts = (page = 1, size = 6) => {
+export const getAllProducts = (page = 1, size = 6, id_category = '') => {
   return api.get(`/produto/listar`, {
-    params: { page, size },
+    params: { page, size, ...(id_category ? { id_category } : {}) },
   });
 };
+
+export const getAllOffers = () => api.get('/oferta/listar');
+
+export const getProductById = (id_product) => api.get(`/produto/listarPorId/${id_product}`);
 
 export const getFeaturedProducts = (page = 1, size = 6) => {
   return api.get(`/produto/listar`, {
@@ -162,6 +166,20 @@ export const updateUser = async (id_people, peopleData) => {
   }
 };
 
+export const uploadUserPhoto = async (id_people, photoData) => {
+  try {
+    const response = await api.patch(`/pessoa/upload-foto/${id_people}`, photoData);
+    return response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error.response?.data));
+  }
+};
+
+export const cancelOrder = async (orderId) => {
+  const response = await api.patch(`/pedido/${orderId}/cancel`);
+  return response.data;
+};
+
 export const createOrder = async (orderData) => {
   try {
     const response = await api.post('/pedido/checkout', orderData);
@@ -203,6 +221,19 @@ export const getAllOrdersForDashboard = () => {
     params: { page: 1, size: 0 },
   });
 };
+
+export const getAllOrders = () =>
+  api.get('/pedido/listar', {
+    params: { page: 1, size: 0 },
+  });
+
+export const getOrderStatuses = async () => {
+  const response = await api.get('/pedido/status/listar');
+  return response.data;
+};
+
+export const updateOrderStatus = (orderId, statusId) =>
+  api.patch(`/pedido/${orderId}/status`, { id_order_status: statusId });
 
 export const deleteProduct = async (id_product) => {
   try {
@@ -264,6 +295,61 @@ export const getAllTypeOfPayment = async (page = 1, size = 6) => {
   return api.get(`/pagamento/listar`, {
     params: { page, size },
   });
+};
+
+export const getAllDeliveryTypes = (page = 1, size = 1000) =>
+  api.get('/entrega/listar', { params: { page, size } });
+
+export const createTypeOfDelivery = async (deliveryData) => {
+  try {
+    const response = await api.post('/entrega/salvar', deliveryData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { mensagem: 'Erro ao criar tipo de entrega' };
+  }
+};
+
+export const updateTypeOfDelivery = async (id, deliveryData) => {
+  try {
+    const response = await api.put(`/entrega/atualizar/${id}`, deliveryData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { mensagem: 'Erro ao atualizar tipo de entrega' };
+  }
+};
+
+export const deleteTypeOfDelivery = async (id) => {
+  try {
+    await api.delete(`/entrega/excluir/${id}`);
+  } catch (error) {
+    throw error.response?.data || { mensagem: 'Erro ao excluir tipo de entrega' };
+  }
+};
+
+export const getAdminUsers = (page = 1, size = 6, role = 'all') =>
+  api.get('/admin/usuarios', { params: { page, size, role } });
+
+export const updateUserRoles = (id_user, id_roles) =>
+  api.put(`/admin/usuarios/${id_user}/roles`, { id_roles });
+
+export const updateAdminPerson = (id_people, personData) =>
+  api.put(`/admin/pessoas/${id_people}`, personData);
+
+export const getAdminRoles = () => api.get('/admin/papeis');
+
+export const getAdminPermissions = () => api.get('/admin/permissoes');
+
+export const updateRolePermissions = (id_role, id_permissions) =>
+  api.put(`/admin/papeis/${id_role}/permissoes`, { id_permissions });
+
+export const createPaymentCheckout = async (checkoutData) => {
+  const response = await api.post('/pagamento/checkout', checkoutData);
+  return response.data;
+};
+
+export const getPaymentCheckoutStatus = async (attemptId) => {
+  const response = await api.get(`/pagamento/checkout/${attemptId}`);
+  return response.data;
 };
 
 export const createTypeOfPayment = async (paymentData) => {

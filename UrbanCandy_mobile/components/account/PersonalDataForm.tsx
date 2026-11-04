@@ -19,6 +19,10 @@ type Props = {
 
     imageUri?: string | null;
     onPickImage?: () => void;
+    avatarColor: 'dark' | 'pink';
+    onChangeAvatarColor: (color: 'dark' | 'pink') => void;
+    useInitialAvatar: boolean;
+    onChangeUseInitialAvatar: (enabled: boolean) => void;
 
     name: string;
     cpf: string;
@@ -44,6 +48,10 @@ export default function PersonalDataForm({
 
     imageUri,
     onPickImage,
+    avatarColor,
+    onChangeAvatarColor,
+    useInitialAvatar,
+    onChangeUseInitialAvatar,
 
     name,
     cpf,
@@ -81,17 +89,23 @@ export default function PersonalDataForm({
             width: 100,
             height: 100,
             borderRadius: 50,
-            backgroundColor: colors.background,
+            backgroundColor: avatarColor === 'pink' ? '#D63384' : '#222222',
             justifyContent: 'center',
             alignItems: 'center',
             borderWidth: 2,
-            borderColor: colors.primary,
+            borderColor: avatarColor === 'pink' ? '#D63384' : '#222222',
         },
 
         avatarImage: {
-            width: '100%',
-            height: '100%',
+            width: '100%' as const,
+            height: '100%' as const,
             borderRadius: 50,
+        },
+
+        avatarInitial: {
+            color: '#FFFFFF',
+            fontFamily: font.bold,
+            fontSize: 42,
         },
 
         cameraBadge: {
@@ -108,6 +122,74 @@ export default function PersonalDataForm({
             fontFamily: font.medium,
             fontSize: fontSize.sm,
             color: colors.textSecondary,
+        },
+
+        avatarColorOptions: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: space.sm,
+            marginTop: space.sm,
+        },
+
+        avatarColorOption: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: space.xs,
+            paddingHorizontal: space.sm,
+            paddingVertical: space.xs,
+            borderWidth: 1,
+            borderColor: colors.border || '#DDDDDD',
+            borderRadius: 18,
+        },
+
+        avatarColorOptionSelected: {
+            borderColor: colors.text,
+            borderWidth: 2,
+        },
+
+        avatarColorOptionDisabled: {
+            backgroundColor: '#F3F3F3',
+            borderColor: '#E5E5E5',
+            opacity: 0.55,
+        },
+
+        avatarColorSwatch: {
+            width: 16,
+            height: 16,
+            borderRadius: 8,
+        },
+
+        avatarColorLabel: {
+            color: colors.text,
+            fontFamily: font.medium,
+            fontSize: fontSize.xs,
+        },
+
+        avatarModeOption: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: space.xs,
+            marginTop: space.sm,
+        },
+
+        avatarModeOptionDisabled: {
+            opacity: 0.55,
+        },
+
+        avatarModeCheckbox: {
+            width: 20,
+            height: 20,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 1,
+            borderColor: colors.textSecondary,
+            borderRadius: 4,
+        },
+
+        avatarModeCheckboxSelected: {
+            backgroundColor: colors.primary,
+            borderColor: colors.primary,
         },
 
         row: {
@@ -164,7 +246,7 @@ export default function PersonalDataForm({
                         style={styles.avatarPressable}
                         onPress={onPickImage}
                     >
-                        {imageUri ? (
+                        {imageUri && !useInitialAvatar ? (
                             <Image
                                 source={imageUri}
                                 style={styles.avatarImage}
@@ -173,17 +255,70 @@ export default function PersonalDataForm({
                                 transition={150}
                             />
                         ) : (
-                            <Ionicons
-                                name="person"
-                                size={48}
-                                color={colors.textSecondary}
-                            />
+                            <Text style={styles.avatarInitial}>
+                                {name.trim().charAt(0).toUpperCase() || '?'}
+                            </Text>
                         )}
                         <View style={styles.cameraBadge}>
                             <Ionicons name="camera" size={14} color="#FFF" />
                         </View>
                     </Pressable>
                     <Text style={styles.avatarText}>Alterar foto de perfil</Text>
+                    <Pressable
+                        accessibilityRole="checkbox"
+                        accessibilityState={{
+                            checked: useInitialAvatar,
+                            disabled: !name.trim(),
+                        }}
+                        disabled={!name.trim()}
+                        onPress={() => onChangeUseInitialAvatar(!useInitialAvatar)}
+                        style={[
+                            styles.avatarModeOption,
+                            !name.trim() && styles.avatarModeOptionDisabled,
+                        ]}
+                    >
+                        <View style={[
+                            styles.avatarModeCheckbox,
+                            useInitialAvatar && styles.avatarModeCheckboxSelected,
+                        ]}>
+                            {useInitialAvatar && (
+                                <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                            )}
+                        </View>
+                        <Text style={styles.avatarColorLabel}>
+                            Usar inicial no lugar da foto
+                        </Text>
+                    </Pressable>
+                    <View style={styles.avatarColorOptions}>
+                        {[
+                            { value: 'dark' as const, label: 'Preto e branco' },
+                            { value: 'pink' as const, label: 'Rosa' },
+                        ].map(option => (
+                            <Pressable
+                                key={option.value}
+                                accessibilityRole="radio"
+                                accessibilityState={{
+                                    selected: avatarColor === option.value,
+                                    disabled: !useInitialAvatar || !name.trim(),
+                                }}
+                                disabled={!useInitialAvatar || !name.trim()}
+                                onPress={() => onChangeAvatarColor(option.value)}
+                                style={[
+                                    styles.avatarColorOption,
+                                    avatarColor === option.value && styles.avatarColorOptionSelected,
+                                    (!useInitialAvatar || !name.trim()) && styles.avatarColorOptionDisabled,
+                                ]}
+                            >
+                                <View
+                                    style={[
+                                        styles.avatarColorSwatch,
+                                        { backgroundColor: option.value === 'pink' ? '#D63384' : '#222222' },
+                                    ]}
+                                />
+                                <Text style={styles.avatarColorLabel}>{option.label}</Text>
+                            </Pressable>
+                        ))}
+                    </View>
                 </View>
             )}
 

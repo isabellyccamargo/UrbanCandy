@@ -222,6 +222,14 @@ npm install
 npm run dev
 ```
 
+Para que `https://urbancandy.local` use o mesmo frontend Vite e backend local, inicie o Vite e selecione o modo local:
+
+```powershell
+.\scripts\set-api-mode.ps1 -Mode local
+```
+
+Nesse modo, o Nginx do Docker encaminha o site para o Vite local e a API para o backend local. As alterações salvas no frontend aparecem nos dois endereços sem reconstruir a imagem. Para usar os serviços empacotados no Docker, selecione `-Mode docker`; nesse modo, o frontend é servido pela imagem do Docker.
+
 ### 4. Aplicativo Mobile
 
 Em outro terminal:

@@ -8,7 +8,7 @@ import {
     View,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 
 import { useCart } from '@/context/CartContext';
@@ -29,6 +29,7 @@ import {
 import { getAllDeliveryTypes } from '@/services/delivery';
 import { getApiErrorMessage } from '@/services/error';
 import { useAppAlert } from '@/components/common/AppAlert';
+import { Ionicons } from '@expo/vector-icons';
 
 import PaymentHeader from '@/components/payment/PaymentHeader';
 import OrderSummary from '@/components/payment/OrderSumary';
@@ -44,7 +45,6 @@ type DeliveryType = {
 
 export default function PaymentScreen() {
     const router = useRouter();
-    const { id_delivery } = useLocalSearchParams<{ id_delivery?: string }>();
     const { items, total, clearCart } = useCart();
     const { colors, font, fontSize, space } = useTheme();
     const { showMessage } = useAppAlert();
@@ -55,6 +55,7 @@ export default function PaymentScreen() {
         null,
     );
     const [delivery, setDelivery] = useState<DeliveryType | null>(null);
+    const [deliveryTypes, setDeliveryTypes] = useState<DeliveryType[]>([]);
     const [loading, setLoading] = useState(true);
     const [finishing, setFinishing] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -77,8 +78,19 @@ export default function PaymentScreen() {
                 if (!user.id_user)
                     throw new Error('ID do usuário não encontrado.');
 
-                const data = await getUserProfile(user.id_user);
+                const [data, deliveryResponse] = await Promise.all([
+                    getUserProfile(user.id_user),
+                    getAllDeliveryTypes(),
+                ]);
                 setProfile(data);
+                const availableDeliveryTypes =
+                    deliveryResponse?.data?.data ??
+                    deliveryResponse?.data ??
+                    [];
+                if (!Array.isArray(availableDeliveryTypes)) {
+                    throw new Error('Não foi possível carregar os tipos de entrega.');
+                }
+                setDeliveryTypes(availableDeliveryTypes);
                 try {
                     const verification = await getEmailVerificationStatus();
                     setEmailVerified(
@@ -93,14 +105,6 @@ export default function PaymentScreen() {
                     );
                 }
 
-                if (id_delivery) {
-                    const response = await getAllDeliveryTypes();
-                    const selected = (response?.data ?? []).find(
-                        (type: DeliveryType) =>
-                            type.id_type_delivery === Number(id_delivery),
-                    );
-                    setDelivery(selected ?? null);
-                }
             } catch (err) {
                 const message = getApiErrorMessage(
                     err,
@@ -114,7 +118,7 @@ export default function PaymentScreen() {
         }
 
         loadData();
-    }, [id_delivery, showMessage]);
+    }, [showMessage]);
 
     useEffect(() => {
         if (!activeCheckout) return;
@@ -173,10 +177,10 @@ export default function PaymentScreen() {
             return;
         }
 
-        if (!id_delivery) {
+        if (!delivery) {
             showMessage(
                 'Atenção',
-                'Selecione um tipo de entrega.',
+                'Selecione entrega ou retirada no local.',
                 undefined,
                 'warning',
             );
@@ -220,7 +224,7 @@ export default function PaymentScreen() {
             if (paymentMethod === 'cash') {
                 await createOrder({
                     id_payment: Number(selectedPayment.id_payment),
-                    id_type_delivery: Number(id_delivery),
+                    id_type_delivery: Number(delivery.id_type_delivery),
                     cart,
                 });
                 clearCart();
@@ -240,7 +244,7 @@ export default function PaymentScreen() {
 
             const checkout = await createPaymentCheckout({
                 id_payment: 0,
-                id_type_delivery: Number(id_delivery),
+                id_type_delivery: Number(delivery.id_type_delivery),
                 payment_method: 'both',
                 cart,
             });
@@ -296,20 +300,43 @@ export default function PaymentScreen() {
             marginTop: space.lg,
             marginBottom: space.sm,
         },
-        delivery: {
+        deliveryOption: {
+            minHeight: 72,
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: 10,
+            paddingHorizontal: space.lg,
+            paddingVertical: space.sm,
+            marginBottom: space.sm,
             backgroundColor: colors.white,
-            borderRadius: 12,
-            padding: space.lg,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
-            elevation: 8,
         },
-        deliveryName: {
-            fontFamily: font.semibold,
-            fontSize: fontSize.md,
+        deliveryOptionSelected: {
+            borderColor: colors.primary,
+            backgroundColor: colors.secondary,
+        },
+        deliveryIndicator: {
+            width: 24,
+            fontSize: fontSize.lg,
             color: colors.primary,
+        },
+        deliveryIcon: {
+            marginRight: space.md,
+        },
+        deliveryOptionCopy: {
+            flex: 1,
+        },
+        deliveryOptionName: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.text,
+        },
+        deliveryOptionDescription: {
+            marginTop: space.xs,
+            fontFamily: font.regular,
+            fontSize: fontSize.sm,
+            color: colors.textSecondary,
         },
         loading: {
             flex: 1,
@@ -391,6 +418,7 @@ export default function PaymentScreen() {
         name: people?.name ?? profileAny?.name ?? '',
         cpf: people?.cpf ?? profileAny?.cpf ?? '',
         phone: people?.phone ?? people?.telephone ?? profileAny?.phone ?? '',
+        email: people?.email ?? profileAny?.email ?? '',
     };
 
     const addressData: AddressData = {
@@ -400,6 +428,14 @@ export default function PaymentScreen() {
         street: address?.road ?? '',
         number: String(address?.number ?? ''),
     };
+    const isPickup = /retirada|pickup/i.test(delivery?.name ?? '');
+    const isAddressComplete = [
+        addressData.cep,
+        addressData.city,
+        addressData.neighborhood,
+        addressData.street,
+        addressData.number,
+    ].every((value) => String(value).trim().length > 0);
 
     return (
         <View style={styles.container}>
@@ -412,22 +448,68 @@ export default function PaymentScreen() {
                 <OrderSummary />
 
                 <Text style={styles.sectionTitle}>
-                    Tipo (entrega ou retirada)
+                    Como deseja receber? *
                 </Text>
-                <View style={styles.delivery}>
-                    <Text style={styles.deliveryName}>
-                        {delivery?.name || 'Tipo não selecionado'}
+                {deliveryTypes.map((type) => {
+                    const selected =
+                        delivery?.id_type_delivery === type.id_type_delivery;
+                    return (
+                        <Pressable
+                            key={type.id_type_delivery}
+                            accessibilityRole="radio"
+                            accessibilityState={{ checked: selected }}
+                            style={[
+                                styles.deliveryOption,
+                                selected && styles.deliveryOptionSelected,
+                            ]}
+                            onPress={() => setDelivery(type)}
+                        >
+                            <Text style={styles.deliveryIndicator}>
+                                {selected ? '●' : '○'}
+                            </Text>
+                            <Ionicons
+                                name={
+                                    /retirada|pickup/i.test(type.name)
+                                        ? 'storefront-outline'
+                                        : 'car-outline'
+                                }
+                                size={22}
+                                color={colors.text}
+                                style={styles.deliveryIcon}
+                            />
+                            <View style={styles.deliveryOptionCopy}>
+                                <Text style={styles.deliveryOptionName}>
+                                    {type.name}
+                                </Text>
+                                <Text style={styles.deliveryOptionDescription}>
+                                    {/retirada|pickup/i.test(type.name)
+                                        ? 'Retire seu pedido no local.'
+                                        : 'Receba seu pedido no endereço cadastrado.'}
+                                </Text>
+                            </View>
+                        </Pressable>
+                    );
+                })}
+                {deliveryTypes.length === 0 && (
+                    <Text style={styles.error}>
+                        Nenhuma opção de entrega está disponível.
                     </Text>
-                </View>
+                )}
 
                 <Text style={styles.sectionTitle}>Dados Pessoais</Text>
                 <CustomerInfo data={customerData} />
 
-                <Text style={styles.sectionTitle}>Endereço</Text>
-                <AddressInfo data={addressData} />
+                <Text style={styles.sectionTitle}>
+                    {isPickup ? 'Retirada no local' : 'Endereço de entrega'}
+                </Text>
+                <AddressInfo
+                    data={addressData}
+                    isComplete={isAddressComplete}
+                    isPickup={isPickup}
+                />
 
                 <Text style={styles.sectionTitle}>
-                    Selecione a forma de pagamento
+                    Selecione a forma de pagamento *
                 </Text>
 
                 <PaymentMethods

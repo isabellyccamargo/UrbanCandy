@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllProducts, deleteProduct } from '../../../services/Api';
+import { getAllCategory, getAllProducts, deleteProduct } from '../../../services/Api';
 import { Button } from '../../../componentes/Button/Button';
+import AdminFilterSelect from '../../../componentes/AdminFilterSelect/AdminFilterSelect';
 import { toast } from 'react-toastify';
 import './ProductsList.css';
 
@@ -12,12 +13,14 @@ const ProductList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [idDel, setIdDel] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
   const navigate = useNavigate();
 
-  const load = async (page = 1) => {
+  const load = async (page = 1, category = selectedCategory) => {
     try {
       setLoading(true);
-      const res = await getAllProducts(page, 6);
+      const res = await getAllProducts(page, 6, category);
       const { data, totalPages: total } = res.data;
       setProducts(data || []);
       setTotalPages(total || 1);
@@ -29,8 +32,53 @@ const ProductList = () => {
   };
 
   useEffect(() => {
-    load(currentPage);
-  }, [currentPage]);
+    let active = true;
+
+    getAllProducts(currentPage, 6, selectedCategory)
+      .then((response) => {
+        if (!active) return;
+        const { data, totalPages: total } = response.data;
+        setProducts(data || []);
+        setTotalPages(total || 1);
+      })
+      .catch(() => {
+        if (active) toast.error('Erro ao carregar produtos. 🍬');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [currentPage, selectedCategory]);
+
+  useEffect(() => {
+    let active = true;
+
+    getAllCategory(1, 100)
+      .then((response) => {
+        if (!active) return;
+        const categoryData = response.data?.data || response.data || [];
+        if (!Array.isArray(categoryData)) {
+          throw new Error('Formato inválido ao carregar categorias.');
+        }
+        setCategories(categoryData);
+      })
+      .catch(() => {
+        if (active) toast.error('Erro ao carregar categorias para o filtro.');
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleCategoryChange = (value) => {
+    setLoading(true);
+    setCurrentPage(1);
+    setSelectedCategory(value);
+  };
 
   const confirmDelete = async () => {
     try {
@@ -53,9 +101,23 @@ const ProductList = () => {
           <h1>Produtos</h1>
           <p>Gerencie os doces da sua vitrine</p>
         </div>
-        <Button variant="primary" onClick={() => navigate('/admin/produtos/form')}>
-          + Novo Produto
-        </Button>
+        <div className="products-header-actions">
+          <AdminFilterSelect
+            label="Categoria"
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            options={[
+              { value: '', label: 'Todas' },
+              ...categories.map((category) => ({
+                value: String(category.id_category),
+                label: category.name_category,
+              })),
+            ]}
+          />
+          <Button variant="primary" onClick={() => navigate('/admin/produtos/form')}>
+            + Novo Produto
+          </Button>
+        </div>
       </header>
 
       <section className="admin-table-container">
@@ -141,8 +203,11 @@ const ProductList = () => {
           <div className="pagination-controls">
             <Button
               variant="secondary"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((p) => p - 1)}
+              disabled={currentPage === 1 || loading}
+              onClick={() => {
+                setLoading(true);
+                setCurrentPage((p) => p - 1);
+              }}
             >
               Anterior
             </Button>
@@ -151,8 +216,11 @@ const ProductList = () => {
             </span>
             <Button
               variant="secondary"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((p) => p + 1)}
+              disabled={currentPage === totalPages || loading}
+              onClick={() => {
+                setLoading(true);
+                setCurrentPage((p) => p + 1);
+              }}
             >
               Próximo
             </Button>

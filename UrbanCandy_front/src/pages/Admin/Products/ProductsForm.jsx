@@ -10,13 +10,16 @@ const ProductsForm = () => {
   const location = useLocation();
   const editItem = location.state?.produto;
 
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [idCat, setIdCat] = useState('');
-  const [desc, setDesc] = useState('');
-  const [feat, setFeat] = useState(false);
+  const [name, setName] = useState(editItem?.name || '');
+  const [price, setPrice] = useState(editItem?.price || '');
+  const [idCat, setIdCat] = useState(editItem?.id_category || '');
+  const [desc, setDesc] = useState(editItem?.description || '');
+  const [ingredients, setIngredients] = useState(editItem?.ingredients || '');
+  const [feat, setFeat] = useState(editItem?.featured || false);
   const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] = useState(
+    editItem ? `https://urbancandy.local//uploads/${editItem.image}` : null
+  );
 
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -32,15 +35,7 @@ const ProductsForm = () => {
       }
     })();
 
-    if (editItem) {
-      setName(editItem.name);
-      setPrice(editItem.price);
-      setIdCat(editItem.id_category);
-      setDesc(editItem.description || '');
-      setFeat(editItem.featured || false);
-      setPreview(`https://urbancandy.local//uploads/${editItem.image}`);
-    }
-  }, [editItem]);
+  }, []);
 
   const handleFile = (e) => {
     const file = e.target.files[0];
@@ -65,6 +60,7 @@ const ProductsForm = () => {
     formData.append('price', Math.max(0, parseFloat(price)));
     formData.append('id_category', idCat);
     formData.append('description', desc);
+    formData.append('ingredients', ingredients);
     formData.append('featured', feat);
     if (image) formData.append('image', image);
 
@@ -106,6 +102,15 @@ const ProductsForm = () => {
                 onChange={(e) => setDesc(e.target.value)}
                 required
                 maxLength="255"
+              />
+            </div>
+            <div className="input-group">
+              <label>Ingredientes (separados por ponto e vírgula)</label>
+              <textarea
+                value={ingredients}
+                onChange={(e) => setIngredients(e.target.value)}
+                rows="3"
+                placeholder="Chocolate; leite condensado; manteiga"
               />
             </div>
             <div className="input-row" style={{ display: 'flex', gap: '20px' }}>

@@ -107,6 +107,26 @@ export default function LoginScreen() {
                 await AsyncStorage.setItem('token', token);
                 
                 if (userObj) {
+                    const pendingAvatarColorKey =
+                        `@UrbanCandy:avatarColor:pending:${email.trim().toLowerCase()}`;
+                    const pendingAvatarColor = await AsyncStorage.getItem(pendingAvatarColorKey);
+                    if (userObj.id_user && pendingAvatarColor) {
+                        await AsyncStorage.setItem(
+                            `@UrbanCandy:avatarColor:${userObj.id_user}`,
+                            pendingAvatarColor
+                        );
+                        await AsyncStorage.removeItem(pendingAvatarColorKey);
+                    }
+                    const pendingAvatarModeKey =
+                        `@UrbanCandy:avatarMode:pending:${email.trim().toLowerCase()}`;
+                    const pendingAvatarMode = await AsyncStorage.getItem(pendingAvatarModeKey);
+                    if (userObj.id_user && pendingAvatarMode) {
+                        await AsyncStorage.setItem(
+                            `@UrbanCandy:avatarMode:${userObj.id_user}`,
+                            pendingAvatarMode
+                        );
+                        await AsyncStorage.removeItem(pendingAvatarModeKey);
+                    }
                     await AsyncStorage.setItem('@UrbanCandy:user', JSON.stringify(userObj));
                     await AsyncStorage.setItem('user', JSON.stringify(userObj));
                     setUser(userObj);

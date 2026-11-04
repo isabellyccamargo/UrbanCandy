@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { getMyOrders, getUserProfile } from '../../services/Api';
+import { cancelOrder, getMyOrders, getUserProfile } from '../../services/Api';
 import { Button } from '../../componentes/Button/Button';
 import { toast } from 'react-toastify';
 import './MyOrders.css';
@@ -20,6 +20,14 @@ const getOrderStatusClass = (statusName) => {
   return 'status-pending';
 };
 
+const canCancelOrder = (order) => {
+  const statusId = Number(order.status?.id_order_status ?? order.status?.id);
+  if (statusId === 1) return true;
+
+  const statusName = String(order.status?.name || '').trim().toLowerCase();
+  return !statusId && ['recebido', 'pendente'].includes(statusName);
+};
+
 export const MyOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +35,8 @@ export const MyOrders = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const requestedOrderId = Number(searchParams.get('pedido') || 0);
 
   const formatCurrency = (value) =>
@@ -84,6 +94,8 @@ export const MyOrders = () => {
 
   const closeOrderDetails = () => {
     setSelectedOrder(null);
+    if (!searchParams.has('pedido')) return;
+
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('pedido');
     setSearchParams(nextParams);
@@ -91,10 +103,44 @@ export const MyOrders = () => {
 
   const showOrderDetails = (order) => {
     setSelectedOrder(order);
-    setCurrentPage(1);
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set('pedido', String(order.id_orders));
-    setSearchParams(nextParams);
+  };
+
+  const handleCancelOrder = async () => {
+    if (!selectedOrder || !canCancelOrder(selectedOrder) || cancelling) return;
+
+    setCancelling(true);
+    try {
+      await cancelOrder(selectedOrder.id_orders);
+      const cancelledStatus = {
+        ...selectedOrder.status,
+        id_order_status: 5,
+        id: 5,
+        name: 'Cancelado',
+        label: 'Cancelado',
+      };
+      setOrders((currentOrders) =>
+        currentOrders.map((order) =>
+          order.id_orders === selectedOrder.id_orders
+            ? { ...order, status_id: 5, status: cancelledStatus }
+            : order
+        )
+      );
+      setSelectedOrder((currentOrder) =>
+        currentOrder
+          ? { ...currentOrder, status_id: 5, status: cancelledStatus }
+          : currentOrder
+      );
+      setShowCancelConfirmation(false);
+      toast.success('Pedido cancelado com sucesso.');
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          error.response?.data?.mensagem ||
+          'Não foi possível cancelar o pedido.'
+      );
+    } finally {
+      setCancelling(false);
+    }
   };
 
   return (
@@ -113,6 +159,7 @@ export const MyOrders = () => {
               <th>Qtd Itens</th>
               <th>Total</th>
               <th>Pagamento</th>
+              <th>Entrega</th>
               <th>Status</th>
               <th>Detalhes</th>
             </tr>
@@ -120,7 +167,7 @@ export const MyOrders = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>
                   Carregando...
                 </td>
               </tr>
@@ -147,6 +194,7 @@ export const MyOrders = () => {
                       {order.paymentType?.name_payment || 'Padrão'}
                     </span>
                   </td>
+                  <td data-label="Entrega">{order.deliveryType?.name || '---'}</td>
                   <td data-label="Status">
                     <span
                       className={`order-status-badge ${getOrderStatusClass(
@@ -165,7 +213,7 @@ export const MyOrders = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '40px' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '40px' }}>
                   Você ainda não realizou nenhum pedido. ✨
                 </td>
               </tr>
@@ -254,6 +302,53 @@ export const MyOrders = () => {
             </p>
             <p>Pagamento: {selectedOrder.paymentType?.name_payment || 'Padrão'}</p>
             <p>Retirada/entrega: {selectedOrder.deliveryType?.name || '---'}</p>
+            {canCancelOrder(selectedOrder) && (
+              <Button
+                variant="secondary"
+                disabled={cancelling}
+                onClick={() => setShowCancelConfirmation(true)}
+              >
+                Cancelar pedido
+              </Button>
+            )}
+          </section>
+        </div>
+      )}
+      {showCancelConfirmation && selectedOrder && (
+        <div
+          className="order-cancel-overlay"
+          onClick={() => !cancelling && setShowCancelConfirmation(false)}
+          role="presentation"
+        >
+          <section
+            className="order-cancel-confirmation"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="order-cancel-title"
+            aria-describedby="order-cancel-description"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="order-cancel-icon" aria-hidden="true">!</div>
+            <h2 id="order-cancel-title">Cancelar pedido?</h2>
+            <p id="order-cancel-description">
+              Deseja realmente cancelar o pedido #{selectedOrder.id_orders}? Esta ação não pode ser desfeita.
+            </p>
+            <div className="order-cancel-actions">
+              <Button
+                variant="secondary"
+                disabled={cancelling}
+                onClick={() => setShowCancelConfirmation(false)}
+              >
+                Manter pedido
+              </Button>
+              <Button
+                variant="primary"
+                disabled={cancelling}
+                onClick={() => void handleCancelOrder()}
+              >
+                {cancelling ? 'Cancelando...' : 'Sim, cancelar'}
+              </Button>
+            </div>
           </section>
         </div>
       )}

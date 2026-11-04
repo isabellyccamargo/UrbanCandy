@@ -36,7 +36,7 @@ class OrderService {
       throw new ApiException('USER_NOT_FOUND', 401, 'Usuário inválido.');
     }
 
-    if (!cart?.items?.length) {
+    if (!cart || (!cart.items?.length && !cart.offers?.length)) {
       throw new ApiException('CART_EMPTY', 400, 'Carrinho vazio.');
     }
 

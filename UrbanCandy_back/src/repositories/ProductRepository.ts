@@ -7,8 +7,9 @@ interface ProductQueryResult {
 }
 
 class ProductRepository {
-  async findAllProduct(limit: number, offset: number) {
+  async findAllProduct(limit: number, offset: number, categoryId?: number) {
     return await Products.findAndCountAll({
+      ...(categoryId ? { where: { id_category: categoryId } } : {}),
       limit: limit,
       offset: offset,
       include: [{ all: true }],

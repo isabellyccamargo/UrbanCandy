@@ -20,7 +20,14 @@ export default function RootLayout() {
                                 <Stack.Screen name="cadastro" />
                                 <Stack.Screen name="email-confirmation" />
                                 <Stack.Screen name="protected" />
-                                <Stack.Screen name="cart" />
+                                <Stack.Screen
+                                    name="cart"
+                                    options={{
+                                        presentation: 'transparentModal',
+                                        animation: 'slide_from_right',
+                                        contentStyle: { backgroundColor: 'transparent' },
+                                    }}
+                                />
                             </Stack>
                         </CartProvider>
                     </NotificationProvider>

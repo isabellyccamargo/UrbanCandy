@@ -2,10 +2,7 @@ import ProductRepository from '../repositories/ProductRepository.js';
 import CategoryRepository from '../repositories/CategoryRepository.js';
 import Products from '../models/Products.js';
 import { ApiException } from '../exception/ApiException.js';
-import {
-  cacheProductQuery,
-  invalidateProductCache,
-} from '../config/RedisCache.js';
+import { cacheProductQuery, invalidateProductCache } from '../config/RedisCache.js';
 
 interface ProductList {
   rows: Products[];
@@ -19,10 +16,11 @@ class ProductService {
     if (!p.id_category) throw new ApiException('INVALID_PRODUCT_CATEGORY', 400);
   }
 
-  async findAllProduct(page: number = 1, size: number = 6) {
+  async findAllProduct(page: number = 1, size: number = 6, categoryId?: number) {
     const offset = (page - 1) * size;
-    return cacheProductQuery(`all:page:${page}:size:${size}`, () =>
-      ProductRepository.findAllProduct(size, offset)
+    const categoryKey = categoryId ?? 'all';
+    return cacheProductQuery(`all:category:${categoryKey}:page:${page}:size:${size}`, () =>
+      ProductRepository.findAllProduct(size, offset, categoryId)
     );
   }
 

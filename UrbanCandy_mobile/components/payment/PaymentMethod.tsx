@@ -158,8 +158,8 @@ export default function PaymentMethods({
 
                             <Text style={styles.description}>
                                 {isCash
-                                    ? 'Pagamento na entrega ou retirada'
-                                    : 'Pix, cartão de crédito ou débito no checkout seguro'}
+                                    ? 'Pagamento na entrega ou retirada.'
+                                    : 'Pix, cartão de crédito ou débito no checkout seguro.'}
                             </Text>
                         </View>
                     </Pressable>
