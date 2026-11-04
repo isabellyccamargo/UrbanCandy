@@ -46,6 +46,75 @@ $encoding = [System.Text.UTF8Encoding]::new($hasUtf8Bom)
 $originalContent = [System.IO.File]::ReadAllText($envPath, $encoding)
 $lineEnding = if ($originalContent.Contains("`r`n")) { "`r`n" } else { "`n" }
 $updatedContent = $originalContent
+$mobileEnvPath = Join-Path $repositoryRoot 'UrbanCandy_mobile\.env'
+$mobileEnvUpdatedContent = $null
+$mobileEnvEncoding = $null
+$mobileEnvWriteAttempted = $false
+
+if (Test-Path $mobileEnvPath) {
+  $mobileEnvBytes = [System.IO.File]::ReadAllBytes($mobileEnvPath)
+  $mobileHasUtf8Bom = $mobileEnvBytes.Length -ge 3 -and
+    $mobileEnvBytes[0] -eq 0xEF -and
+    $mobileEnvBytes[1] -eq 0xBB -and
+    $mobileEnvBytes[2] -eq 0xBF
+  $mobileEnvEncoding = [System.Text.UTF8Encoding]::new($mobileHasUtf8Bom)
+  $mobileEnvContent = [System.IO.File]::ReadAllText($mobileEnvPath, $mobileEnvEncoding)
+  $mobileApiUrlPattern = '(?m)^\s*EXPO_PUBLIC_API_URL\s*=\s*(.*?)\s*$'
+  $mobileApiUrlMatches = [regex]::Matches($mobileEnvContent, $mobileApiUrlPattern)
+
+  if ($mobileApiUrlMatches.Count -gt 1) {
+    throw 'O UrbanCandy_mobile\.env contém mais de uma definição EXPO_PUBLIC_API_URL. Remova a duplicata e tente novamente.'
+  }
+
+  if ($mobileApiUrlMatches.Count -eq 1) {
+    $mobileApiPort = 3000
+    if ($Mode -eq 'docker') {
+      $backendPortMatches = [regex]::Matches($originalContent, '(?m)^\s*BACKEND_PORT\s*=\s*(.*?)\s*$')
+      if ($backendPortMatches.Count -gt 1) {
+        throw 'O .env da raiz contém mais de uma definição BACKEND_PORT. Remova a duplicata e tente novamente.'
+      }
+
+      $configuredBackendPort = if ($backendPortMatches.Count -eq 1) {
+        $backendPortMatches[0].Groups[1].Value.Trim().Trim('"').Trim("'")
+      } else {
+        '3030'
+      }
+      if (-not [int]::TryParse($configuredBackendPort, [ref]$mobileApiPort) -or
+        $mobileApiPort -lt 1 -or $mobileApiPort -gt 65535) {
+        throw 'BACKEND_PORT no .env da raiz deve ser um número entre 1 e 65535.'
+      }
+    }
+
+    $configuredMobileApiUrl = $mobileApiUrlMatches[0].Groups[1].Value.Trim()
+    try {
+      $mobileApiUri = [Uri]::new($configuredMobileApiUrl)
+    } catch {
+      throw 'EXPO_PUBLIC_API_URL no UrbanCandy_mobile\.env deve ser uma URL absoluta válida.'
+    }
+    if (-not $mobileApiUri.IsAbsoluteUri -or
+      $mobileApiUri.Scheme -notin @('http', 'https') -or
+      $mobileApiUri.Query -or $mobileApiUri.Fragment -or $mobileApiUri.UserInfo) {
+      throw 'EXPO_PUBLIC_API_URL no UrbanCandy_mobile\.env deve ser uma URL HTTP(S) sem query, fragmento ou credenciais.'
+    }
+
+    $mobileApiUriBuilder = [System.UriBuilder]::new($mobileApiUri)
+    $mobileApiUriBuilder.Port = $mobileApiPort
+    $updatedMobileApiUrl = $mobileApiUriBuilder.Uri.GetLeftPart([System.UriPartial]::Path).TrimEnd('/')
+    $mobileEnvUpdatedContent = [regex]::Replace(
+      $mobileEnvContent,
+      $mobileApiUrlPattern,
+      [System.Text.RegularExpressions.MatchEvaluator]{
+        param($match)
+        "EXPO_PUBLIC_API_URL=$updatedMobileApiUrl"
+      },
+      1
+    )
+  } else {
+    Write-Warning 'EXPO_PUBLIC_API_URL não está configurada em UrbanCandy_mobile\.env; o modo do Expo não foi alterado.'
+  }
+} else {
+  Write-Warning 'UrbanCandy_mobile\.env não existe; configure EXPO_PUBLIC_API_URL para habilitar a troca automática do modo no Expo.'
+}
 
 foreach ($setting in @{
     BACKEND_UPSTREAM = $backendUpstream
@@ -118,10 +187,19 @@ try {
     if (-not $healthy) { throw "A verificação de saúde da API pelo domínio urbancandy.local falhou (HTTP $lastStatus)." }
   }
 
+  if ($null -ne $mobileEnvUpdatedContent) {
+    $mobileEnvWriteAttempted = $true
+    [System.IO.File]::WriteAllText($mobileEnvPath, $mobileEnvUpdatedContent, $mobileEnvEncoding)
+    Write-Host "API mobile selecionada na porta $mobileApiPort."
+  }
+
   Write-Host "Modo $Mode ativo em https://urbancandy.local."
 } catch {
   $operationError = $_
   [System.IO.File]::WriteAllText($envPath, $originalContent, $encoding)
+  if ($mobileEnvWriteAttempted) {
+    [System.IO.File]::WriteAllText($mobileEnvPath, $mobileEnvContent, $mobileEnvEncoding)
+  }
   try {
     & docker compose up -d --no-deps --force-recreate urbancandy-nginx
     if ($LASTEXITCODE -ne 0) {

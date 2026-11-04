@@ -76,11 +76,15 @@ As portas publicadas podem ser alteradas no `.env` raiz com `HTTP_PORT`,
 
 ## Acesso pelo aplicativo mobile
 
-Para acessar o backend Docker em um celular físico, configure
-`EXPO_PUBLIC_API_URL` no `UrbanCandy_mobile/.env` com
-`http://<IP-do-computador>:3030`. O celular e o computador precisam estar na
-mesma rede, e o firewall deve permitir a conexão. O backend local usa a porta
-`3000`; no emulador Android padrão, o endereço é `http://10.0.2.2:3000`.
+Para acessar a API em um celular físico, configure uma vez
+`EXPO_PUBLIC_API_URL=http://<IP-do-computador>:3000` em
+`UrbanCandy_mobile/.env`. O celular e o computador precisam estar na mesma
+rede, e o firewall deve permitir a conexão. Ao selecionar modo local
+(`npm run dev` no backend) ou Docker (`scripts/start-docker.ps1`), o script
+`set-api-mode.ps1` mantém a porta do Expo sincronizada: `3000` para o backend
+local e `BACKEND_PORT` (padrão `3030`) para o Docker. Reinicie o Expo após a
+troca de modo para carregar a URL atualizada. No emulador Android padrão, use
+`http://10.0.2.2:3000` como URL inicial.
 
 ## Verificar, acompanhar e parar
 
@@ -142,12 +146,12 @@ Para desenvolver no celular sem conectar o backend ao MySQL do Compose:
    desenvolvimento e defina `REDIS_URL=redis://127.0.0.1:6380`. O modelo de
    configuração está em `UrbanCandy_back/.env.example`. Se `REDIS_PORT` foi
    alterado no `.env` da raiz, use a porta correspondente no `REDIS_URL`.
-3. Inicie a API local normalmente. Para o emulador Android padrão, o mobile já
-   usa `http://10.0.2.2:3000`. Em um celular físico com backend rodando no
-   Compose, configure `EXPO_PUBLIC_API_URL` no arquivo
-   `UrbanCandy_mobile/.env` como `http://<IP-do-computador>:3030`. Se estiver
-   usando backend local, use a porta `3000`. O celular e computador precisam
-   estar na mesma rede, e o firewall deve permitir a conexão.
+3. Configure a URL inicial no `.env` do mobile conforme o dispositivo: use
+   `http://10.0.2.2:3000` no emulador Android padrão ou
+   `http://<IP-do-computador>:3000` em um celular físico. Inicie a API local;
+   o `predev` seleciona o modo local. Para voltar ao backend Docker, execute
+   `scripts/start-docker.ps1`. A porta no `.env` do mobile é atualizada em cada
+   troca; reinicie o Expo para carregar a configuração nova.
 
 O Redis não é o banco de dados: o backend local continua usando o MySQL indicado
 em `UrbanCandy_back/.env`; o backend do Compose continua usando

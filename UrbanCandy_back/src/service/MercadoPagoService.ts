@@ -36,6 +36,13 @@ export function validateAccessToken(
   accessToken: string,
   nodeEnvironment = process.env.NODE_ENV
 ): string {
+  if (nodeEnvironment === 'test') {
+    throw new ApiException(
+      'PAYMENT_GATEWAY_DISABLED_IN_TEST',
+      503,
+      'O Mercado Pago está desativado no ambiente de testes.'
+    );
+  }
   if (nodeEnvironment === 'production' && accessToken.startsWith('TEST-')) {
     throw new ApiException(
       'PAYMENT_PRODUCTION_CREDENTIAL_REQUIRED',

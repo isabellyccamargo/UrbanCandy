@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/UseCart';
 import {
   createOrder,
+  confirmDemoPixPayment,
   getUserProfile,
   getAllTypeOfPayment,
   getAllDeliveryTypes,
@@ -13,8 +14,10 @@ import {
 import { Button } from '../../componentes/Button/Button';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/AuthContext';
-import { Banknote, Store, Truck, WalletCards } from 'lucide-react';
+import { Banknote, Clock3, QrCode, Store, Truck, WalletCards } from 'lucide-react';
 import './Checkout.css';
+
+const PIX_DEMO_DURATION_SECONDS = 5 * 60;
 
 const getPaymentMethodKind = (name) => {
   const normalizedName = String(name || '')
@@ -22,10 +25,64 @@ const getPaymentMethodKind = (name) => {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
-  return normalizedName.includes('dinheiro') || normalizedName.includes('cash')
-    ? 'cash'
-    : 'online';
+  if (normalizedName.includes('pix')) return 'pix';
+  if (normalizedName.includes('dinheiro') || normalizedName.includes('cash')) return 'cash';
+  return 'online';
 };
+
+const isPixDemoEnabled = import.meta.env.DEV;
+
+const isDemoQrCellFilled = (row, column) => {
+  const finder = (startRow, startColumn) => {
+    const localRow = row - startRow;
+    const localColumn = column - startColumn;
+    if (localRow < 0 || localRow > 6 || localColumn < 0 || localColumn > 6) return null;
+    return (
+      localRow === 0 ||
+      localRow === 6 ||
+      localColumn === 0 ||
+      localColumn === 6 ||
+      (localRow >= 2 && localRow <= 4 && localColumn >= 2 && localColumn <= 4)
+    );
+  };
+  const finderCell = finder(0, 0) ?? finder(0, 18) ?? finder(18, 0);
+
+  return finderCell ?? (row * 17 + column * 31 + row * column * 7) % 11 < 5;
+};
+
+const DemoPixQr = () => (
+  <svg
+    className="pix-demo-qr"
+    viewBox="0 0 25 25"
+    role="img"
+    aria-label="QR ilustrativo, não pagável"
+  >
+    <rect width="25" height="25" fill="#fff" />
+    {Array.from({ length: 25 }, (_, row) =>
+      Array.from({ length: 25 }, (_, column) =>
+        isDemoQrCellFilled(row, column) ? (
+          <rect key={`${row}-${column}`} x={column} y={row} width="1" height="1" fill="#222" />
+        ) : null
+      )
+    )}
+  </svg>
+);
+
+const createCartPayload = (cart) => ({
+  total: Number(cart.total),
+  items: cart.items
+    .filter((item) => !item.isOffer)
+    .map((item) => ({
+      id_product: Number(item.id_product),
+      quantity: Number(item.quantity || 1),
+    })),
+  offers: cart.items
+    .filter((item) => item.isOffer)
+    .map((item) => ({
+      id_offer: Number(item.id_offer),
+      quantity: Number(item.quantity || 1),
+    })),
+});
 
 const getDeliveryDetails = (name) => {
   const normalizedName = String(name || '')
@@ -39,7 +96,7 @@ const getDeliveryDetails = (name) => {
 };
 
 const Checkout = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { cart, clearCart } = useCart();
 
@@ -54,12 +111,48 @@ const Checkout = () => {
   const [emailVerified, setEmailVerified] = useState(null);
   const [activeCheckout, setActiveCheckout] = useState(null);
   const [checkoutStatus, setCheckoutStatus] = useState(null);
+  const [checkoutPopupBlocked, setCheckoutPopupBlocked] = useState(false);
+  const [pixDemoState, setPixDemoState] = useState('idle');
+  const [pixDemoPaid, setPixDemoPaid] = useState(false);
+  const [pixDemoOrderId, setPixDemoOrderId] = useState(null);
+  const [pixDemoExpiresAt, setPixDemoExpiresAt] = useState(null);
+  const [pixDemoSecondsRemaining, setPixDemoSecondsRemaining] = useState(PIX_DEMO_DURATION_SECONDS);
   const completionHandled = useRef(false);
+  const checkoutStatusRef = useRef(null);
+  const pixDemoRef = useRef(null);
 
   const formatBRL = (val) =>
     Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   useEffect(() => {
+    if (checkoutPopupBlocked) {
+      checkoutStatusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [checkoutPopupBlocked]);
+
+  useEffect(() => {
+    if (pixDemoState !== 'waiting' || !pixDemoExpiresAt) return undefined;
+
+    const updateCountdown = () => {
+      const secondsRemaining = Math.max(0, Math.ceil((pixDemoExpiresAt - Date.now()) / 1000));
+      setPixDemoSecondsRemaining(secondsRemaining);
+      if (secondsRemaining === 0) setPixDemoState('expired');
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [pixDemoState, pixDemoExpiresAt]);
+
+  useEffect(() => {
+    if (pixDemoState !== 'idle') {
+      pixDemoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [pixDemoState]);
+
+  useEffect(() => {
+    if (authLoading) return;
+
     const userId = user?.id_people || user?.id_user || user?.id;
 
     if (!userId) {
@@ -93,8 +186,7 @@ const Checkout = () => {
           const currentUserId = user?.id_user || user?.id;
           setEmailVerified(
             verification.verified &&
-              (verification.userId == null ||
-                Number(verification.userId) === Number(currentUserId))
+              (verification.userId == null || Number(verification.userId) === Number(currentUserId))
           );
         } catch (verificationError) {
           console.warn('Não foi possível consultar a confirmação do e-mail:', verificationError);
@@ -107,7 +199,7 @@ const Checkout = () => {
         setLoading(false);
       }
     })();
-  }, [user, navigate]);
+  }, [authLoading, user, navigate]);
 
   useEffect(() => {
     if (!activeCheckout) return undefined;
@@ -149,18 +241,18 @@ const Checkout = () => {
     if (!selectedPayment) return toast.warning('Selecione uma forma de pagamento! 💳');
     if (cart.items.length === 0) return toast.error('Seu carrinho está vazio!');
 
-    const cartPayload = {
-      total: Number(cart.total),
-      items: cart.items.filter((item) => !item.isOffer).map((item) => ({
-        id_product: Number(item.id_product),
-        quantity: Number(item.quantity || 1),
-      })),
-      offers: cart.items.filter((item) => item.isOffer).map((item) => ({
-        id_offer: Number(item.id_offer),
-        quantity: Number(item.quantity || 1),
-      })),
-    };
+    if (isPixDemoEnabled && getPaymentMethodKind(selectedPayment.name_payment) === 'pix') {
+      setPixDemoPaid(false);
+      setPixDemoOrderId(null);
+      setPixDemoExpiresAt(Date.now() + PIX_DEMO_DURATION_SECONDS * 1000);
+      setPixDemoSecondsRemaining(PIX_DEMO_DURATION_SECONDS);
+      setPixDemoState('waiting');
+      return;
+    }
 
+    const cartPayload = createCartPayload(cart);
+
+    let checkoutWindow = null;
     setIsSubmitting(true);
     try {
       if (getPaymentMethodKind(selectedPayment.name_payment) === 'cash') {
@@ -173,6 +265,14 @@ const Checkout = () => {
         setShowSuccessModal(true);
       } else {
         if (activeCheckout && checkoutStatus?.status === 'pending') return;
+
+        setCheckoutPopupBlocked(false);
+        checkoutWindow = window.open('about:blank', '_blank');
+        if (checkoutWindow) {
+          checkoutWindow.opener = null;
+          checkoutWindow.document.title = 'Pagamento seguro';
+          checkoutWindow.document.body.textContent = 'Abrindo o checkout seguro do Mercado Pago...';
+        }
 
         const checkout = await createPaymentCheckout({
           id_payment: 0,
@@ -191,8 +291,25 @@ const Checkout = () => {
           total: checkout.total,
         });
         completionHandled.current = false;
+        let popupAvailable = Boolean(checkoutWindow);
+        if (checkoutWindow) {
+          try {
+            checkoutWindow.location.replace(checkout.checkoutUrl);
+          } catch (error) {
+            popupAvailable = false;
+            checkoutWindow.close();
+            console.warn('Não foi possível redirecionar a nova aba para o pagamento:', error);
+          }
+        }
+        setCheckoutPopupBlocked(!popupAvailable);
+        if (!popupAvailable) {
+          toast.info(
+            'Seu navegador bloqueou a nova aba. Use o botão para continuar no Mercado Pago.'
+          );
+        }
       }
     } catch (error) {
+      checkoutWindow?.close();
       if ((error.code || error.response?.data?.code) === 'EMAIL_NOT_VERIFIED') {
         setEmailVerified(false);
         toast.error(error.response?.data?.message || error.message);
@@ -211,7 +328,33 @@ const Checkout = () => {
     }
   };
 
-  if (loading) return <div className="loading-screen">Carregando dados... 🍬</div>;
+  const handleConfirmDemoPixPayment = async () => {
+    if (!deliveryId) return toast.warning('Selecione um tipo de entrega ou retirada.');
+    if (cart.items.length === 0) return toast.error('Seu carrinho está vazio!');
+
+    setIsSubmitting(true);
+    try {
+      const result = await confirmDemoPixPayment({
+        id_type_delivery: Number(deliveryId),
+        cart: createCartPayload(cart),
+      });
+      setPixDemoPaid(true);
+      setPixDemoOrderId(result.orderId);
+      setPixDemoState('idle');
+      clearCart();
+      setShowSuccessModal(true);
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          'Não foi possível concluir a demonstração do Pix.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading || authLoading) return <div className="loading-screen">Carregando dados... 🍬</div>;
   if (!userData) return null;
 
   const selectedDelivery = deliveryOptions.find(
@@ -223,8 +366,12 @@ const Checkout = () => {
   );
   const availablePaymentOptions = [
     ...(cashPayment ? [cashPayment] : []),
+    ...(isPixDemoEnabled ? [{ id_payment: -1, name_payment: 'Pix (demonstração)' }] : []),
     { id_payment: 0, name_payment: 'Mercado Pago' },
   ];
+  const isPixDemo = selectedPayment && getPaymentMethodKind(selectedPayment.name_payment) === 'pix';
+  const formatCountdown = (seconds) =>
+    `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 
   return (
     <div className="checkout-container animate-entrance">
@@ -321,7 +468,12 @@ const Checkout = () => {
           <h3>
             <i className="fas fa-credit-card"></i> Selecione a forma de pagamento *
           </h3>
-          <div className="payment-options" role="radiogroup" aria-label="Forma de pagamento" aria-required="true">
+          <div
+            className="payment-options"
+            role="radiogroup"
+            aria-label="Forma de pagamento"
+            aria-required="true"
+          >
             {availablePaymentOptions.map((option) => (
               <label
                 key={option.id_payment}
@@ -334,22 +486,32 @@ const Checkout = () => {
                   name="payment"
                   value={option.id_payment}
                   checked={selectedPayment?.id_payment === option.id_payment}
-                  onChange={() => setSelectedPayment(option)}
+                  onChange={() => {
+                    setSelectedPayment(option);
+                    setPixDemoState('idle');
+                  }}
                 />
                 {(() => {
                   const isCash = getPaymentMethodKind(option.name_payment) === 'cash';
-                  const Icon = isCash ? Banknote : WalletCards;
+                  const isPixOption = getPaymentMethodKind(option.name_payment) === 'pix';
+                  const Icon = isCash ? Banknote : isPixOption ? QrCode : WalletCards;
                   return (
                     <>
                       <Icon className="checkout-option-icon" size={22} aria-hidden="true" />
                       <span className="checkout-option-copy">
                         <span className="checkout-option-title">
-                          {isCash ? 'Dinheiro' : 'Pagar com Mercado Pago'}
+                          {isCash
+                            ? 'Dinheiro'
+                            : isPixOption
+                              ? 'Pix (demonstração)'
+                              : 'Pagar com Mercado Pago'}
                         </span>
                         <span className="checkout-option-description">
                           {isCash
                             ? 'Pagamento na entrega ou retirada.'
-                            : 'Pix, cartão de crédito ou débito no checkout seguro.'}
+                            : isPixOption
+                              ? 'Apenas demonstração visual; não gera cobrança Pix.'
+                              : 'Cartão de crédito ou débito no checkout seguro.'}
                         </span>
                       </span>
                     </>
@@ -359,8 +521,59 @@ const Checkout = () => {
             ))}
           </div>
         </section>
+        {pixDemoState !== 'idle' && (
+          <section
+            ref={pixDemoRef}
+            className="checkout-section checkout-pix-demo"
+            aria-live="polite"
+          >
+            <h3>
+              <QrCode size={22} aria-hidden="true" />
+              Pix de demonstração
+            </h3>
+            {pixDemoState === 'waiting' ? (
+              <>
+                <p className="pix-demo-warning">
+                  Este QR é apenas ilustrativo e não pode ser pago. Nenhuma transferência real será
+                  feita.
+                </p>
+                <div className="pix-demo-content">
+                  <DemoPixQr />
+                  <div className="pix-demo-details">
+                    <strong>{formatBRL(cart.total)}</strong>
+                    <span className="pix-demo-countdown">
+                      <Clock3 size={18} aria-hidden="true" />
+                      Expira em {formatCountdown(pixDemoSecondsRemaining)}
+                    </span>
+                    <p>Simulação local. Nenhuma comunicação com o Mercado Pago foi feita.</p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p role="status">
+                O QR ilustrativo expirou. Você ainda pode concluir a simulação abaixo; nenhum Pix
+                real será cobrado.
+              </p>
+            )}
+            <p className="pix-demo-warning">
+              Ao continuar, o pedido será registrado como pago apenas para demonstração local. Não
+              houve transferência real.
+            </p>
+            <Button
+              variant="primary"
+              onClick={handleConfirmDemoPixPayment}
+              disabled={isSubmitting || emailVerified === false}
+            >
+              {isSubmitting ? 'Finalizando...' : 'Simular pagamento e finalizar compra'}
+            </Button>
+          </section>
+        )}
         {activeCheckout && (
-          <section className="checkout-section checkout-payment-status" aria-live="polite">
+          <section
+            ref={checkoutStatusRef}
+            className="checkout-section checkout-payment-status"
+            aria-live="polite"
+          >
             <h3>
               {checkoutStatus?.status === 'approved'
                 ? 'Pagamento confirmado'
@@ -375,6 +588,11 @@ const Checkout = () => {
                   ? 'Você pode tentar novamente ou escolher outra forma de pagamento.'
                   : 'Se você ainda não concluiu o pagamento, continue no Mercado Pago. O pedido só será criado após a confirmação.'}
             </p>
+            {checkoutPopupBlocked && checkoutStatus?.status === 'pending' && (
+              <p>
+                O navegador bloqueou a abertura automática. Clique abaixo para abrir o pagamento.
+              </p>
+            )}
             {checkoutStatus?.status === 'pending' && (
               <a
                 className="checkout-payment-link"
@@ -441,14 +659,19 @@ const Checkout = () => {
             isSubmitting ||
             cart.items.length === 0 ||
             emailVerified === false ||
+            pixDemoState === 'waiting' ||
             (activeCheckout && ['pending', 'approved'].includes(checkoutStatus?.status))
           }
         >
           {isSubmitting
             ? 'Processando...'
-            : selectedPayment && getPaymentMethodKind(selectedPayment.name_payment) !== 'cash'
-              ? 'Pagar com Mercado Pago'
-              : 'Finalizar Pedido'}
+            : isPixDemo
+              ? pixDemoState === 'waiting'
+                ? 'Pix demonstrativo aberto'
+                : 'Ver Pix demonstrativo'
+              : selectedPayment && getPaymentMethodKind(selectedPayment.name_payment) !== 'cash'
+                ? 'Pagar com Mercado Pago'
+                : 'Finalizar Pedido'}
         </Button>
       </aside>
 
@@ -456,10 +679,17 @@ const Checkout = () => {
         <div className="modal-overlay">
           <div className="modal-confirmacao success-modal">
             <div className="success-icon">🎉</div>
-            <h3>Pedido Confirmado!</h3>
-            <p>
-              Obrigada pela preferência. Em breve seu pedido entrará em produção e será entregue!
-            </p>
+            <h3>{pixDemoPaid ? 'Pedido de demonstração finalizado!' : 'Pedido Confirmado!'}</h3>
+            {pixDemoPaid ? (
+              <p>
+                Pedido #{pixDemoOrderId} registrado como pago para teste local. Nenhum dinheiro foi
+                transferido; não use essa confirmação como comprovante de pagamento.
+              </p>
+            ) : (
+              <p>
+                Obrigada pela preferência. Em breve seu pedido entrará em produção e será entregue!
+              </p>
+            )}
             <div className="modal-buttons">
               <Button variant="primary" onClick={() => navigate('/pedidos')}>
                 Ver meus pedidos

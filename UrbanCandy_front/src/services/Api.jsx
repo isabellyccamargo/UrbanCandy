@@ -347,6 +347,11 @@ export const createPaymentCheckout = async (checkoutData) => {
   return response.data;
 };
 
+export const confirmDemoPixPayment = async (checkoutData) => {
+  const response = await api.post('/pagamento/pix/demo/confirm', checkoutData);
+  return response.data;
+};
+
 export const getPaymentCheckoutStatus = async (attemptId) => {
   const response = await api.get(`/pagamento/checkout/${attemptId}`);
   return response.data;

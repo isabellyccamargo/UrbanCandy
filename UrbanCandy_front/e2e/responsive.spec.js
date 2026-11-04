@@ -13,9 +13,7 @@ const product = {
 const category = { id_category: 1, name_category: 'Brigadeiros' };
 
 async function mockCatalog(page) {
-  await page.route('**/produto/listar**', (route) =>
-    route.fulfill({ json: { data: [product] } })
-  );
+  await page.route('**/produto/listar**', (route) => route.fulfill({ json: { data: [product] } }));
   await page.route('**/categoria/listar**', (route) =>
     route.fulfill({ json: { data: [category] } })
   );
@@ -189,7 +187,10 @@ test.describe('Experiência web responsiva', () => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/checkout');
     await expect(page.getByRole('heading', { name: 'Resumo do pedido' })).toBeVisible();
-    await page.getByRole('radio', { name: 'Entrega' }).check();
+    await page
+      .getByRole('radiogroup', { name: 'Tipo de entrega' })
+      .getByRole('radio', { name: /^Entrega/ })
+      .check();
     await page.getByRole('radio', { name: 'Dinheiro' }).check();
     await expectNoHorizontalOverflow(page);
     await page.getByRole('button', { name: 'Finalizar Pedido' }).click();
@@ -248,7 +249,10 @@ test.describe('Experiência web responsiva', () => {
 
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/checkout');
-    await page.getByRole('radio', { name: 'Retirada' }).check();
+    await page
+      .getByRole('radiogroup', { name: 'Tipo de entrega' })
+      .getByRole('radio', { name: /^Retirada/ })
+      .check();
     await page.getByRole('radio', { name: 'Mercado Pago' }).check();
     await page.getByRole('button', { name: 'Pagar com Mercado Pago' }).click();
 
@@ -263,5 +267,79 @@ test.describe('Experiência web responsiva', () => {
       cart: { total: 17, items: [{ id_product: 1, quantity: 2 }] },
     });
     await expectNoHorizontalOverflow(page);
+  });
+
+  test('permite finalizar pedido Pix de demonstração sem chamar o Mercado Pago', async ({
+    page,
+  }) => {
+    await seedAuthenticatedUser(page);
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        '@UrbanCandy:cart',
+        JSON.stringify({
+          items: [
+            {
+              id_product: 1,
+              quantity: 2,
+              sub_total: 17,
+              products: { name: 'Brigadeiro de chocolate', price: 8.5, image: 'brigadeiro.png' },
+            },
+          ],
+          total: 17,
+        })
+      );
+    });
+
+    let paymentRequests = 0;
+    let orderRequests = 0;
+    let demoPixPayload;
+    await page.route('**/pagamento/checkout', async (route) => {
+      paymentRequests += 1;
+      await route.abort();
+    });
+    await page.route('**/pedido/checkout', async (route) => {
+      orderRequests += 1;
+      await route.abort();
+    });
+    await page.route('**/pagamento/pix/demo/confirm', async (route) => {
+      demoPixPayload = route.request().postDataJSON();
+      await route.fulfill({ status: 201, json: { orderId: 42, attemptId: 'demo-attempt-1' } });
+    });
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/checkout');
+    await expect(page.getByRole('heading', { name: 'Resumo do pedido' })).toBeVisible();
+    await page.clock.install();
+    await page
+      .getByRole('radiogroup', { name: 'Tipo de entrega' })
+      .getByRole('radio', { name: /^Entrega/ })
+      .check();
+    await page.getByRole('radio', { name: /Pix \(demonstração\)/ }).check();
+    await page.getByRole('button', { name: 'Ver Pix demonstrativo' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Pix de demonstração' })).toBeVisible();
+    await expect(page.getByRole('img', { name: 'QR ilustrativo, não pagável' })).toBeVisible();
+    await expect(page.getByText('Expira em 05:00')).toBeVisible();
+    await expect(page.getByText(/QR é apenas ilustrativo e não pode ser pago/)).toBeVisible();
+    expect(paymentRequests).toBe(0);
+    expect(orderRequests).toBe(0);
+    await expectNoHorizontalOverflow(page);
+
+    await page.clock.fastForward(5 * 60 * 1000);
+    await expect(page.getByText(/QR ilustrativo expirou/)).toBeVisible();
+    expect(paymentRequests).toBe(0);
+    expect(orderRequests).toBe(0);
+
+    await page.getByRole('button', { name: 'Simular pagamento e finalizar compra' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Pedido de demonstração finalizado!' })
+    ).toBeVisible();
+    await expect(page.getByText(/Pedido #42 registrado como pago para teste local/)).toBeVisible();
+    expect(demoPixPayload).toMatchObject({
+      id_type_delivery: 1,
+      cart: { total: 17, items: [{ id_product: 1, quantity: 2 }], offers: [] },
+    });
+    expect(paymentRequests).toBe(0);
+    expect(orderRequests).toBe(0);
   });
 });

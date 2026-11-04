@@ -240,16 +240,23 @@ npm install
 npx expo start
 ```
 
-Após iniciar o Expo, escaneie o QR Code pelo Expo Go.
+Para usar o Expo em um celular físico, configure uma vez
+`EXPO_PUBLIC_API_URL=http://<IP-do-computador>:3000` em
+`UrbanCandy_mobile/.env` (celular e computador devem estar na mesma rede).
+O comando `npm run dev` do backend seleciona a API local; ao iniciar o Docker
+com `.\scripts\start-docker.ps1`, a configuração do Expo troca para a porta
+Docker (`BACKEND_PORT`, padrão `3030`). Reinicie o Expo após trocar o modo para
+carregar a URL atualizada.
 
-> Para testar em um dispositivo físico, o celular e o computador devem estar conectados à mesma rede, conforme a configuração da API.
+No emulador Android padrão, use `http://10.0.2.2:3000` como URL inicial; a troca
+de modo atualiza a porta automaticamente.
 
 ### Docker
 
 Para executar os serviços configurados no Docker Compose:
 
 ```bash
-docker-compose up -d
+.\scripts\start-docker.ps1
 ```
 
 ---

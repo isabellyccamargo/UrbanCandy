@@ -15,6 +15,7 @@ import TypeOfPaymentController from '../controllers/TypeOfPaymentController.js';
 import TypeOfDeliveryController from '../controllers/TypeOfDeliveryController.js';
 import NotificationController from '../controllers/NotificationController.js';
 import MercadoPagoController from '../controllers/MercadoPagoController.js';
+import DemoPixController from '../controllers/DemoPixController.js';
 import EmailVerificationController from '../controllers/EmailVerificationController.js';
 import { upload } from '../config/MulterConfig.js';
 
@@ -49,6 +50,7 @@ privateRoutes.patch('/notificacoes/lidas', NotificationController.markAllAsRead)
 privateRoutes.patch('/notificacoes/:id_notification/lida', NotificationController.markAsRead);
 privateRoutes.post('/pagamento/checkout', MercadoPagoController.createCheckout);
 privateRoutes.get('/pagamento/checkout/:id', MercadoPagoController.getStatus);
+privateRoutes.post('/pagamento/pix/demo/confirm', DemoPixController.confirm);
 
 // --- PRODUTO ---
 

@@ -45,6 +45,11 @@ describe('Mercado Pago checkout URL environment', () => {
     );
   });
 
+  it('rejects all Mercado Pago credentials in the test environment', () => {
+    expect(() => validateAccessToken('APP_USR-private-token', 'test')).toThrow(ApiException);
+    expect(() => validateAccessToken('TEST-private-token', 'test')).toThrow(ApiException);
+  });
+
   it('rejects test credentials in production', () => {
     expect(() => validateAccessToken('TEST-private-token', 'production')).toThrow(ApiException);
   });
