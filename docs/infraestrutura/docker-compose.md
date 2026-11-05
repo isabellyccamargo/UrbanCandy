@@ -122,11 +122,11 @@ Os alertas Prometheus cobrem backend sem coleta, taxa de 5xx acima de 1%, p95
 do catálogo acima de 500 ms e circuito ViaCEP aberto. Alertas ficam disponíveis
 no Prometheus; notificações por e-mail ou chat não estão configuradas.
 
-O Compose inicia um backend e um banco separados para o envio de e-mails. O
-MySQL de e-mail é publicado apenas no loopback pela porta `3308` e persiste no
-volume `email_mysql_data`; não é o banco principal nem o banco de testes. O
-serviço de e-mail fica disponível no host pela porta `3040` e na rede Compose
-como `urbancandy-email:3040`.
+O Compose inicia um serviço de e-mail e um banco separados para o envio de
+e-mails. O MySQL de e-mail é publicado apenas no loopback pela porta `3308` e
+persiste no volume `email_mysql_data`; não é o banco principal nem o banco de
+testes. O serviço de e-mail fica disponível no host pela porta `3041` e na rede
+Compose como `urbancandy-email:3040`.
 
 O MySQL principal é publicado em `localhost:3307` por padrão, e o MySQL do
 serviço de e-mail em `localhost:3308`; ambos usam a porta interna `3306` em
@@ -142,8 +142,8 @@ HTTPS configurada.
 
 Se as portas MySQL, backend, HTTP, HTTPS ou Redis já estiverem ocupadas, altere
 `MYSQL_PORT`, `BACKEND_PORT`, `HTTP_PORT`, `HTTPS_PORT` ou `REDIS_PORT` no
-`.env`. O backend Compose fica disponível na porta `3030` do computador para
-que o aplicativo mobile em um celular físico consiga acessá-lo. A porta
+`.env`. A API do backend Compose fica publicada na porta `3030` para diagnóstico;
+o aplicativo mobile acessa a API pela porta `HTTP_PORT` do Nginx. A porta
 publicada do Redis fica limitada ao loopback (`127.0.0.1`): ela permite que um
 backend executado diretamente no computador acesse o Redis do Compose, sem
 disponibilizá-lo para outros dispositivos da rede.

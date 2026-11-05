@@ -214,10 +214,16 @@ export default function PaymentScreen() {
                 selectedPayment.name_payment,
             );
             const cart = {
-                items: items.map((item) => ({
+                items: items.filter((item) => !item.isOffer).map((item) => ({
                     id_product: item.id_product,
                     quantity: item.quantity,
                 })),
+                offers: items
+                    .filter((item) => item.isOffer && item.id_offer != null)
+                    .map((item) => ({
+                        id_offer: Number(item.id_offer),
+                        quantity: item.quantity,
+                    })),
                 total: Number(total),
             };
 

@@ -9,3 +9,5 @@ UrbanCandy_IA/
 **/.env.development
 **/.env.production
 **/.env.local
+**/.expo/
+UrbanCandy_back/*.log

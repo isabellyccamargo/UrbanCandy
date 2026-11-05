@@ -1,4 +1,5 @@
 import api from './api';
+import type { CheckoutCart } from './orders';
 
 export type PaymentType = {
     id_payment: number;
@@ -59,7 +60,7 @@ export async function createPaymentCheckout(input: {
     id_payment: number;
     id_type_delivery: number;
     payment_method: 'pix' | 'card' | 'both';
-    cart: { items: { id_product: number; quantity: number }[]; total: number };
+    cart: CheckoutCart;
 }): Promise<{ attemptId: string; checkoutUrl: string; total: number }> {
     const response = await api.post('/pagamento/checkout', input);
     return response.data;

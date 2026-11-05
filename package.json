@@ -2,7 +2,7 @@
   "name": "urbancandy-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "Monorepo for UrbanCandy project (Backend, Frontend, AI)",
+  "description": "Monorepo for UrbanCandy project (Backend, Frontend, Mobile, Email service)",
   "main": "index.js",
   "scripts": {
     "postinstall": "node -e \"if (process.env.HUSKY !== '0') require('child_process').execSync('husky install', { stdio: 'inherit' })\"",

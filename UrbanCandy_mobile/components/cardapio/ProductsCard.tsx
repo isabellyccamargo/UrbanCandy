@@ -55,7 +55,7 @@ export function ProductCard({
         },
 
         image: {
-            width: '100%',
+            width: '100%' as const,
             height: 122,
             borderRadius: radius.sm,
         },

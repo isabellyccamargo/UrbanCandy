@@ -83,13 +83,13 @@ function OfferCard({
         },
         image: {
             width: 170,
-            height: '100%',
+            height: '100%' as const,
             borderTopLeftRadius: 40,
             borderBottomLeftRadius: 40,
         },
         imagePlaceholder: {
             width: 110,
-            height: '100%',
+            height: '100%' as const,
             backgroundColor: '#EDEDED',
         },
         pressed: {

@@ -1,12 +1,15 @@
 import api from './api';
 
+export type CheckoutCart = {
+    items: { id_product: number; quantity: number }[];
+    offers: { id_offer: number; quantity: number }[];
+    total: number;
+};
+
 export type CreateOrderData = {
     id_payment: number;
     id_type_delivery: number;
-    cart: {
-        items: { id_product: number; quantity: number }[];
-        total: number;
-    };
+    cart: CheckoutCart;
 };
 
 export const createOrder = async (orderData: CreateOrderData) => {

@@ -94,8 +94,16 @@ export function createApp() {
 
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     const knownError = error instanceof EmailServiceError;
-    const message = knownError ? error.message : 'Internal email service error.';
-    const status = knownError ? error.status : 500;
+    const malformedJson =
+      error instanceof SyntaxError &&
+      'type' in error &&
+      error.type === 'entity.parse.failed';
+    const message = knownError
+      ? error.message
+      : malformedJson
+        ? 'Invalid JSON request body.'
+        : 'Internal email service error.';
+    const status = knownError ? error.status : malformedJson ? 400 : 500;
     res.status(status).json({ message });
   });
   return app;
