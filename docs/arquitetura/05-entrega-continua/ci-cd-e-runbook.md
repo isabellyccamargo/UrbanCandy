@@ -8,8 +8,9 @@ compila backend, frontend e serviço de e-mail, valida a configuração e constr
 as imagens Docker.
 
 O workflow **não publica imagens nem executa deploy remoto**: não há servidor de
-produção/homologação nem credenciais configuradas. A promoção para o ambiente
-Docker existente é manual.
+produção/homologação nem credenciais configuradas. A CI valida testes e builds;
+a publicação demonstrável do projeto é feita manualmente no ambiente Docker
+Compose configurado.
 
 ## Pipeline de CI
 
@@ -27,7 +28,10 @@ Qualquer falha reprova o job. Esta CI valida o software e as imagens, mas não t
 
 ## Estratégia de deploy adotada
 
-A estratégia atual é a **recriação manual dos serviços via Docker Compose**, com breve indisponibilidade. Não é Blue-Green.
+A estratégia atual é o **deploy manual via Docker Compose** no ambiente
+configurado para demonstração e validação do projeto. O comando recria os
+serviços e pode causar breve indisponibilidade; não é Blue-Green nem deploy
+remoto automatizado.
 
 ### Publicação manual (Deploy)
 

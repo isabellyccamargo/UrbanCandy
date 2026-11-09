@@ -107,9 +107,11 @@ executados e registrados.
   e [ErrorHandler.test.ts](../../../UrbanCandy_back/__tests__/ErrorHandler.test.ts)
   verificam que esses registros são JSON, usam rotas normalizadas e não expõem
   mensagens internas na resposta.
-- **Limitações:** a coleta depende de o Docker e os serviços permanecerem
-  ativos; sem tráfego, gráficos de requisições podem não ter dados. Não há
-  probe sintético contínuo do endpoint HTTP.
+- **Limitações:** a coleta e o probe HTTP dependem de o Docker e os serviços
+  permanecerem ativos. O Blackbox Exporter consulta `/api/health` a cada 15
+  segundos no ambiente Compose, mas isso não é monitoramento externo nem
+  comprova o SLO de disponibilidade de 30 dias. Sem tráfego, gráficos de
+  requisições podem não ter dados.
 
 ## Acessar o dashboard
 

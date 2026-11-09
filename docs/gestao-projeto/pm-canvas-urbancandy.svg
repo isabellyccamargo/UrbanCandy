@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1170" viewBox="0 0 1440 1170" role="img" aria-labelledby="title description">
+  <title id="title">PM Canvas do projeto UrbanCandy</title>
+  <desc id="description">Canvas resumido do projeto acadêmico UrbanCandy, com justificativa, objetivo, benefícios, produto, requisitos, stakeholders, equipe, premissas, entregas, restrições, riscos, linha do tempo e custos.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f5f7fb; }
+      .card { fill: #ffffff; stroke: #d7deea; stroke-width: 2; }
+      .accent { fill: #7c3aed; }
+      .title { font: 700 34px Arial, sans-serif; fill: #172033; }
+      .subtitle { font: 16px Arial, sans-serif; fill: #596579; }
+      .heading { font: 700 18px Arial, sans-serif; fill: #5423a8; }
+      .body { font: 15px Arial, sans-serif; fill: #263247; }
+      .foot { font: 14px Arial, sans-serif; fill: #596579; }
+    </style>
+  </defs>
+  <rect class="bg" width="1440" height="1170"/>
+  <text class="title" x="48" y="58">PM Canvas | UrbanCandy</text>
+  <text class="subtitle" x="48" y="88">Plataforma de e-commerce de doces • Projeto acadêmico • Abordagem de gestão híbrida</text>
+
+  <!-- Row 1 -->
+  <g transform="translate(40 120)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">JUSTIFICATIVA</text>
+    <text class="body" x="24" y="62"><tspan x="24">Organizar a experiência de compra de doces</tspan><tspan x="24" dy="22">em uma plataforma digital, reunindo catálogo,</tspan><tspan x="24" dy="22">pedidos, pagamento e acompanhamento em</tspan><tspan x="24" dy="22">interfaces Web e Mobile.</tspan></text>
+  </g>
+  <g transform="translate(500 120)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">OBJETIVO</text>
+    <text class="body" x="24" y="62"><tspan x="24">Desenvolver e validar um e-commerce</tspan><tspan x="24" dy="22">integrado, com Web e Mobile conectados à</tspan><tspan x="24" dy="22">mesma API. Verificar os fluxos essenciais</tspan><tspan x="24" dy="22">pelos critérios de aceite e testes.</tspan></text>
+  </g>
+  <g transform="translate(960 120)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">BENEFÍCIOS</text>
+    <text class="body" x="24" y="62"><tspan x="24">Facilitar a consulta e compra; centralizar</tspan><tspan x="24" dy="22">informações de pedidos; apoiar a gestão do</tspan><tspan x="24" dy="22">catálogo; demonstrar integração e consolidar</tspan><tspan x="24" dy="22">aprendizado de desenvolvimento e gestão.</tspan></text>
+  </g>
+
+  <!-- Row 2 -->
+  <g transform="translate(40 328)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">PRODUTO</text>
+    <text class="body" x="24" y="62"><tspan x="24">Plataforma UrbanCandy: aplicação Web,</tspan><tspan x="24" dy="22">aplicativo Mobile, API/backend, serviço de</tspan><tspan x="24" dy="22">e-mail, banco de dados e infraestrutura</tspan><tspan x="24" dy="22">documentada para execução.</tspan></text>
+  </g>
+  <g transform="translate(500 328)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">REQUISITOS</text>
+    <text class="body" x="24" y="62"><tspan x="24">Catálogo; cadastro e autenticação; carrinho e</tspan><tspan x="24" dy="22">checkout; pedidos e acompanhamento;</tspan><tspan x="24" dy="22">acesso administrativo; pagamento seguro;</tspan><tspan x="24" dy="22">notificações, testes e documentação.</tspan></text>
+  </g>
+  <g transform="translate(960 328)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">STAKEHOLDERS</text>
+    <text class="body" x="24" y="62"><tspan x="24">Clientes e usuários; responsável pelo</tspan><tspan x="24" dy="22">catálogo e pedidos; professora/orientadora</tspan><tspan x="24" dy="22">e avaliadores; desenvolvedora/gerente;</tspan><tspan x="24" dy="22">provedores externos, como Mercado Pago.</tspan></text>
+  </g>
+
+  <!-- Row 3 -->
+  <g transform="translate(40 536)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">EQUIPE</text>
+    <text class="body" x="24" y="62"><tspan x="24">Isabelly Camargo acumula os papéis de</tspan><tspan x="24" dy="22">gerente de projeto, Scrum Master/facilitadora,</tspan><tspan x="24" dy="22">analista de requisitos e desenvolvedora.</tspan><tspan x="24" dy="22">Projeto conduzido individualmente.</tspan></text>
+  </g>
+  <g transform="translate(500 536)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">PREMISSAS</text>
+    <text class="body" x="24" y="62"><tspan x="24">Contexto acadêmico; Web e Mobile utilizam</tspan><tspan x="24" dy="22">backend comum; há ambiente local de</tspan><tspan x="24" dy="22">desenvolvimento e testes; serviços externos</tspan><tspan x="24" dy="22">dependem de disponibilidade e credenciais.</tspan></text>
+  </g>
+  <g transform="translate(960 536)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">GRUPOS DE ENTREGAS</text>
+    <text class="body" x="24" y="62"><tspan x="24">1. Base: arquitetura, dados e interfaces.</tspan><tspan x="24" dy="22">2. Negócio: conta, catálogo, carrinho e pedidos.</tspan><tspan x="24" dy="22">3. Integrações: pagamento, cache e e-mail.</tspan><tspan x="24" dy="22">4. Qualidade: testes, CI e documentação.</tspan></text>
+  </g>
+
+  <!-- Row 4 -->
+  <g transform="translate(40 744)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">RESTRIÇÕES</text>
+    <text class="body" x="24" y="62"><tspan x="24">Escopo e recursos de projeto acadêmico;</tspan><tspan x="24" dy="22">dependência de serviços externos; integração</tspan><tspan x="24" dy="22">real de pagamento exige configuração. CI</tspan><tspan x="24" dy="22">existe; deploy remoto não está automatizado.</tspan></text>
+  </g>
+  <g transform="translate(500 744)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">RISCOS</text>
+    <text class="body" x="24" y="62"><tspan x="24">Acúmulo de papéis e aumento de escopo;</tspan><tspan x="24" dy="22">indisponibilidade de serviços externos;</tspan><tspan x="24" dy="22">exposição de dados/credenciais; documentação</tspan><tspan x="24" dy="22">divergente; ausência de ambiente de produção.</tspan></text>
+  </g>
+  <g transform="translate(960 744)">
+    <rect class="card" width="440" height="188" rx="12"/><rect class="accent" width="8" height="188" rx="4"/>
+    <text class="heading" x="24" y="32">LINHA DO TEMPO</text>
+    <text class="body" x="24" y="62"><tspan x="24">Iniciação e escopo → planejamento → ciclos</tspan><tspan x="24" dy="22">de desenvolvimento e validação → testes e</tspan><tspan x="24" dy="22">evidências → encerramento e apresentação.</tspan><tspan x="24" dy="22">Sequência relativa; sem datas presumidas.</tspan></text>
+  </g>
+
+  <!-- Row 5 -->
+  <g transform="translate(40 952)">
+    <rect class="card" width="1360" height="150" rx="12"/><rect class="accent" width="8" height="150" rx="4"/>
+    <text class="heading" x="24" y="34">CUSTOS</text>
+    <text class="body" x="24" y="68"><tspan x="24">Não há orçamento monetário aprovado ou registrado. Podem existir custos futuros com hospedagem, domínio, serviços externos ou operação;</tspan><tspan x="24" dy="24">valores devem ser definidos somente após cotação e decisão.</tspan></text>
+  </g>
+  <text class="foot" x="48" y="1140">Gestão híbrida: planejar escopo, dependências e riscos; desenvolver em incrementos, validar e adaptar.</text>
+</svg>
