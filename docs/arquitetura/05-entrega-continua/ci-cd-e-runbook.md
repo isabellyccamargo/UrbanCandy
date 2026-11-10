@@ -7,10 +7,14 @@ pull requests e pushes, ou manualmente. Instala dependências, executa testes,
 compila backend, frontend e serviço de e-mail, valida a configuração e constrói
 as imagens Docker.
 
-O workflow **não publica imagens nem executa deploy remoto**: não há servidor de
-produção/homologação nem credenciais configuradas. A CI valida testes e builds;
-a publicação demonstrável do projeto é feita manualmente no ambiente Docker
-Compose configurado.
+O workflow também possui um job de **deploy temporário para validação**. Depois
+do job `validate`, em pushes para `develop` e execuções manuais, ele inicia
+backend, frontend, e-mail, bancos e Redis via Docker Compose no runner do
+GitHub Actions, aguarda os health checks e consulta a API. Em seguida, encerra
+os containers. Isso demonstra o estágio de deploy e valida a inicialização
+integrada, mas não publica a aplicação na internet nem a mantém hospedada
+depois do workflow. O ambiente local para apresentação continua sendo iniciado
+manualmente com Docker Compose.
 
 ## Pipeline de CI
 
@@ -24,14 +28,18 @@ Compose configurado.
    `docker compose build` constrói backend, e-mail e frontend. A validação usa
    valores fictícios exclusivos do CI, não secrets de produção.
 
-Qualquer falha reprova o job. Esta CI valida o software e as imagens, mas não testa a aplicação integrada com serviços externos reais nem realiza deploy.
+Qualquer falha reprova o job. O job `validate` verifica testes, compilação e
+imagens; o job `deploy` inicia o conjunto necessário para a aplicação no
+runner temporário e verifica a saúde da API. O ambiente do pipeline usa
+credenciais fictícias e não integra provedores externos reais.
 
 ## Estratégia de deploy adotada
 
-A estratégia atual é o **deploy manual via Docker Compose** no ambiente
-configurado para demonstração e validação do projeto. O comando recria os
-serviços e pode causar breve indisponibilidade; não é Blue-Green nem deploy
-remoto automatizado.
+A estratégia é um **deploy simples via Docker Compose**, sem Blue-Green. No
+pipeline, o Compose sobe temporariamente os serviços no runner após os testes
+e a construção das imagens; na apresentação, o mesmo Compose é iniciado
+manualmente no ambiente local. O deploy temporário do pipeline não substitui
+uma hospedagem persistente.
 
 ### Publicação manual (Deploy)
 
@@ -86,11 +94,15 @@ ambiente isolado antes de alterar o ambiente ativo.
 
 ## Limitações e próximos passos para deploy remoto
 
-- CI está automatizada; publicação de imagens e deploy remoto não estão
-  configurados por falta de servidor/destino aprovado.
+- O pipeline automatiza o deploy temporário de validação, mas não publica o
+  sistema em uma hospedagem persistente. Para manter a aplicação acessível
+  após o workflow, ainda seria necessário escolher um destino de hospedagem,
+  que pode ser um serviço gerenciado sem VM própria.
 - Backup e restauração são procedimentos manuais; ainda precisam de ensaio
   controlado e evidência registrada.
-- Antes de automatizar deploy, definir servidor, domínio/TLS, armazenamento de
-  secrets, acesso restrito do runner, retenção de backups e responsável pela
-  aprovação. Depois, validar deploy e rollback em ambiente protegido antes de
-  declarar o processo pronto para produção.
+- Para disponibilizar o sistema continuamente, escolher o destino de
+  hospedagem (por exemplo, serviço gerenciado ou servidor próprio), definir
+  domínio/TLS quando aplicável, guardar credenciais como secrets e estabelecer
+  aprovações e backups. O runner do GitHub Actions é temporário e não hospeda
+  a aplicação após o fim do workflow. Validar deploy e rollback no destino
+  escolhido antes de declarar o processo pronto para produção.

@@ -34,7 +34,11 @@ de aceite. As versões agrupam as entregas planejadas:
 | **v2.0.0 — Entrega e governança** | Notificações, observabilidade, CI, deploy manual via Docker Compose e documentação. |
 
 As versões são agrupamentos de planejamento, não necessariamente um histórico
-de releases publicadas. A CI automatiza testes e builds; a publicação da
-aplicação é manual, executada com Docker Compose e verificada pelos serviços
-em execução. Não há deploy remoto automatizado. A mensageria implementada usa
-**Redis Pub/Sub com outbox**; RabbitMQ não faz parte da arquitetura atual.
+de releases publicadas. A CI automatiza testes e builds; a execução para
+demonstração é iniciada manualmente com Docker Compose e verificada pelos
+serviços em execução. Depois da validação, o workflow também inicia o Compose
+no runner temporário, verifica a saúde da API e encerra os serviços. Isso
+demonstra deploy no pipeline, mas não mantém a aplicação publicada após o job;
+para isso seria necessário configurar uma hospedagem, que pode ser gerenciada
+e não exige VM própria. A mensageria implementada usa **Redis Pub/Sub com
+outbox**; RabbitMQ não faz parte da arquitetura atual.

@@ -67,3 +67,35 @@ jobs:
           JWT_SECRET: ci-only-not-a-real-secret
           EMAIL_API_KEY: ci-only-not-a-real-secret
           GRAFANA_ADMIN_PASSWORD: ci-only-not-a-real-secret
+
+  deploy:
+    name: Deploy (temporary CI environment)
+    needs: validate
+    if: >-
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/develop'))
+    runs-on: ubuntu-latest
+    env:
+      DB_PASSWORD: ci-only-not-a-real-secret
+      JWT_SECRET: ci-only-not-a-real-secret
+      EMAIL_API_KEY: ci-only-not-a-real-secret
+      GRAFANA_ADMIN_PASSWORD: ci-only-not-a-real-secret
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Deploy application stack to the runner
+        run: >-
+          docker compose up --build --detach --wait --wait-timeout 300
+          urbancandy-nginx urbancandy-email
+
+      - name: Check API health through the deployed stack
+        run: curl --fail --retry 5 --retry-connrefused --retry-delay 2 http://127.0.0.1:3030/api/health
+
+      - name: Show deployment logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+
+      - name: Remove temporary deployment
+        if: always()
+        run: docker compose down --remove-orphans
