@@ -25,5 +25,6 @@ suas pastas próprias:
 ## Gestão do projeto
 
 - [Análise Cynefin e abordagem de gestão do UrbanCandy](gestao-projeto/analise-cynefin-e-abordagem-de-gestao.md)
-- [Ciclo de vida híbrido e PM Canvas do UrbanCandy](gestao-projeto/ciclo-de-vida-e-pm-canvas.md)
-- [Roteiro completo de apresentação da rubrica](gestao-projeto/roteiro-apresentacao-rubrica.md)
+- [Ciclo de vida e PM Canvas do UrbanCandy](gestao-projeto/ciclo-de-vida-e-pm-canvas.md)
+- [Product Backlog do UrbanCandy](gestao-projeto/product-backlog-urbancandy.md)
+- [Roteiro completo de apresentação da rubrica](roteiro-apresentacao-rubrica.md)
