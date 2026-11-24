@@ -1,45 +1,40 @@
-# Material de estudo — apresentação do UrbanCandy
+# Roteiro de apresentação — rubrica do UrbanCandy
 
-O UrbanCandy é uma plataforma de e-commerce de doces, acessível pela Web e
-por aplicativo Mobile. As duas interfaces usam a mesma API. O backend é um
-monólito organizado em camadas: catálogo, usuários, pedidos e pagamentos
-compartilham a aplicação, enquanto o serviço de e-mail é separado. No
-[Context Map](arquitetura/02-estilos-arquiteturais-e-ddd/ContextMap.drawio.png),
-os limites de domínio ajudam a explicar responsabilidades, mas não significam
-que cada área já seja um módulo independente no código.
+Este roteiro segue a ordem da apresentação: visão do projeto e gestão, demonstração
+funcional, documentação arquitetural na ordem da rubrica e, por fim, Jira. Mostre
+os artefatos e explique sua finalidade sem ler os documentos integralmente.
 
-## Arquitetura e funcionamento
+## 1. Apresentação do UrbanCandy e gestão
 
-A API REST aplica regras de negócio no backend e persiste os dados relacionais
-no MySQL, usando Sequelize. O Swagger apresenta os endpoints. O MySQL é
-adequado aos relacionamentos entre clientes, pedidos e produtos; transações
-ajudam a manter consistentes as gravações relacionadas. A decisão está
-registrada na [ADR-005](arquitetura/03-integracao-apis-e-dados/ADR-005-escolha-banco-de-dados.md).
+O UrbanCandy é uma plataforma de e-commerce de doces, acessível pela Web e por
+aplicativo Mobile. As duas interfaces usam a mesma API. O backend principal é
+um monólito organizado em camadas; o serviço de e-mail é uma aplicação separada.
 
-O Redis tem dois usos. No catálogo, o Cache-Aside tenta buscar primeiro no
-cache; se não encontrar, consulta o MySQL e guarda uma cópia temporária. O
-MySQL continua sendo a fonte de verdade. Já o Redis Pub/Sub transporta eventos
-de pedidos para o serviço de e-mail. A outbox guarda eventos pendentes para
-nova tentativa; o ACK confirma que o serviço persistiu a entrega, não que o
-e-mail foi enviado. Para comprovar o envio, é necessário verificar também o
-log `Sent`. O projeto não usa RabbitMQ para esse fluxo nem Redis para
-processar pagamentos. Consulte o [guia de eventos](infraestrutura/eventos-notificacoes.md).
+O Cynefin é um framework para interpretar o contexto e orientar a resposta de
+gestão, não uma metodologia de desenvolvimento. O contexto predominante do
+UrbanCandy foi classificado como **Complexo**, pois algumas soluções ficam mais
+claras ao implementar, observar e receber feedback. A abordagem escolhida é
+**híbrida**: planejamento inicial e acompanhamento de escopo e riscos, junto
+com desenvolvimento incremental e adaptação. Consulte a
+[análise Cynefin e abordagem](gestao-projeto/analise-cynefin-e-abordagem-de-gestao.md).
 
-Prometheus, Grafana e logs apoiam o acompanhamento do sistema. As metas de
-desempenho e disponibilidade documentadas são objetivos, não resultados já
-comprovados. A CI automatiza validações, testes e builds; a execução para
-demo também é iniciada manualmente com Docker Compose na máquina local. No
-GitHub Actions, depois que testes e builds passam, o job de deploy sobe os
-serviços temporariamente com Compose no runner, espera que fiquem saudáveis,
-consulta a API e encerra os containers. Esse é um deploy automatizado de
-validação, não uma hospedagem permanente. Para manter o site acessível depois
-do workflow, seria necessário configurar uma plataforma de hospedagem, mas
-isso não faz parte do deploy demonstrado. A estratégia é simples, sem
-Blue-Green, e há um runbook com recuperação e rollback. Os detalhes estão nos
-[cenários de qualidade](arquitetura/04-qualidade-resiliencia-observabilidade/cenarios-de-qualidade.md)
-e no [runbook de CI/CD](arquitetura/05-entrega-continua/ci-cd-e-runbook.md).
+O [PM Canvas](gestao-projeto/pm-canvas-urbancandy.svg) registra a visão geral e
+o planejamento inicial. O [ciclo de vida](gestao-projeto/ciclo-de-vida-e-pm-canvas.md)
+organiza o projeto em **iniciação**, **planejamento**, **execução**,
+**monitoramento e controle** e **encerramento**. Durante a execução, o
+[Product Backlog](gestao-projeto/product-backlog-urbancandy.md) representado
+no Jira organiza e prioriza o trabalho em incrementos. Assim, os artefatos se
+complementam: Canvas para a visão inicial; backlog para acompanhar o trabalho
+priorizado.
 
-## Demonstração da compra
+Isabelly Camargo acumula as responsabilidades de gerente de projeto, Scrum
+Master/facilitadora, analista e desenvolvedora. Ao falar de versões, esclareça
+que v1.0.0, v1.1.0 e v2.0.0 são grupos **planejados** de entregas, não releases
+que necessariamente já foram publicadas.
+
+## 2. Demonstração funcional
+
+### Compra e atualização de pedido
 
 Na tela do cliente, escolha um produto, adicione-o ao carrinho e finalize o
 pedido com uma conta de teste cujo e-mail esteja confirmado. Use pagamento em
@@ -48,54 +43,107 @@ cobrança. O backend valida os dados e calcula o total; o pedido começa como
 “Recebido”.
 
 Depois, acesse a área de funcionário, abra o pedido e altere o status pela
-própria interface. Assim, além de mostrar a atualização, você aciona o fluxo
-de eventos da aplicação. Não altere o status diretamente no banco. Dinheiro
-não demonstra a integração financeira com o Mercado Pago, e o QR Pix
-ilustrativo do ambiente de desenvolvimento não é pagável. Se os serviços de
-e-mail estiverem disponíveis, mostre os logs; use dados de teste, pois a
-mudança de status pode enviar uma mensagem.
+interface. Não altere o status diretamente no banco. Dinheiro não demonstra a
+integração financeira com o Mercado Pago, e o QR Pix ilustrativo do ambiente
+de desenvolvimento não é pagável.
 
-## Gestão do projeto
+### Mensageria e serviço de e-mail
 
-O Cynefin ajuda a entender o contexto do projeto, não é uma metodologia de
-desenvolvimento. O UrbanCandy foi classificado predominantemente como
-**Complexo**: algumas soluções ficam claras apenas depois de implementar,
-observar e receber feedback. Nesse contexto, é útil fazer mudanças controladas,
-avaliar o resultado e ajustar os próximos passos.
+Explique o fluxo: a mudança de status gera um evento; o backend publica usando
+Redis Pub/Sub e a outbox mantém eventos pendentes para nova tentativa; o
+serviço de e-mail persiste a entrega e confirma o recebimento. O ACK indica
+persistência pelo serviço, não envio. Para comprovar envio, mostre também o
+registro `Sent`. O serviço de e-mail é uma aplicação separada e implantável
+independentemente. Consulte [eventos e notificações](infraestrutura/eventos-notificacoes.md).
+O projeto usa Redis Pub/Sub com outbox, não RabbitMQ para esse fluxo.
 
-A gestão **híbrida** combina planejamento e acompanhamento com ciclos de
-desenvolvimento e adaptação. Ela é adequada ao UrbanCandy porque organiza o
-escopo, a arquitetura, as integrações e os riscos sem impedir ajustes quando
-as funcionalidades são implementadas e validadas. Os elementos preditivos
-definem o PM Canvas e o ciclo de vida; os elementos ágeis priorizam entregas
-incrementais e permitem repriorizar o [Product Backlog](gestao-projeto/product-backlog-urbancandy.md).
-Essa é a justificativa para a
-gestão do projeto, detalhada na [análise Cynefin](gestao-projeto/analise-cynefin-e-abordagem-de-gestao.md).
+### Cache, logs e Docker/Nginx
 
-O [PM Canvas](gestao-projeto/pm-canvas-urbancandy.svg) resume a visão geral do projeto:
-objetivo, benefícios, produto, envolvidos, entregas, restrições e riscos. Ele
-é um quadro de planejamento, não uma fase do ciclo de vida. Separadamente, o
-[ciclo de vida](gestao-projeto/ciclo-de-vida-e-pm-canvas.md) descreve cinco fases:
-**iniciação**, para definir objetivo e escopo macro; **planejamento**, para
-organizar entregas, arquitetura e riscos; **execução**, para desenvolver e
-testar; **monitoramento e controle**, para acompanhar progresso e bloqueios;
-e **encerramento**, para consolidar testes, evidências e documentação.
-Isabelly Camargo acumula os papéis de gerente de projeto, Scrum
-Master/facilitadora, analista e desenvolvedora.
+No terminal do backend no VS Code ou nos logs do container, consulte o catálogo
+duas vezes: explique `MISS` seguido de `HIT` para mostrar Cache-Aside. Se
+possível, edite um produto e mostre a invalidação. Consulte o [guia de cache Redis](infraestrutura/cache-redis.md).
+Isso demonstra o fluxo do cache, não um benchmark de redução de latência.
 
-O trabalho é demonstrado no Jira por meio do quadro e dos cards do Product
-Backlog. Os cards devem apresentar prioridade, estado, responsável, descrição,
-critério de aceite e evidência ou status de conclusão. Sprints ou filtros do
-Jira podem organizar o trabalho executado, mas o backlog continua sendo a
-fonte única da lista priorizada de funcionalidades.
+Mostre o Docker Compose e explique que ele orquestra a aplicação e suas
+dependências. O Nginx atua como proxy reverso, encaminhando as requisições ao
+frontend e à API. O ambiente local é uma demonstração; não o apresente como
+hospedagem permanente de produção. Consulte o [guia Docker Compose](infraestrutura/docker-compose.md).
 
-As versões planejadas agrupam a base do MVP (v1.0.0), serviços e integrações
-(v1.1.0) e entrega e governança (v2.0.0); representam organização do trabalho,
-não necessariamente releases já publicadas. O [documento de ciclo de vida e
-PM Canvas](gestao-projeto/ciclo-de-vida-e-pm-canvas.md) reúne a explicação das fases e do
-quadro visual.
+## 3. Documentação no GitHub — ordem da rubrica
 
-Em síntese, a apresentação explica como o sistema está organizado, demonstra
-uma compra e a atualização de um pedido, e justifica a gestão híbrida. É
-importante distinguir o que está implementado do que é planejado ou ainda
-precisa de medições.
+Apresente cada grupo brevemente: diga para que serve, mostre os artefatos e
+avance para o próximo. A documentação detalhada está indexada em
+[Arquitetura de Software](arquitetura/README.md).
+
+### 3.1 Documentação arquitetural: C4, ADRs e cenários de qualidade
+
+Mostre os [diagramas C4 de contexto e contêineres](arquitetura/01-documentacao-arquitetural/)
+para explicar os limites e componentes principais. Mostre as
+[ADRs arquiteturais](arquitetura/01-documentacao-arquitetural/) para explicar
+decisões e alternativas, incluindo a decisão do backend em camadas. Os
+[cenários de qualidade](arquitetura/01-documentacao-arquitetural/cenarios-de-qualidade.md)
+especificam estímulo, resposta e medidas esperadas para desempenho e disponibilidade.
+
+### 3.2 Estilos arquiteturais e DDD
+
+Mostre [domínio e subdomínios](arquitetura/02-estilos-arquiteturais-e-ddd/01-dominio-e-subdominios.md),
+[Context Map](arquitetura/02-estilos-arquiteturais-e-ddd/02-bounded-contexts-e-context-map.md)
+e [modelo de Pedidos](arquitetura/02-estilos-arquiteturais-e-ddd/03-modelo-do-contexto-pedidos.md).
+Explique que
+Usuários, Catálogo e Pedidos são limites conceituais propostos para organizar o
+domínio; não diga que já são módulos DDD isolados no código. Apresente entidades,
+Value Objects e agregado de Pedidos conforme o documento, distinguindo o que é
+implementado do que é modelo proposto.
+
+### 3.3 Integração, APIs e dados
+
+Mostre o [OpenAPI](../UrbanCandy_back/docs/api/openapi.yaml)/Swagger para
+consultar os principais endpoints e a [ADR do MySQL](arquitetura/03-integracao-apis-e-dados/ADR-005-escolha-banco-de-dados.md)
+para explicar a escolha do banco relacional e o uso de transações. Não
+afirme que houve benchmark comparativo entre bancos.
+
+### 3.4 Qualidade, resiliência e observabilidade
+
+Mostre o documento de [qualidade e resiliência](arquitetura/04-qualidade-resiliencia-observabilidade/cenarios-de-qualidade.md),
+as [metas SLI/SLO e observabilidade](arquitetura/04-qualidade-resiliencia-observabilidade/grafana-prometheus.md),
+estratégias como timeout, retry, circuit breaker, logs e o dashboard
+Prometheus/Grafana. As metas de desempenho e disponibilidade
+são propostas e não devem ser apresentadas como resultados medidos. Os testes
+automatizados demonstram comportamentos específicos, mas não comprovam por si
+sós as integrações reais nem um SLO de 30 dias.
+
+### 3.5 Entrega contínua
+
+Mostre o [workflow de CI](arquitetura/05-entrega-continua/ci-cd-e-runbook.md),
+a estratégia simples de deploy, rollback e runbook.
+O deploy no GitHub Actions sobe os serviços temporariamente no runner para
+validação e encerra os containers; não mantém o site hospedado após o workflow.
+Não há estratégia Blue-Green.
+
+### 3.6 Back-end Avançado: cache, mensageria, Docker e observabilidade
+
+Relacione a demonstração prática aos documentos: Cache-Aside com TTL e
+invalidação; Redis Pub/Sub com outbox e serviço de e-mail; Docker Compose com
+Nginx como proxy reverso; e logs/métricas para acompanhar o sistema. O ACK do
+evento confirma persistência, enquanto `Sent` é a evidência de envio SMTP.
+
+## 4. Jira: fluxo de trabalho
+
+Finalize mostrando o quadro e os cards do Jira. Explique que o Jira é a
+ferramenta e que os cards priorizados representam o Product Backlog. Mostre
+uma User Story e destaque descrição no formato “Como…, quero…, para…”,
+prioridade, responsável, estado, critérios de aceite e evidências ou links.
+Explique como os estados do quadro tornam o progresso visível.
+
+Não afirme que foram realizadas Sprints ou cerimônias Scrum se isso não estiver
+registrado. Se um card mencionar RabbitMQ, corrija-o: o fluxo de pedidos usa
+Redis Pub/Sub com outbox. Só diga que houve repriorização quando puder apontar
+um exemplo real no Jira.
+
+## Fechamento
+
+Em síntese: o UrbanCandy combina planejamento inicial com entregas
+incrementais; demonstra uma compra e a atualização de um pedido; e documenta
+arquitetura, integração, qualidade, entrega e acompanhamento do trabalho.
+Durante toda a apresentação, diferencie funcionalidades implementadas,
+modelos conceituais, metas propostas e entregas planejadas.
