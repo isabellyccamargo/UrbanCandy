@@ -1,88 +1,362 @@
-import { StyleSheet, TextInput, View, Pressable } from 'react-native';
+import React, {
+    useCallback,
+    useState,
+} from 'react';
+
+import {
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from 'react-native';
+
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+    useFocusEffect,
+    useRouter,
+} from 'expo-router';
+
+import { useTheme } from '@/context/Theme';
+import { useNotifications } from '@/context/NotificationContext';
+import api, { BASE_URL } from '@/services/api';
+import { getUserProfile } from '@/services/auth';
+
+function getFullImageUrl(
+    imagePath?: string | null
+) {
+    if (!imagePath) {
+        return null;
+    }
+
+    if (
+        imagePath.startsWith('file://') ||
+        imagePath.startsWith('content://') ||
+        imagePath.startsWith('http://') ||
+        imagePath.startsWith('https://')
+    ) {
+        return imagePath;
+    }
+
+    const rawBaseURL = api.defaults.baseURL || BASE_URL;
+
+    const cleanBaseURL = rawBaseURL
+        .replace(/\/api\/?$/, '')
+        .replace(/\/$/, '');
+
+    const cleanPath = imagePath.startsWith('/')
+        ? imagePath
+        : `/${imagePath}`;
+
+    return `${cleanBaseURL}${cleanPath}`;
+}
 
 export function HomeHeader() {
+    const {
+        colors,
+        fontSize,
+        font,
+        space,
+        radius,
+    } = useTheme();
+
+    const router = useRouter();
+    const { unreadCount } = useNotifications();
+
+    const [userName, setUserName] =
+        useState<string>('Visitante');
+
+    const [userImage, setUserImage] =
+        useState<string | null>(null);
+
+    const [avatarColor, setAvatarColor] =
+        useState<'dark' | 'pink'>('dark');
+
+    const [useInitialAvatar, setUseInitialAvatar] =
+        useState(false);
+
+    useFocusEffect(
+        useCallback(() => {
+            async function loadUserData() {
+                try {
+                    const stored =
+                        (await AsyncStorage.getItem(
+                            '@UrbanCandy:user'
+                        )) ||
+                        (await AsyncStorage.getItem('user'));
+
+                    if (!stored) {
+                        setUserName('Visitante');
+                        setUserImage(null);
+                        setAvatarColor('dark');
+                        setUseInitialAvatar(false);
+                        return;
+                    }
+
+                    const user = JSON.parse(stored);
+
+                    const fullName =
+                        user?.nome ||
+                        user?.name ||
+                        user?.people?.name ||
+                        'Visitante';
+
+                    const firstName = fullName
+                        .trim()
+                        .split(' ')[0];
+
+                    setUserName(firstName);
+
+                    const userId =
+                        user?.id_user ||
+                        user?.id;
+
+                    setAvatarColor(
+                        userId && (await AsyncStorage.getItem(
+                            `@UrbanCandy:avatarColor:${userId}`
+                        )) === 'pink'
+                            ? 'pink'
+                            : 'dark'
+                    );
+                    setUseInitialAvatar(
+                        userId && (await AsyncStorage.getItem(
+                            `@UrbanCandy:avatarMode:${userId}`
+                        )) === 'initial'
+                    );
+
+                    const cachedImage =
+                        user?.people?.image ||
+                        user?.people?.foto ||
+                        user?.image ||
+                        user?.foto ||
+                        null;
+                    setUserImage(getFullImageUrl(cachedImage));
+
+                    if (!userId) {
+                        return;
+                    }
+
+                    try {
+                        const profile =
+                            await getUserProfile(userId);
+
+                        const people =
+                            profile?.people ??
+                            profile ??
+                            {};
+
+                        const rawImage =
+                            people?.image ||
+                            people?.foto ||
+                            profile?.image ||
+                            profile?.foto ||
+                            null;
+
+                        const formattedUrl =
+                            getFullImageUrl(rawImage);
+
+                        setUserImage(formattedUrl);
+                    } catch (apiError) {
+                        console.log(
+                            'Erro ao buscar foto do usuário na API:',
+                            apiError
+                        );
+                    }
+                } catch (error) {
+                    console.log(
+                        'Erro ao carregar dados do usuário no header:',
+                        error
+                    );
+                }
+            }
+
+            loadUserData();
+        }, [])
+    );
+
+    const styles = StyleSheet.create({
+        container: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 100,
+
+            flexDirection: 'row',
+            alignItems: 'center',
+
+            paddingHorizontal: space.xl,
+            paddingTop: 60,
+        },
+
+        headerCard: {
+            width: '100%',
+            backgroundColor: colors.white,
+            borderRadius: radius.xl,
+
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+
+            paddingHorizontal: space.md,
+            paddingVertical: space.sm,
+
+            elevation: 3,
+            shadowColor: '#000',
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+        },
+
+        textContainer: {
+            flex: 1,
+            marginRight: 8,
+        },
+
+        greetingText: {
+            fontFamily: font?.semibold || 'System',
+            fontSize: fontSize.md,
+            color: colors.text,
+        },
+
+        subtitleText: {
+            fontFamily: font?.medium || 'System',
+            fontSize: fontSize.xs || 12,
+            color: colors.textSecondary || '#777',
+            marginTop: 2,
+        },
+
+        avatarPressable: {
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: avatarColor === 'pink' ? '#D63384' : '#222222',
+            justifyContent: 'center',
+            alignItems: 'center',
+            overflow: 'hidden',
+            borderWidth: 1.5,
+            borderColor: avatarColor === 'pink' ? '#D63384' : '#222222',
+        },
+
+        avatarImage: {
+            width: '100%' as const,
+            height: '100%' as const,
+            borderRadius: 22,
+        },
+
+        avatarInitial: {
+            color: '#FFFFFF',
+            fontFamily: font?.bold || 'System',
+            fontSize: 18,
+        },
+
+        actions: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: space.md,
+        },
+
+        notificationButton: {
+            width: 44,
+            height: 44,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 22,
+            backgroundColor: colors.background || '#F0F0F0',
+        },
+
+        notificationBadge: {
+            position: 'absolute',
+            top: -2,
+            right: -2,
+            minWidth: 18,
+            height: 18,
+            paddingHorizontal: 4,
+            borderRadius: 9,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: colors.danger,
+            borderWidth: 1,
+            borderColor: colors.white,
+        },
+
+        notificationBadgeText: {
+            color: colors.white,
+            fontFamily: font?.bold || 'System',
+            fontSize: 10,
+            lineHeight: 12,
+        },
+    });
+
+    const handleProfilePress = () => {
+        router.push('/cadastro' as any);
+    };
+
     return (
         <View style={styles.container}>
+            <View style={styles.headerCard}>
+                <View style={styles.textContainer}>
+                    <Text
+                        style={styles.greetingText}
+                        numberOfLines={1}
+                    >
+                        Olá, {userName} 👋
+                    </Text>
 
-            <View style={styles.searchContainer}>
-                <Ionicons
-                    name="search-outline"
-                    size={24}
-                    color="#000000"
-                />
+                    <Text
+                        style={styles.subtitleText}
+                        numberOfLines={1}
+                    >
+                        O que vamos pedir hoje?
+                    </Text>
+                </View>
 
-                <TextInput
-                    style={styles.input}
-                    placeholder=""
-                    placeholderTextColor="#777777"
-                    returnKeyType="search"
-                />
+                <View style={styles.actions}>
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Notificações${unreadCount ? `, ${unreadCount} não lidas` : ''}`}
+                        style={styles.notificationButton}
+                        onPress={() => router.push('/protected/notifications' as any)}
+                    >
+                        <Ionicons
+                            name="notifications-outline"
+                            size={23}
+                            color={colors.primary}
+                        />
+                        {unreadCount > 0 && (
+                            <View style={styles.notificationBadge}>
+                                <Text style={styles.notificationBadgeText}>
+                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                </Text>
+                            </View>
+                        )}
+                    </Pressable>
+
+                    <Pressable
+                        style={styles.avatarPressable}
+                        onPress={handleProfilePress}
+                    >
+                        {userImage && !useInitialAvatar ? (
+                            <Image
+                                source={userImage}
+                                style={styles.avatarImage}
+                                contentFit="cover"
+                                cachePolicy="memory-disk"
+                                transition={150}
+                                onError={() => setUserImage(null)}
+                            />
+                        ) : (
+                            <Text style={styles.avatarInitial}>
+                                {userName.trim().charAt(0).toUpperCase() || '?'}
+                            </Text>
+                        )}
+                    </Pressable>
+                </View>
             </View>
-
-            <Pressable
-                style={({ pressed }) => [
-                    styles.cartButton,
-                    pressed && styles.pressed,
-                ]}
-                onPress={() => {
-                    console.log('Carrinho');
-                }}
-            >
-                <Ionicons
-                    name="cart-outline"
-                    size={25}
-                    color="#000000"
-                />
-            </Pressable>
-
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-     container: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingTop: 60,
-        gap: 12,
-    },
-
-    searchContainer: {
-        flex: 1,
-        height: 40,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 22,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-    },
-
-    input: {
-        flex: 1,
-        height: '100%',
-        marginLeft: 6,
-        fontSize: 16,
-        color: '#3B1E36',
-    },
-
-    cartButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#FFFFFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    pressed: {
-        opacity: 0.6,
-        transform: [{ scale: 0.95 }],
-    },
-});

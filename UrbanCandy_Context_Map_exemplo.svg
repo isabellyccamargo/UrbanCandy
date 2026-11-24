@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="700" viewBox="0 0 1300 700" role="img" aria-labelledby="title desc" style="display:block;width:100%;height:auto;max-width:100%">
+  <title id="title">UrbanCandy — Mapa de Contextos</title>
+  <desc id="desc">Contextos de negócio existentes no UrbanCandy e integração futura com gateway de pagamento. Aplicações, backend e banco de dados não são mostrados por não serem contextos de negócio.</desc>
+  <defs>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#2474b5"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#e88422"/>
+    </marker>
+    <style>
+      text { font-family: "Segoe UI", Arial, sans-serif; fill: #233247; }
+      .title { font-size: 29px; font-weight: 700; }
+      .subtitle { font-size: 15px; fill: #5d6b7b; }
+      .box-title { font-size: 19px; font-weight: 700; }
+      .box-copy { font-size: 14px; fill: #405166; }
+      .small { font-size: 12px; fill: #5d6b7b; }
+      .edge-label { font-size: 12px; font-weight: 600; fill: #38536d; }
+      .prop-label { font-size: 12px; font-weight: 600; fill: #a85d12; }
+      .current { fill: #eaf4fc; stroke: #2474b5; stroke-width: 2; }
+      .proposal { fill: #fff4e8; stroke: #e88422; stroke-width: 2; stroke-dasharray: 8 6; }
+      .line-current { fill: none; stroke: #2474b5; stroke-width: 2.5; marker-end: url(#arrowBlue); }
+      .line-proposal { fill: none; stroke: #e88422; stroke-width: 2.5; stroke-dasharray: 8 6; marker-end: url(#arrowOrange); }
+    </style>
+  </defs>
+
+  <rect width="1300" height="700" fill="#ffffff"/>
+  <text class="title" x="48" y="53">UrbanCandy — Mapa de Contextos</text>
+  <text class="subtitle" x="50" y="82">Áreas de negócio existentes e uma integração de pagamento ainda não implementada</text>
+
+  <rect x="770" y="27" width="490" height="73" rx="12" fill="#fbfcfe" stroke="#d9e1ea"/>
+  <rect x="790" y="42" width="20" height="16" rx="3" class="current"/>
+  <text class="small" x="818" y="55">Contexto existente no código</text>
+  <rect x="1030" y="42" width="20" height="16" rx="3" class="proposal"/>
+  <text class="small" x="1058" y="55">Integração futura</text>
+  <path d="M790 80 H840" class="line-current"/>
+  <text class="small" x="850" y="84">Relação atual identificada</text>
+  <path d="M1030 80 H1080" class="line-proposal"/>
+  <text class="small" x="1090" y="84">Ainda não existe</text>
+
+  <path d="M350 302 H475" class="line-current"/>
+  <rect x="365" y="267" width="150" height="24" rx="5" fill="#ffffff"/>
+  <text class="edge-label" x="374" y="284">pessoa vinculada ao pedido</text>
+
+  <path d="M760 302 H885" class="line-current"/>
+  <rect x="779" y="267" width="150" height="24" rx="5" fill="#ffffff"/>
+  <text class="edge-label" x="787" y="284">produtos nos itens</text>
+
+  <path d="M760 435 H1010 V418" class="line-proposal"/>
+  <rect x="806" y="443" width="190" height="24" rx="5" fill="#ffffff"/>
+  <text class="prop-label" x="814" y="460">processar cobrança no futuro</text>
+
+  <rect x="65" y="220" width="285" height="220" rx="14" class="current"/>
+  <text class="box-title" x="89" y="258">Usuários e Acesso</text>
+  <text class="box-copy" x="89" y="294">
+    <tspan x="89" dy="0">Cadastro de usuário e pessoa</tspan>
+    <tspan x="89" dy="25">Autenticação e dados de perfil</tspan>
+    <tspan x="89" dy="25">Papéis e permissões</tspan>
+  </text>
+  <text class="small" x="89" y="408">Área implementada no código</text>
+
+  <rect x="475" y="220" width="285" height="220" rx="14" class="current"/>
+  <text class="box-title" x="499" y="258">Pedidos</text>
+  <text class="box-copy" x="499" y="294">
+    <tspan x="499" dy="0">Checkout, itens e status</tspan>
+    <tspan x="499" dy="25">Registra a pessoa e os produtos</tspan>
+    <tspan x="499" dy="25">Guarda a forma de pagamento escolhida</tspan>
+    <tspan x="499" dy="25">Não inicia nem confirma uma cobrança</tspan>
+  </text>
+  <text class="small" x="499" y="408">Área implementada no código</text>
+
+  <rect x="885" y="220" width="285" height="220" rx="14" class="current"/>
+  <text class="box-title" x="909" y="258">Catálogo</text>
+  <text class="box-copy" x="909" y="294">
+    <tspan x="909" dy="0">Produtos e categorias</tspan>
+    <tspan x="909" dy="25">Ofertas associadas a produtos</tspan>
+    <tspan x="909" dy="25">Dados dos produtos usados nos pedidos</tspan>
+  </text>
+  <text class="small" x="909" y="408">Área implementada no código</text>
+
+  <rect x="1010" y="500" width="240" height="125" rx="14" class="proposal"/>
+  <text class="box-title" x="1032" y="538" fill="#a85d12">Gateway de pagamento</text>
+  <text class="box-copy" x="1032" y="568">
+    <tspan x="1032" dy="0">Provedor a definir</tspan>
+    <tspan x="1032" dy="23">Integração ainda não existe</tspan>
+  </text>
+
+  <rect x="65" y="520" width="820" height="105" rx="12" fill="#fbfcfe" stroke="#d9e1ea"/>
+  <text class="box-title" x="89" y="555">Sobre pagamento hoje</text>
+  <text class="box-copy" x="89" y="584">
+    <tspan x="89" dy="0">O sistema cadastra opções (por exemplo, Pix ou cartão) e grava a opção selecionada no pedido.</tspan>
+    <tspan x="89" dy="22">Esse cadastro não realiza transação financeira; por isso, só o gateway aparece como futuro.</tspan>
+  </text>
+
+  <text class="small" x="65" y="666">Este mapa mostra áreas de negócio e relações. Não mostra aplicações, backend, banco de dados ou detalhes de implantação.</text>
+</svg>

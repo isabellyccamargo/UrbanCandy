@@ -8,14 +8,21 @@ export interface ICartItem {
   };
 }
 
+export interface ICartOffer {
+  id_offer: number;
+  quantity: number;
+}
+
 export interface ICart {
   items: ICartItem[];
+  offers?: ICartOffer[];
   total: number;
 }
 
 export interface IOrderCheckout {
-  id_people: number;
+  id_people?: number;
   id_payment: number;
+  id_type_delivery: number;
   cart: ICart;
 }
 

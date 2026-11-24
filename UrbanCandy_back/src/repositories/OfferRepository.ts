@@ -17,13 +17,7 @@ class OfferRepository {
             {
               model: Products,
               as: 'product',
-              attributes: [
-                'id_product',
-                'name',
-                'description',
-                'price',
-                'image',
-              ],
+              attributes: ['id_product', 'name', 'description', 'price', 'image'],
             },
           ],
         },
@@ -43,13 +37,7 @@ class OfferRepository {
             {
               model: Products,
               as: 'product',
-              attributes: [
-                'id_product',
-                'name',
-                'description',
-                'price',
-                'image',
-              ],
+              attributes: ['id_product', 'name', 'description', 'price', 'image'],
             },
           ],
         },
@@ -58,7 +46,14 @@ class OfferRepository {
   }
 
   async createOffer(offer: Offers) {
-    return await Offers.create(offer);
+    return await Offers.create({
+      name_offer: offer.name_offer,
+      description: offer.description,
+      discount: offer.discount,
+      price_offer: offer.price_offer,
+      image: offer.image,
+      active: offer.active,
+    });
   }
 
   async updateOffer(offer: Offers) {

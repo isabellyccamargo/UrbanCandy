@@ -1,7 +1,7 @@
 .main-header {
   background-color: #ffffff;
   width: 100%;
-  height: 80px;
+  height: var(--main-header-height, 80px);
   display: flex;
   justify-content: center;
   border-bottom: 1px solid #eeeeee;
@@ -37,7 +37,51 @@
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: clamp(8px, 2vw, 25px);
+}
+
+.icon-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.icon-btn:hover,
+.icon-btn:focus-visible {
+  background: #fce4ec;
+}
+
+.icon-btn:focus-visible,
+.user-menu-trigger:focus-visible,
+.dropdown-item:focus-visible {
+  outline: 2px solid #d81b60;
+  outline-offset: 2px;
+}
+
+.cart-badge {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #fff;
+  border-radius: 10px;
+  background: #e91e63;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .user-menu-container {
@@ -49,7 +93,42 @@
 .user-menu-trigger {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  color: #5d4037;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.user-avatar-image,
+.user-avatar-initial {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 50%;
+}
+
+.user-avatar-image {
+  object-fit: cover;
+}
+
+.user-avatar-initial {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.user-avatar-dark {
+  background: #222;
+}
+
+.user-avatar-pink {
+  background: #d63384;
 }
 
 .dropdown-menu {
@@ -67,7 +146,7 @@
   border: 1px solid #f0f0f0;
 }
 
-.user-menu-container:hover .dropdown-menu {
+.user-menu-container.is-open .dropdown-menu {
   display: flex;
 }
 
@@ -82,16 +161,6 @@
 .dropdown-item:hover {
   background-color: #fce4ec;
   color: #e91e63;
-}
-
-.user-menu-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 20px;
-  transition: background 0.3s;
 }
 
 .user-name-text {
@@ -111,12 +180,8 @@
 /* ===== RESPONSIVIDADE ===== */
 
 @media (max-width: 1024px) {
-  .main-header {
-    height: 75px;
-  }
-
   .logo-image {
-    height: 65px;
+    height: 62px;
   }
 
   .header-container {
@@ -129,8 +194,8 @@
 }
 
 @media (max-width: 768px) {
-  .main-header {
-    height: 65px;
+  :root {
+    --main-header-height: 65px;
   }
 
   .logo-image {
@@ -166,8 +231,8 @@
 }
 
 @media (max-width: 480px) {
-  .main-header {
-    height: 55px;
+  :root {
+    --main-header-height: 55px;
   }
 
   .logo-image {
@@ -211,8 +276,8 @@
 }
 
 @media (max-width: 320px) {
-  .main-header {
-    height: 50px;
+  :root {
+    --main-header-height: 50px;
   }
 
   .logo-image {

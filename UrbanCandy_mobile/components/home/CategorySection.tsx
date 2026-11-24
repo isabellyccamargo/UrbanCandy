@@ -7,10 +7,12 @@ import {
     View,
 } from 'react-native';
 
-import { CategoryCard } from './Categorycard';
-import api from '@/services/api';
-import { Fonts } from '@/constants/fonts';
 import { useRouter } from 'expo-router';
+
+import { useTheme } from '@/context/Theme';
+import api from '@/services/api';
+
+import { CategoryCard } from './Categorycard';
 
 type Category = {
     id_category: number;
@@ -24,22 +26,60 @@ const CATEGORY_IMAGES: Record<number, any> = {
 };
 
 export function CategorySection() {
+    const { colors, font, fontSize, space } = useTheme();
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
+    const styles = StyleSheet.create({
+        container: {
+            width: '100%',
+            marginTop: 30,
+        },
+        header: {
+            alignItems: 'center',
+            marginBottom: 18,
+        },
+        title: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.xxl,
+            color: colors.primary,
+        },
+        list: {
+            paddingHorizontal: space.xl,
+        },
+        loading: {
+            minHeight: 100,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        categoryItem: {
+            flexDirection: 'row',
+            alignItems: 'center',
+        },
+        divider: {
+            width: 1,
+            height: 75,
+            backgroundColor: colors.primary,
+        },
+    });
+
     useEffect(() => {
+        console.log('CategorySection montou');
+
         loadCategories();
+
+        return () => {
+            console.log('CategorySection desmontou');
+        };
     }, []);
 
     async function loadCategories() {
+        console.log('BUSCANDO CATEGORIAS');
+
         try {
             const response = await api.get('/categoria/listar');
-
             const data = response.data?.data;
-
-            console.log('========== CATEGORIAS ==========');
-            console.log(data);
 
             if (!Array.isArray(data)) {
                 setCategories([]);
@@ -47,7 +87,6 @@ export function CategorySection() {
             }
 
             setCategories(data);
-
         } catch (error: any) {
             console.error(
                 'Erro ao carregar categorias:',
@@ -55,7 +94,6 @@ export function CategorySection() {
             );
 
             setCategories([]);
-
         } finally {
             setLoading(false);
         }
@@ -63,7 +101,6 @@ export function CategorySection() {
 
     return (
         <View style={styles.container}>
-
             <View style={styles.header}>
                 <Text style={styles.title}>
                     Categorias
@@ -74,7 +111,7 @@ export function CategorySection() {
                 <View style={styles.loading}>
                     <ActivityIndicator
                         size="small"
-                        color="#DD2E8A"
+                        color={colors.primary}
                     />
                 </View>
             ) : (
@@ -84,14 +121,8 @@ export function CategorySection() {
                     contentContainerStyle={styles.list}
                 >
                     {categories.map((category, index) => {
-
                         const image =
                             CATEGORY_IMAGES[category.id_category];
-
-                        console.log(
-                            `${category.id_category} - ${category.name_category} →`,
-                            image ? 'IMAGEM OK' : 'SEM IMAGEM'
-                        );
 
                         return (
                             <View
@@ -103,9 +134,10 @@ export function CategorySection() {
                                     image={image}
                                     onPress={() => {
                                         router.push({
-                                            pathname: '/cardapio',
+                                            pathname: '/protected/cardapio',
                                             params: {
-                                                category: category.name_category,
+                                                category:
+                                                    category.name_category,
                                             },
                                         });
                                     }}
@@ -114,53 +146,11 @@ export function CategorySection() {
                                 {index < categories.length - 1 && (
                                     <View style={styles.divider} />
                                 )}
-
                             </View>
                         );
                     })}
                 </ScrollView>
             )}
-
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        width: '100%',
-        marginTop: 30,
-    },
-
-    header: {
-        alignItems: 'center',
-        marginBottom: 18,
-    },
-
-    title: {
-        fontFamily: Fonts.semibold,
-        fontSize: 24,
-        color: '#DD2E8A',
-    },
-
-    list: {
-        paddingHorizontal: 20,
-    },
-
-    loading: {
-        minHeight: 100,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    categoryItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-
-    divider: {
-        width: 1,
-        height: 75,
-        backgroundColor: '#e6b3ce',
-
-    },
-});

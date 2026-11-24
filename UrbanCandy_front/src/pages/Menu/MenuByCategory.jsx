@@ -51,7 +51,7 @@ export const MenuByCategory = () => {
 
   return (
     <main className="menu-container animate-entrance">
-      <nav className="category-nav">
+      <nav className="category-nav" aria-label="Categorias do cardápio">
         <ul>
           {categoriesMenu.map((cat) => (
             <li key={cat.id_category}>

@@ -41,8 +41,20 @@ class ProductController {
     try {
       const page = Number(req.query.page) || 1;
       const size = Number(req.query.size) || 6;
+      const rawCategoryId = req.query.id_category;
+      let categoryId: number | undefined;
 
-      const result = await ProductService.findAllProduct(page, size);
+      if (rawCategoryId !== undefined) {
+        if (typeof rawCategoryId !== 'string' || !/^[1-9]\d*$/.test(rawCategoryId)) {
+          throw new ApiException('INVALID_ID', 400, 'id_category');
+        }
+        categoryId = Number(rawCategoryId);
+        if (!Number.isSafeInteger(categoryId)) {
+          throw new ApiException('INVALID_ID', 400, 'id_category');
+        }
+      }
+
+      const result = await ProductService.findAllProduct(page, size, categoryId);
 
       res.status(200).json({
         data: result.rows,

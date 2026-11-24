@@ -1,11 +1,12 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../config/Config.js';
+import type Role from './Role.js';
 
 class Users extends Model {
   declare id_user: number;
   declare email: string;
   declare password: string;
-  declare administrator: string;
+  declare roles?: Role[];
 }
 
 Users.init(
@@ -23,11 +24,6 @@ Users.init(
     password: {
       type: DataTypes.STRING(100),
       allowNull: false,
-    },
-    administrator: {
-      type: DataTypes.ENUM('0', '1'),
-      allowNull: true,
-      defaultValue: '0',
     },
   },
   {

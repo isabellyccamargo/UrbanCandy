@@ -1,61 +1,207 @@
 import { Router } from 'express';
+
 import authMiddleware from '../middlewares/AuthMiddleware.js';
+import { authorizePermission } from '../middlewares/AuthorizationMiddleware.js';
+import managerAuthorizationMiddleware from '../middlewares/ManagerAuthorizationMiddleware.js';
+
 import ProductController from '../controllers/ProductController.js';
 import CategoryController from '../controllers/CategoryController.js';
 import UserController from '../controllers/UserController.js';
 import PeopleController from '../controllers/PeopleController.js';
+import AdminController from '../controllers/AdminController.js';
 import OrderController from '../controllers/OrderController.js';
 import AddressController from '../controllers/AddressController.js';
 import TypeOfPaymentController from '../controllers/TypeOfPaymentController.js';
-import multer from 'multer';
+import TypeOfDeliveryController from '../controllers/TypeOfDeliveryController.js';
+import NotificationController from '../controllers/NotificationController.js';
+import MercadoPagoController from '../controllers/MercadoPagoController.js';
+import DemoPixController from '../controllers/DemoPixController.js';
+import EmailVerificationController from '../controllers/EmailVerificationController.js';
+import { upload } from '../config/MulterConfig.js';
 
 const privateRoutes = Router();
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
-});
-const upload = multer({ storage });
-
 privateRoutes.use(authMiddleware);
+privateRoutes.use('/admin', managerAuthorizationMiddleware);
+
+privateRoutes.get('/admin/usuarios', AdminController.findUsers);
+privateRoutes.put('/admin/usuarios/:id_user/roles', AdminController.replaceUserRoles);
+privateRoutes.put('/admin/pessoas/:id_people', PeopleController.updateAdminPeople);
+privateRoutes.get('/admin/papeis', AdminController.findRoles);
+privateRoutes.get('/admin/permissoes', AdminController.findPermissions);
+privateRoutes.put('/admin/papeis/:id_role/permissoes', AdminController.replaceRolePermissions);
+
+privateRoutes.get('/notificacoes', NotificationController.list);
+privateRoutes.get('/email-verification/status', EmailVerificationController.status);
+privateRoutes.post(
+  '/email-verification/request',
+  EmailVerificationController.requestForAuthenticatedUser
+);
+privateRoutes.post(
+  '/email-verification/change/request',
+  EmailVerificationController.requestEmailChange
+);
+privateRoutes.post(
+  '/email-verification/change/confirm',
+  EmailVerificationController.confirmEmailChange
+);
+privateRoutes.get('/notificacoes/stream', NotificationController.stream);
+privateRoutes.patch('/notificacoes/lidas', NotificationController.markAllAsRead);
+privateRoutes.patch('/notificacoes/:id_notification/lida', NotificationController.markAsRead);
+privateRoutes.post('/pagamento/checkout', MercadoPagoController.createCheckout);
+privateRoutes.get('/pagamento/checkout/:id', MercadoPagoController.getStatus);
+privateRoutes.post('/pagamento/pix/demo/confirm', DemoPixController.confirm);
 
 // --- PRODUTO ---
-privateRoutes.get('/produto/listar', ProductController.findAllProduct);
-privateRoutes.post('/produto/salvar', upload.single('image'), ProductController.createProduct);
+
+privateRoutes.post(
+  '/produto/salvar',
+  authorizePermission('cadastrar_produto'),
+  upload.single('image'),
+  ProductController.createProduct
+);
+
 privateRoutes.put(
   '/produto/atualizar/:id_product',
+  authorizePermission('editar_produto'),
   upload.single('image'),
   ProductController.updateProduct
 );
-privateRoutes.delete('/produto/excluir/:id_product', ProductController.deleteProduct);
 
-// --- CATEGORIA  ---
-privateRoutes.get('/categoria/listar', CategoryController.findAllCategory);
-privateRoutes.post('/categoria/salvar', CategoryController.createCategory);
-privateRoutes.put('/categoria/atualizar/:idCategory', CategoryController.updateCategory);
-privateRoutes.delete('/categoria/excluir/:id_category', CategoryController.deleteCategory);
+privateRoutes.delete(
+  '/produto/excluir/:id_product',
+  authorizePermission('excluir_produto'),
+  ProductController.deleteProduct
+);
+
+// --- CATEGORIA ---
+
+privateRoutes.post(
+  '/categoria/salvar',
+  authorizePermission('criar_categoria'),
+  CategoryController.createCategory
+);
+
+privateRoutes.put(
+  '/categoria/atualizar/:idCategory',
+  authorizePermission('editar_categoria'),
+  CategoryController.updateCategory
+);
+
+privateRoutes.delete(
+  '/categoria/excluir/:id_category',
+  authorizePermission('excluir_categoria'),
+  CategoryController.deleteCategory
+);
 
 // --- USUÁRIO E PESSOA ---
-privateRoutes.get('/usuario/listar', UserController.findAllUsers);
+
+privateRoutes.get('/usuario/listar', managerAuthorizationMiddleware, UserController.findAllUsers);
+
 privateRoutes.get('/usuario/listarPorId/:id_user', UserController.findByIdUser);
+
 privateRoutes.put('/usuario/atualizar/:id_user', UserController.updateUser);
-privateRoutes.get('/pessoa/listar', PeopleController.findAllPeople);
+
+privateRoutes.get('/pessoa/listar', managerAuthorizationMiddleware, PeopleController.findAllPeople);
+
 privateRoutes.put('/pessoa/atualizar/:id_people', PeopleController.updatePeople);
+
 privateRoutes.put('/endereco/atualizar/:id_address', AddressController.updateAddress);
 
-// --- PEDIDOS  ---
 privateRoutes.post('/pedido/checkout', OrderController.store);
-privateRoutes.get('/pedido/listar', OrderController.findAllOrders);
+
+privateRoutes.get(
+  '/pedido/listar',
+  authorizePermission('visualizar_pedidos'),
+  OrderController.findAllOrders
+);
+
+privateRoutes.patch(
+  '/pessoa/upload-foto/:id_people',
+  upload.single('image'),
+  PeopleController.uploadImage
+);
+
 privateRoutes.get('/pedido/usuario/:id_people', OrderController.findByUserId);
 
-// --- TIPOS DE PAGAMENTO ---
-privateRoutes.post('/pagamento/salvar', TypeOfPaymentController.createTypeOfPayment);
-privateRoutes.put('/pagamento/atualizar/:id_payment', TypeOfPaymentController.updateTypeOfPayment);
-privateRoutes.delete('/pagamento/excluir/:id_payment', TypeOfPaymentController.deleteTypeOfPayment);
-privateRoutes.get('/pagamento/listar', TypeOfPaymentController.findAllTypeOfPayment);
 privateRoutes.get(
-  '/pagamento/listarPorId/:id_payment',
-  TypeOfPaymentController.findByIdTypeOfPayment
+  '/pedido/:id_order/itens',
+  authorizePermission('visualizar_pedido'),
+  OrderController.findItemsByOrder
 );
+
+privateRoutes.get(
+  '/pedido/status/listar',
+  authorizePermission('visualizar_pedidos'),
+  OrderController.findAllStatuses
+);
+
+privateRoutes.patch(
+  '/pedido/:id_order/status',
+  authorizePermission('alterar_status_pedido'),
+  OrderController.updateStatus
+);
+
+privateRoutes.patch('/pedido/:id_order/cancel', OrderController.cancel);
+
+// --- TIPOS DE PAGAMENTO ---
+
+privateRoutes.post(
+  '/pagamento/salvar',
+  authorizePermission('criar_tipo_pagamento'),
+  TypeOfPaymentController.createTypeOfPayment
+);
+
+privateRoutes.put(
+  '/pagamento/atualizar/:id_payment',
+  authorizePermission('editar_tipo_pagamento'),
+  TypeOfPaymentController.updateTypeOfPayment
+);
+
+privateRoutes.delete(
+  '/pagamento/excluir/:id_payment',
+  authorizePermission('excluir_tipo_pagamento'),
+  TypeOfPaymentController.deleteTypeOfPayment
+);
+
+privateRoutes.get('/pagamento/listar', TypeOfPaymentController.findAllTypeOfPayment);
+
+// --- TIPOS DE DELIVERY ---
+
+privateRoutes.post(
+  '/entrega/salvar',
+  authorizePermission('criar_tipo_delivery'),
+  TypeOfDeliveryController.create
+);
+
+privateRoutes.put(
+  '/entrega/atualizar/:id_delivery',
+  authorizePermission('editar_tipo_delivery'),
+  TypeOfDeliveryController.update
+);
+
+privateRoutes.delete(
+  '/entrega/excluir/:id_delivery',
+  authorizePermission('excluir_tipo_delivery'),
+  TypeOfDeliveryController.delete
+);
+
+privateRoutes.get(
+  '/entrega/listarPorId/:id_delivery',
+  authorizePermission('listar_tipos_delivery'),
+  TypeOfDeliveryController.findById
+);
+
+privateRoutes.stack.forEach((layer) => {
+  if (layer.route) {
+    const routePath = layer.route.path;
+    const handlers = layer.route.stack;
+    handlers.forEach((h: any, index: number) => {
+      if (!h.handle) {
+        console.error(`[ERRO DE ROTA] Handler indefinido na rota: ${routePath} (índice ${index})`);
+      }
+    });
+  }
+});
 
 export default privateRoutes;

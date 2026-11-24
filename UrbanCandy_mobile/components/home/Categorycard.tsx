@@ -1,15 +1,15 @@
+import { Image } from 'expo-image';
 import {
-    Image,
     Pressable,
     StyleSheet,
     Text,
 } from 'react-native';
 
-import { Fonts } from '@/constants/fonts';
+import { useTheme } from '@/context/Theme';
 
 type CategoryCardProps = {
     name: string;
-    image?: any;
+    image?: string;
     onPress?: () => void;
 };
 
@@ -18,6 +18,45 @@ export function CategoryCard({
     image,
     onPress,
 }: CategoryCardProps) {
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+        radius,
+    } = useTheme();
+
+    const styles = StyleSheet.create({
+        container: {
+            width: 125,
+            marginTop: space.xl,
+            alignItems: 'center',
+        },
+        image: {
+            width: 72,
+            height: 72,
+            borderRadius: radius.circle,
+            backgroundColor: colors.white,
+            marginBottom: space.sm,
+        },
+        name: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.md,
+            color: colors.primary,
+            textAlign: 'center',
+        },
+        options: {
+            fontFamily: font.regular,
+            fontSize: fontSize.sm,
+            color: colors.primary,
+            marginTop: 1,
+        },
+        pressed: {
+            opacity: 0.65,
+            transform: [{ scale: 0.96 }],
+        },
+    });
+
     return (
         <Pressable
             onPress={onPress}
@@ -29,7 +68,9 @@ export function CategoryCard({
             <Image
                 source={image}
                 style={styles.image}
-                resizeMode="cover"
+                contentFit="cover"
+                cachePolicy="memory-disk"
+                transition={150}
             />
 
             <Text
@@ -45,37 +86,3 @@ export function CategoryCard({
         </Pressable>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        width: 125,
-        marginTop: 20,
-        alignItems: 'center',
-    },
-
-    image: {
-        width: 72,
-        height: 72,
-        borderRadius: 36,
-        backgroundColor: '#FFFFFF',
-        marginBottom: 8,
-    },
-
-    name: {
-        fontFamily: Fonts.semibold,
-        fontSize: 15,
-        color: '#DD2E8A',
-        textAlign: 'center',
-    },
-
-    options: {
-        fontSize: 12,
-        color: '#DD2E8A',
-        marginTop: 1,
-    },
-
-    pressed: {
-        opacity: 0.65,
-        transform: [{ scale: 0.96 }],
-    },
-});

@@ -1,11 +1,38 @@
 import { Stack } from 'expo-router';
 
+import { ThemeProvider } from '@/context/Theme';
+import { AppAlertProvider } from '@/components/common/AppAlert';
+import { CartProvider } from '@/context/CartContext';
+import { AuthProvider } from '@/context/AuthContext';
+import { NotificationProvider } from '@/context/NotificationContext';
+
 export default function RootLayout() {
     return (
-        <Stack
-            screenOptions={{
-                headerShown: false,
-            }}
-        />
+        <AuthProvider>
+            <ThemeProvider>
+                <AppAlertProvider>
+                    <NotificationProvider>
+                        <CartProvider>
+                            <Stack screenOptions={{ headerShown: false }}>
+                                <Stack.Screen name="index" />
+                                <Stack.Screen name="login" />
+                                <Stack.Screen name="welcome" />
+                                <Stack.Screen name="cadastro" />
+                                <Stack.Screen name="email-confirmation" />
+                                <Stack.Screen name="protected" />
+                                <Stack.Screen
+                                    name="cart"
+                                    options={{
+                                        presentation: 'transparentModal',
+                                        animation: 'slide_from_right',
+                                        contentStyle: { backgroundColor: 'transparent' },
+                                    }}
+                                />
+                            </Stack>
+                        </CartProvider>
+                    </NotificationProvider>
+                </AppAlertProvider>
+            </ThemeProvider>
+        </AuthProvider>
     );
 }

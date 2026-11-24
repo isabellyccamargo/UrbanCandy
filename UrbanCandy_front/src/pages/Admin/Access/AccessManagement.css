@@ -1,0 +1,86 @@
+.access-role-list {
+  display: grid;
+  gap: 18px;
+}
+
+.access-management-card {
+  min-width: 0;
+  padding: 20px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.access-role-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.access-role-header h2 {
+  margin: 0;
+  color: #5d4037;
+  font-size: 1.15rem;
+}
+
+.access-role-header p {
+  margin: 5px 0 0;
+  color: #888;
+}
+
+.access-permission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.access-permission-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid #f0e2e8;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.access-permission-option input {
+  margin-top: 3px;
+  accent-color: #e91e63;
+}
+
+.access-permission-option span {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.access-permission-option strong {
+  color: #444;
+  overflow-wrap: anywhere;
+}
+
+.access-permission-option small {
+  color: #888;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+  .access-permission-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .access-role-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .access-management-card {
+    padding: 14px;
+  }
+}

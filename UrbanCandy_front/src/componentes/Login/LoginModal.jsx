@@ -52,6 +52,22 @@ const LoginModal = ({ isOpen, onClose, onLoginSuccess }) => {
       }
 
       const profile = data.user;
+      const pendingAvatarColorKey =
+        `@UrbanCandy:avatarColor:pending:${email.toLowerCase()}`;
+      const pendingAvatarColor = localStorage.getItem(pendingAvatarColorKey);
+      if (profile?.id_user && pendingAvatarColor) {
+        localStorage.setItem(
+          `@UrbanCandy:avatarColor:${profile.id_user}`,
+          pendingAvatarColor
+        );
+        localStorage.removeItem(pendingAvatarColorKey);
+      }
+      const pendingAvatarModeKey = `@UrbanCandy:avatarMode:pending:${email.toLowerCase()}`;
+      const pendingAvatarMode = localStorage.getItem(pendingAvatarModeKey);
+      if (profile?.id_user && pendingAvatarMode) {
+        localStorage.setItem(`@UrbanCandy:avatarMode:${profile.id_user}`, pendingAvatarMode);
+        localStorage.removeItem(pendingAvatarModeKey);
+      }
       login(profile);
 
       if (data.id_people) {

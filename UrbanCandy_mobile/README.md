@@ -16,6 +16,22 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
+### Backend local e Docker
+
+Para usar o app em um celular físico, configure uma vez
+`EXPO_PUBLIC_API_URL=http://<IP-do-computador>:80` no arquivo `.env` desta
+pasta. O endereço usa o Nginx como proxy para a API; o celular e o computador
+devem estar na mesma rede, e o firewall deve permitir a porta HTTP do Nginx.
+
+Para usar o backend Docker, inicie-o pela raiz do repositório com
+`.\scripts\start-docker.ps1`; o celular acessa a API pelo Nginx. O comando
+`npm run dev` do backend inicia apenas a API local para uso no navegador e não
+altera o Nginx. No emulador Android padrão, use
+`http://10.0.2.2:80` como URL inicial.
+
+O HTTP sem TLS é somente para desenvolvimento em uma rede local confiável; não
+use em rede pública nem para tráfego com dados reais.
+
 In the output, you'll find options to open the app in a
 
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)

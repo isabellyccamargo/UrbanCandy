@@ -1,4 +1,5 @@
 import { Button } from '../Button/Button';
+import { Link } from 'react-router-dom';
 import { useCart } from '../../hooks/UseCart';
 import { toast } from 'react-toastify';
 import './CardProduct.css';
@@ -28,6 +29,9 @@ export const CardProduct = ({ product, showDescription = false }) => {
       <div className="product-info">
         <h3>{product.name}</h3>
         {showDescription && <p className="product-description">{product.description}</p>}
+        <Link className="product-details-link" to={`/produto/${product.id_product}`}>
+          Ver detalhes
+        </Link>
 
         <div className="product-footer">
           <p className="product-price">

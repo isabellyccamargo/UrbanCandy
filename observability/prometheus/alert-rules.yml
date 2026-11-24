@@ -1,0 +1,50 @@
+groups:
+  - name: urbancandy-api
+    rules:
+      - alert: UrbanCandyBackendUnavailable
+        expr: up{job="urbancandy-backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: UrbanCandy backend is not being scraped
+
+      - alert: UrbanCandyApiHealthCheckFailed
+        expr: probe_success{job="urbancandy-api-health"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: UrbanCandy API health endpoint is failing
+
+      - alert: UrbanCandyHighServerErrorRate
+        expr: |
+          sum(rate(urbancandy_http_requests_total{status_code=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(urbancandy_http_requests_total{status_code!~"4.."}[5m])), 1e-9)
+          > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Backend server error ratio exceeded 1% for 5 minutes
+
+      - alert: UrbanCandyCatalogLatencySloAtRisk
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (rate(urbancandy_http_request_duration_seconds_bucket{route=~"/api/(produto|categoria)/.*"}[5m]))
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Catalog API p95 latency exceeded the proposed 500 ms target
+
+      - alert: UrbanCandyViaCepCircuitOpen
+        expr: urbancandy_viacep_circuit_open == 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: ViaCEP circuit breaker is open

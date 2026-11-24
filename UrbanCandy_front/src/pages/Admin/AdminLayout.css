@@ -20,6 +20,17 @@
   flex: 1;
 }
 
+.admin-page > .admin-table-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.admin-page {
+  box-sizing: border-box;
+  padding-inline: 16px;
+}
+
 .sidebar-overlay {
   display: none;
   position: fixed;
@@ -54,6 +65,10 @@
 
   .admin-page-content {
     padding: 0 15px 15px 15px;
+  }
+
+  .admin-page {
+    padding-inline: 8px;
   }
 
   .sidebar-overlay {

@@ -49,17 +49,32 @@ describe('UserService', () => {
   describe('Autenticação (Login)', () => {
     test('deve realizar login com sucesso', async () => {
       const senhaPlana = 'Senha123';
-      const senhaHash = await bcrypt.hash(senhaPlana, 10);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => true);
 
       jest.spyOn(UserRepository, 'findByEmail').mockResolvedValue({
         id_user: 1,
         email: 'user@gmail.com',
-        password: senhaHash,
+        password: 'stored-password-hash',
         people: { name: 'Fulano' },
       } as any);
 
       const result = await UserService.login('user@gmail.com', senhaPlana);
       expect(result.user.nome).toBe('Fulano');
+      expect(bcrypt.compare).toHaveBeenCalledWith(senhaPlana, 'stored-password-hash');
+    });
+
+    test('deve normalizar espaços e maiúsculas do e-mail antes de consultar', async () => {
+      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => true);
+      const findByEmail = jest.spyOn(UserRepository, 'findByEmail').mockResolvedValue({
+        id_user: 1,
+        email: 'user@gmail.com',
+        password: 'stored-password-hash',
+        people: { name: 'Fulano' },
+      } as any);
+
+      await UserService.login('  USER@GMAIL.COM  ', 'Senha123');
+
+      expect(findByEmail).toHaveBeenCalledWith('user@gmail.com');
     });
 
     test('deve falhar login com senha incorreta', async () => {

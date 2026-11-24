@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
@@ -17,7 +17,7 @@ WORKDIR /app
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/.env ./
+COPY --from=builder /app/docs/api/openapi.yaml ./docs/api/openapi.yaml
 RUN mkdir -p /app/dist/src/config
 COPY --from=builder /app/src/config/errors_messages.properties ./dist/src/config/
 

@@ -5,6 +5,7 @@ import { CategoryCard } from '../../componentes/Category/CategoryCard';
 import { FeatureCard } from '../../componentes/Featured/FeaturedCard';
 import { Link } from 'react-router-dom';
 import { FEATURES, CATEGORY_IMAGES } from './HomeData';
+import OfferSection from './OfferSection';
 import { toast } from 'react-toastify';
 import sobre1 from '../../assets/sobre1.png';
 import sobre2 from '../../assets/sobre2.png';
@@ -166,7 +167,20 @@ const Home = () => {
             <div className="divider-candy"></div>
           </section>
 
-          {/* AJUSTADO: Adicionado ref={destaquesRef} aqui embaixo para receber a rolagem */}
+          <OfferSection />
+
+          <section className="categories-section animate-entrance">
+            <SectionHeader
+              title="Nosso Cardápio"
+              sub="Escolha sua categoria favorita e descubra os sabores. Aqui você escolhe seu doce favorito e fazemos na hora. Fresquinho e delicioso!"
+            />
+            <div className="categories-grid">
+              {categories.map((cat, i) => (
+                <CategoryCard key={i} title={cat.name} image={cat.image} />
+              ))}
+            </div>
+          </section>
+
           <section
             ref={destaquesRef}
             className="highlights-section animate-entrance"
@@ -188,18 +202,6 @@ const Home = () => {
                   <p className="no-data-msg">Nenhum destaque disponível no momento.</p>
                 )}
               </div>
-            </div>
-          </section>
-
-          <section className="categories-section animate-entrance">
-            <SectionHeader
-              title="Nosso Cardápio"
-              sub="Escolha sua categoria favorita e descubra os sabores. Aqui você escolhe seu doce favorito e fazemos na hora. Fresquinho e delicioso!"
-            />
-            <div className="categories-grid">
-              {categories.map((cat, i) => (
-                <CategoryCard key={i} title={cat.name} image={cat.image} />
-              ))}
             </div>
           </section>
 

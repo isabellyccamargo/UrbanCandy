@@ -1,13 +1,15 @@
 import {
-    Image,
     Pressable,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
 
-import { Fonts } from '@/constants/fonts';
+import { Image } from 'expo-image';
+
 import { API_BASE_URL } from '@/services/api';
+import { SmallButton } from '@/components/ui/smallButton';
+import { useTheme } from '@/context/Theme';
 
 type ProductCardProps = {
     id_product: number;
@@ -26,23 +28,103 @@ export function ProductCard({
     onPress,
     onAdd,
 }: ProductCardProps) {
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+        radius,
+    } = useTheme();
+
+    const finalImageUrl = image
+        ? `${API_BASE_URL}/uploads/${image}`
+        : null;
+
+    const styles = StyleSheet.create({
+        card: {
+            width: '49%',
+            backgroundColor: colors.white,
+            borderRadius: radius.md,
+            padding: 5,
+            marginBottom: space.md,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.12,
+            shadowRadius: 8,
+            elevation: 8,
+        },
+
+        image: {
+            width: '100%' as const,
+            height: 122,
+            borderRadius: radius.sm,
+        },
+
+        imagePlaceholder: {
+            width: '100%',
+            height: 122,
+            borderRadius: radius.sm,
+            backgroundColor: colors.border,
+        },
+
+        name: {
+            fontFamily: font.regular,
+            fontSize: fontSize.base,
+            color: colors.text,
+            marginTop: 6,
+            marginLeft: 3,
+        },
+
+        detailsButton: {
+            alignSelf: 'flex-start',
+            marginTop: 4,
+            marginLeft: 3,
+            paddingVertical: 2,
+        },
+
+        details: {
+            fontFamily: font.regular,
+            fontSize: fontSize.sm,
+            color: colors.primary,
+        },
+
+        footer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: 7,
+            marginHorizontal: 3,
+        },
+
+        price: {
+            fontFamily: font.bold,
+            fontSize: fontSize.base,
+            color: colors.text,
+        },
+    });
+
     return (
         <View style={styles.card}>
-
-            {/* IMAGEM */}
-            {image ? (
+            {finalImageUrl ? (
                 <Image
-                    source={{
-                        uri: `${API_BASE_URL}/uploads/${image}`,
-                    }}
+                    source={finalImageUrl}
                     style={styles.image}
-                    resizeMode="cover"
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={150}
+                    onError={(error) => {
+                        console.error(
+                            `[ERRO DE CARREGAMENTO - ${name}]:`,
+                            error,
+                            '| URL:',
+                            finalImageUrl
+                        );
+                    }}
                 />
             ) : (
                 <View style={styles.imagePlaceholder} />
             )}
 
-            {/* NOME */}
             <Text
                 style={styles.name}
                 numberOfLines={1}
@@ -50,16 +132,8 @@ export function ProductCard({
                 {name}
             </Text>
 
-            {/* VER DETALHES */}
             <Pressable
-                onPress={() => {
-                    console.log(
-                        'CLICOU EM VER DETALHES:',
-                        id_product
-                    );
-
-                    onPress?.();
-                }}
+                onPress={onPress}
                 style={styles.detailsButton}
             >
                 <Text style={styles.details}>
@@ -67,114 +141,16 @@ export function ProductCard({
                 </Text>
             </Pressable>
 
-            {/* PREÇO + ADICIONAR */}
             <View style={styles.footer}>
-
                 <Text style={styles.price}>
-                    R${' '}
-                    {Number(price)
-                        .toFixed(2)
-                        .replace('.', ',')}
+                    R$ {Number(price).toFixed(2).replace('.', ',')}
                 </Text>
 
-                <Pressable
-                    style={styles.button}
-                    onPress={() => {
-                        onAdd?.();
-                    }}
-                >
-                    <Text style={styles.buttonText}>
-                        Adicionar
-                    </Text>
-                </Pressable>
-
+                <SmallButton
+                    title="Adicionar"
+                    onPress={() => onAdd?.()}
+                />
             </View>
-
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-
-    card: {
-        width: '47%',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 5,
-        marginBottom: 14,
-
-        shadowColor: '#000000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.20,
-        shadowRadius: 3,
-        elevation: 4,
-    },
-
-    image: {
-        width: '100%',
-        height: 122,
-        borderRadius: 9,
-    },
-
-    imagePlaceholder: {
-        width: '100%',
-        height: 122,
-        borderRadius: 9,
-        backgroundColor: '#EDEDED',
-    },
-
-    name: {
-        fontFamily: Fonts.regular,
-        fontSize: 14,
-        color: '#222222',
-        marginTop: 6,
-        marginLeft: 3,
-    },
-
-    detailsButton: {
-        alignSelf: 'flex-start',
-        marginTop: 4,
-        marginLeft: 3,
-        paddingVertical: 2,
-        paddingHorizontal: 2,
-    },
-
-    details: {
-        fontFamily: Fonts.regular,
-        fontSize: 12,
-        color: '#DD2E8A',
-    },
-
-    footer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: 7,
-        marginHorizontal: 3,
-    },
-
-    price: {
-        fontFamily: Fonts.regular,
-        fontSize: 14,
-        color: '#222222',
-    },
-
-    button: {
-        height: 25,
-        paddingHorizontal: 14,
-        backgroundColor: '#DD2E8A',
-        borderRadius: 13,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    buttonText: {
-        fontFamily: Fonts.regular,
-        fontSize: 12,
-        color: '#FFFFFF',
-    },
-
-});

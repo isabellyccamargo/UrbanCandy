@@ -14,23 +14,40 @@ export const TypeOfPaymentList = () => {
   const [idDel, setIdDel] = useState(null);
   const navigate = useNavigate();
 
+  const fetchPage = (page) => getAllTypeOfPayment(page, 6);
+  const applyPage = (res) => {
+    const data = res.data?.data || res.data || [];
+    setTypes(data);
+    setTotalPages(res.data?.totalPages || 1);
+  };
+
+  useEffect(() => {
+    let active = true;
+    fetchPage(currentPage)
+      .then((res) => {
+        if (active) applyPage(res);
+      })
+      .catch(() => {
+        if (active) toast.error('Erro ao carregar pagamentos.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [currentPage]);
+
   const load = async (page = 1) => {
     try {
-      setLoading(true);
-      const res = await getAllTypeOfPayment(page, 6);
-      const data = res.data?.data || res.data || [];
-      setTypes(data);
-      setTotalPages(res.data?.totalPages || 1);
+      applyPage(await fetchPage(page));
     } catch {
       toast.error('Erro ao carregar pagamentos.');
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    load(currentPage);
-  }, [currentPage]);
 
   const confirmDelete = async () => {
     const idT = toast.loading('Removendo...');
@@ -42,6 +59,7 @@ export const TypeOfPaymentList = () => {
         isLoading: false,
         autoClose: 2000,
       });
+      setLoading(true);
       types.length === 1 && currentPage > 1 ? setCurrentPage((p) => p - 1) : load(currentPage);
     } catch {
       toast.update(idT, {
@@ -118,7 +136,10 @@ export const TypeOfPaymentList = () => {
           <Button
             variant="secondary"
             disabled={currentPage === 1 || loading}
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            onClick={() => {
+              setLoading(true);
+              setCurrentPage((p) => Math.max(p - 1, 1));
+            }}
           >
             Anterior
           </Button>
@@ -128,7 +149,10 @@ export const TypeOfPaymentList = () => {
           <Button
             variant="secondary"
             disabled={currentPage === totalPages || loading || totalPages === 0}
-            onClick={() => setCurrentPage((p) => p + 1)}
+            onClick={() => {
+              setLoading(true);
+              setCurrentPage((p) => p + 1);
+            }}
           >
             Próximo
           </Button>

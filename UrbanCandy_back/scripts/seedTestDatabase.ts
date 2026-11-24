@@ -10,6 +10,10 @@ if (process.env.NODE_ENV !== 'test') {
   throw new Error('Este script só pode ser executado com NODE_ENV=test');
 }
 
+if (process.env.DB_NAME !== 'urbancandy_test') {
+  throw new Error('Seed de teste permitido somente no banco urbancandy_test');
+}
+
 async function seedDatabase() {
   try {
     console.log('Criando dados de teste...');

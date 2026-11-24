@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createTypeOfPayment, updateTypeOfPayment } from '../../../services/Api';
 import { toast } from 'react-toastify';
@@ -8,12 +8,8 @@ export const TypeOfPaymentForm = () => {
   const { state } = useLocation();
   const paymentType = state?.paymentType;
 
-  const [name, setName] = useState('');
+  const [name, setName] = useState(paymentType?.name_payment || '');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (paymentType) setName(paymentType.name_payment);
-  }, [paymentType]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

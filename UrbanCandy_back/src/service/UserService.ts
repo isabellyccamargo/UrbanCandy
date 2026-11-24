@@ -4,7 +4,6 @@ import People from '../models/People.js';
 import bcrypt from 'bcrypt';
 import Address from '../models/Address.js';
 import { ApiException } from '../exception/ApiException.js';
-import 'dotenv/config';
 import jwt from 'jsonwebtoken';
 
 interface UserWithProfile extends Users {
@@ -25,13 +24,12 @@ interface IUserRegistration {
   road: string;
   number: number;
   complement: string;
-  administrator?: string;
+  image?: string; // Campo opcional para o caminho da imagem de perfil
 }
 
 class UserService {
   private validateEmail(email: string) {
-    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.com$/;
-
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!regex.test(email)) {
       throw new ApiException('INVALID_EMAIL', 400);
     }
@@ -52,7 +50,8 @@ class UserService {
   }
 
   async login(email: string, password: string) {
-    const user = (await UserRepository.findByEmail(email)) as UserWithProfile;
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = (await UserRepository.findByEmail(normalizedEmail)) as UserWithProfile;
     if (!user) throw new ApiException('INVALID_CREDENTIALS', 401);
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -69,11 +68,11 @@ class UserService {
 
     return {
       message: 'Usuário autenticado',
-      //Envia a string longa e criptografada que o Front-end deve guardar, no LocalStorage
       token,
       user: {
         id_user: user.id_user,
         nome: user.people?.name || 'Usuário',
+        roles: user.roles?.map((role) => role.name) || [],
       },
     };
   }
@@ -106,7 +105,6 @@ class UserService {
     const userData: Partial<Users> = {
       email: allData.email,
       password: hashedPassword,
-      administrator: allData.administrator || '0',
     };
 
     const addressData: Partial<Address> = {
@@ -122,21 +120,33 @@ class UserService {
       name: allData.name,
       cpf: allData.cpf,
       telephone: allData.telephone,
+      image: allData.image || null,
     };
 
     return await UserRepository.createUser(userData, personData, addressData);
   }
 
   async updateUser(id_user: number, userData: Partial<Users>, personData: Partial<People>) {
-    if (userData.email) throw new ApiException('EMAIL_CHANGE_NOT_ALLOWED', 403);
+    if (userData?.email) throw new ApiException('EMAIL_CHANGE_NOT_ALLOWED', 403);
 
-    if (userData.password) {
+    if (userData?.password) {
       this.validatePasswordLevel(userData.password);
       const salt = await bcrypt.genSalt(10);
       userData.password = await bcrypt.hash(userData.password, salt);
     }
 
     return await UserRepository.updateUser(id_user, userData, personData);
+  }
+
+  async updateEmail(id_user: number, email: string): Promise<void> {
+    this.validateEmail(email);
+    const user = await Users.findByPk(id_user);
+    if (!user) throw new ApiException('USER_NOT_FOUND', 404);
+    const existingUser = await UserRepository.findByEmail(email);
+    if (existingUser && existingUser.id_user !== id_user) {
+      throw new ApiException('EMAIL_ALREADY_EXISTS', 409, email);
+    }
+    await user.update({ email });
   }
 
   async findByIdUser(id_user: number) {

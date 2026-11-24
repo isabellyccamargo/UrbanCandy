@@ -1,6 +1,7 @@
 import Users from '../models/Users.js';
 import People from '../models/People.js';
 import Address from '../models/Address.js';
+import Role from '../models/Role.js';
 
 class UserRepository {
   async findAllUsers(limit: number, offset: number) {
@@ -37,6 +38,11 @@ class UserRepository {
         {
           model: People,
           as: 'people',
+        },
+        {
+          model: Role,
+          as: 'roles',
+          through: { attributes: [] },
         },
       ],
     });

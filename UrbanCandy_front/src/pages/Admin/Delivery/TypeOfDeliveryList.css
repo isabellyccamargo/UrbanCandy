@@ -1,0 +1,66 @@
+.admin-table-container {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 15px;
+  border-bottom: 2px solid #f0f0f0;
+  color: #888;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.admin-table td {
+  padding: 15px;
+  border-bottom: 1px solid #f9f9f9;
+  color: #444;
+}
+
+.btn-edit,
+.btn-delete {
+  margin-left: 10px;
+  border: 0;
+  background: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-edit {
+  color: #e91e63;
+}
+
+.btn-delete {
+  color: #ff4444;
+}
+
+@media (max-width: 768px) {
+  .admin-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table {
+    min-width: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-table-container {
+    padding: 12px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 8px;
+    font-size: 0.75rem;
+  }
+}

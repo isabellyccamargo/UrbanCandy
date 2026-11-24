@@ -2,6 +2,11 @@
   display: none;
 }
 
+.my-data-page > .admin-table-container {
+  width: 100%;
+  max-width: none;
+}
+
 .section-title {
   font-size: 18px;
   color: #4a4a4a;
@@ -17,6 +22,117 @@
   display: flex;
   flex-direction: column;
   gap: 15px;
+}
+
+.profile-photo-field {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.profile-photo-preview,
+.profile-photo-placeholder {
+  width: 96px;
+  height: 96px;
+  flex: 0 0 96px;
+  border-radius: 50%;
+}
+
+.profile-photo-preview {
+  object-fit: cover;
+  border: 2px solid #f0c4d2;
+}
+
+.profile-photo-placeholder {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.profile-photo-dark {
+  background: #222;
+}
+
+.profile-photo-pink {
+  background: #d63384;
+}
+
+.profile-photo-actions {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  color: #5d4037;
+}
+
+.avatar-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.avatar-color-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  background: #fff;
+  color: #5d4037;
+  cursor: pointer;
+}
+
+.avatar-color-option.is-selected {
+  border-color: #5d4037;
+  box-shadow: 0 0 0 1px #5d4037;
+}
+
+.avatar-color-option:disabled {
+  color: #999;
+  background: #f3f3f3;
+  border-color: #e5e5e5;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.avatar-mode-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #5d4037;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.avatar-mode-option:has(input:disabled) {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.avatar-mode-option input {
+  accent-color: #d63384;
+}
+
+.avatar-color-option:disabled .avatar-color-swatch {
+  opacity: 0.5;
+}
+
+.avatar-color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.profile-photo-actions span {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.profile-photo-input {
+  display: none;
 }
 
 .form-row {

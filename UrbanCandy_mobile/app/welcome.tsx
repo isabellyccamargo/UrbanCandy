@@ -37,8 +37,14 @@ export default function WelcomeScreen() {
                     <Button
                         title="Cadastrar-se"
                         variant="secondary"
-                        onPress={() => router.push('/')}
+                        onPress={() =>
+                            router.push({
+                                pathname: '/cadastro',
+                                params: { mode: 'create' },
+                            })
+                        }
                     />
+
 
                 </View>
 

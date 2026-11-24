@@ -1,55 +1,105 @@
 import Orders from '../models/Orders.js';
 import People from '../models/People.js';
+import Users from '../models/Users.js';
 import OrderItem from '../models/OrderItem.js';
 import Products from '../models/Products.js';
+import TypeOfPayment from '../models/TypeOfPayment.js';
+import TypeOfDelivery from '../models/TypeOfDelivery.js';
+import OrderStatus from '../models/OrderStatus.js';
 import sequelize from '../config/Config.js';
 import { type Order as SequelizeOrder, Transaction, type FindAndCountOptions } from 'sequelize';
-import TypeOfPayment from '../models/TypeOfPayment.js';
+import { randomUUID } from 'node:crypto';
 import { type ICartItem, type IPaginatedResponse } from '../@types/OrdersTypes.js';
+import OrderStatusOutbox, {
+  type OrderCreatedOutboxEvent,
+  type OrderStatusOutboxEvent,
+} from '../models/OrderStatusOutbox.js';
 
 class OrderRepository {
   private async _createItems(id_order: number, items: ICartItem[], t: Transaction): Promise<void> {
     const formatted = items.map((item) => {
       const price = item.products?.price ? Number(item.products.price) : 0;
+
       const quantity = item.quantity || 1;
+
       const subTotal = item.sub_total ? Number(item.sub_total) : price * quantity;
 
       return {
-        id_order: id_order,
+        id_order,
         id_product: item.id_product,
-        quantity: quantity,
+        quantity,
         unit_price: price,
         sub_total: subTotal,
       };
     });
 
-    await OrderItem.bulkCreate(formatted, { transaction: t });
+    await OrderItem.bulkCreate(formatted, {
+      transaction: t,
+    });
   }
 
   async createFullOrder(
     id_people: number,
     items: ICartItem[],
     total: number,
-    id_payment: number
+    id_payment: number,
+    id_type_delivery: number,
+    status_id: number = 1,
+    transaction?: Transaction
   ): Promise<Orders> {
-    const t = await sequelize.transaction();
+    const t = transaction ?? (await sequelize.transaction());
+
     try {
       const order = await Orders.create(
         {
           id_people: Number(id_people),
           total: Number(total),
           id_payment: Number(id_payment),
+          id_type_delivery: Number(id_type_delivery),
+          status_id: Number(status_id),
         },
         { transaction: t }
       );
 
       await this._createItems(order.id_orders, items, t);
 
-      await t.commit();
+      const person = await People.findByPk(id_people, {
+        attributes: ['id_user'],
+        transaction: t,
+      });
+      const recipient = person
+        ? await Users.findByPk(Number(person.id_user), {
+          attributes: ['id_user', 'email'],
+          transaction: t,
+        })
+        : null;
+      if (recipient) {
+        const event: OrderCreatedOutboxEvent = {
+          eventType: 'order.created',
+          eventId: randomUUID(),
+          occurredAt: new Date().toISOString(),
+          orderId: order.id_orders,
+          recipientUserId: Number(recipient.id_user),
+          recipientEmail: recipient.email,
+          total: Number(total),
+        };
+        await OrderStatusOutbox.create(
+          { eventId: event.eventId, payload: event, acknowledgedAt: null },
+          { transaction: t }
+        );
+      } else {
+        console.warn(
+          `[outbox] Pedido ${order.id_orders} criado sem evento de confirmação: ` +
+            'cliente ou e-mail não encontrado.'
+        );
+      }
+
+      if (!transaction) await t.commit();
+
       return order;
     } catch (error) {
-      await t.rollback();
-      console.error('ERRO REPOSITORY (createFullOrder):');
+      if (!transaction) await t.rollback();
+      console.error('ERRO REPOSITORY (createFullOrder):', error);
       throw error;
     }
   }
@@ -62,12 +112,23 @@ class OrderRepository {
         {
           model: People,
           as: 'people',
-          attributes: ['id_people', 'name'],
+          // CORREÇÃO: Adicionado 'telephone' para retornar o telefone ao front-end
+          attributes: ['id_people', 'name', 'telephone', 'cpf'],
         },
         {
           model: TypeOfPayment,
           as: 'paymentType',
           attributes: ['name_payment'],
+        },
+        {
+          model: TypeOfDelivery,
+          as: 'deliveryType',
+          attributes: ['name'],
+        },
+        {
+          model: OrderStatus,
+          as: 'status',
+          attributes: ['id', 'name', 'label'],
         },
         {
           model: OrderItem,
@@ -76,7 +137,7 @@ class OrderRepository {
             {
               model: Products,
               as: 'products',
-              attributes: ['id_product', 'name', 'description', 'price'],
+              attributes: ['id_product', 'name', 'description', 'price', 'image'],
             },
           ],
         },
@@ -98,7 +159,7 @@ class OrderRepository {
     offset: number
   ): Promise<IPaginatedResponse<Orders>> {
     const options: FindAndCountOptions = {
-      where: { id_people: id_people },
+      where: { id_people },
       distinct: true,
       col: 'id_orders',
       include: [
@@ -106,11 +167,31 @@ class OrderRepository {
           model: TypeOfPayment,
           as: 'paymentType',
           attributes: ['name_payment'],
+          required: false,
+        },
+        {
+          model: TypeOfDelivery,
+          as: 'deliveryType',
+          attributes: ['name'],
+          required: false,
+        },
+        {
+          model: OrderStatus,
+          as: 'status',
+          attributes: ['id', 'name', 'label'],
+          required: false,
         },
         {
           model: OrderItem,
           as: 'items',
-          include: [{ model: Products, as: 'products' }],
+          required: false,
+          include: [
+            {
+              model: Products,
+              as: 'products',
+              required: false,
+            },
+          ],
         },
       ],
       order: [['id_orders', 'DESC']] as SequelizeOrder,
@@ -124,16 +205,65 @@ class OrderRepository {
     return await Orders.findAndCountAll(options);
   }
 
-  async findOpenOrderByPeople(id_people: number): Promise<Orders | null> {
-    return await Orders.findOne({ where: { id_people } });
+  async findById(id_order: number): Promise<Orders | null> {
+    return await Orders.findByPk(id_order, {
+      include: [
+        {
+          model: OrderStatus,
+          as: 'status',
+          attributes: ['id', 'name', 'label'],
+        },
+        // ... outros includes se necessário para contexto adicional do pedido ...
+      ],
+    });
   }
 
-  async createOrder(id_people: number): Promise<Orders> {
-    return await Orders.create({ id_people, total: 0 });
+  async findAllStatuses(): Promise<OrderStatus[]> {
+    return await OrderStatus.findAll();
   }
 
-  async updateTotal(id_orders: number, total: number): Promise<[number]> {
-    return await Orders.update({ total }, { where: { id_orders } });
+  async findStatusById(id: number): Promise<OrderStatus | null> {
+    return await OrderStatus.findByPk(id);
+  }
+
+  async updateOrderStatus(id_orders: number, status_id: number): Promise<[number]> {
+    return await Orders.update({ status_id }, { where: { id_orders } });
+  }
+
+  async updateOrderStatusAndQueueEvent(
+    idOrder: number,
+    previousStatusId: number,
+    newStatusId: number,
+    recipientUserId: number,
+    recipientEmail: string,
+    newStatusLabel: string
+  ): Promise<OrderStatusOutboxEvent | null> {
+    return sequelize.transaction(async (transaction) => {
+      const order = await Orders.findByPk(idOrder, {
+        transaction,
+        lock: transaction.LOCK.UPDATE,
+      });
+      if (!order || Number(order.status_id) !== previousStatusId) return null;
+
+      const event: OrderStatusOutboxEvent = {
+        eventType: 'order.status.changed',
+        eventId: randomUUID(),
+        occurredAt: new Date().toISOString(),
+        orderId: idOrder,
+        previousStatusId,
+        newStatusId,
+        recipientUserId,
+        recipientEmail,
+        newStatusLabel,
+      };
+
+      await order.update({ status_id: newStatusId }, { transaction });
+      await OrderStatusOutbox.create(
+        { eventId: event.eventId, payload: event, acknowledgedAt: null },
+        { transaction }
+      );
+      return event;
+    });
   }
 }
 

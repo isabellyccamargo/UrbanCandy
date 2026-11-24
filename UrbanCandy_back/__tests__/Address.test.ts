@@ -1,18 +1,21 @@
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import AddressService from '../src/service/AddressService.js';
 import AddressRepository from '../src/repositories/AddressRepository.js';
+import ViaCepClient from '../src/service/ViaCepClient.js';
 
 describe('AddressService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   test('deve validar campos obrigatórios na criação do endereço', async () => {
     const incompleto: any = { cep: '12545678', road: '' };
+    jest.spyOn(ViaCepClient, 'validate').mockResolvedValue(undefined);
 
-    await expect(AddressService.createAddress(incompleto)).rejects.toThrow(
-      'REQUIRED_FIELDS_ADDRESS'
-    );
+    await expect(AddressService.createAddress(incompleto)).rejects.toMatchObject({
+      code: 'REQUIRED_FIELDS_ADDRESS',
+    });
   });
 
   test('deve calcular a paginação corretamente', async () => {

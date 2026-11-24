@@ -8,8 +8,10 @@ export const CategoryCard = ({ title, image }) => {
   const nomeExibicao = typeof title === 'object' ? title.name_category : title;
 
   return (
-    <div
+    <button
+      type="button"
       className="category-card"
+      aria-label={`Ver categoria ${nomeExibicao}`}
       onClick={() => navigate(`/cardapio/${String(nomeExibicao).toLowerCase()}`)}
     >
       <div className="category-image-container">
@@ -26,6 +28,6 @@ export const CategoryCard = ({ title, image }) => {
       <div className="category-title">
         <h3>{nomeExibicao}</h3>
       </div>
-    </div>
+    </button>
   );
 };

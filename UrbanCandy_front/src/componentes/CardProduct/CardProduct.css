@@ -32,6 +32,18 @@
   margin-bottom: 15px;
 }
 
+.product-details-link {
+  align-self: flex-start;
+  color: #d81b60;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-decoration: none;
+}
+
+.product-details-link:hover {
+  text-decoration: underline;
+}
+
 .product-footer {
   display: flex;
   justify-content: space-between;

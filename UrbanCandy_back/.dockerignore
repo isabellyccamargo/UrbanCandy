@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+uploads
+.env
+.env.*
+__tests__
+*.test.ts
+*.spec.ts

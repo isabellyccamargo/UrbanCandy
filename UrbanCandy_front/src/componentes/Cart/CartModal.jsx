@@ -7,9 +7,17 @@ import './CartModal.css';
 
 export const CartModal = () => {
   const { setIsLoginModalOpen } = useAuth();
-  const { cart, isCartOpen, setIsCartOpen, removeItem, updateQuantity } = useCart();
+  const {
+    cart,
+    isCartOpen,
+    setIsCartOpen,
+    removeItem,
+    updateQuantity,
+    getCartItemKey,
+  } = useCart();
   const navigate = useNavigate();
   const baseImgUrl = 'https://urbancandy.local/uploads/';
+
   if (!isCartOpen) return null;
 
   const isCartEmpty = !cart.items || cart.items.length === 0;
@@ -27,11 +35,23 @@ export const CartModal = () => {
   };
 
   return (
-    <div className="cart-overlay" onClick={() => setIsCartOpen(false)}>
-      <div className="cart-sidebar" onClick={(e) => e.stopPropagation()}>
+    <div className="cart-overlay" onClick={() => setIsCartOpen(false)} role="presentation">
+      <section
+        className="cart-sidebar"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cart-title"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="cart-header">
-          <h2>🛒 Carrinho</h2>
-          <button onClick={() => setIsCartOpen(false)}>X</button>
+          <h2 id="cart-title">🛒 Carrinho</h2>
+          <button
+            type="button"
+            aria-label="Fechar carrinho"
+            onClick={() => setIsCartOpen(false)}
+          >
+            ×
+          </button>
         </div>
 
         <div className="cart-items">
@@ -43,17 +63,20 @@ export const CartModal = () => {
             </div>
           ) : (
             cart.items.map((item) => (
-              <div key={item.id_product} className="cart-item">
+              <div key={getCartItemKey(item)} className="cart-item">
                 <img src={`${baseImgUrl}${item.products.image}`} alt={item.products.name} />
                 <div className="item-info">
                   <h4>{item.products.name}</h4>
                   <p>R$ {Number(item.products.price).toFixed(2)}</p>
+                  {item.isOffer && <span className="cart-offer-label">Oferta especial</span>}
                   <div className="quantity-controls">
                     <button
                       className="qty-btn"
+                      type="button"
+                      aria-label={`Diminuir quantidade de ${item.products.name}`}
                       onClick={() => {
                         if (item.quantity > 1) {
-                          updateQuantity(item.id_product, item.quantity - 1);
+                          updateQuantity(getCartItemKey(item), item.quantity - 1);
                         }
                       }}
                     >
@@ -64,13 +87,20 @@ export const CartModal = () => {
 
                     <button
                       className="qty-btn"
-                      onClick={() => updateQuantity(item.id_product, item.quantity + 1)}
+                      type="button"
+                      aria-label={`Aumentar quantidade de ${item.products.name}`}
+                      onClick={() => updateQuantity(getCartItemKey(item), item.quantity + 1)}
                     >
                       +
                     </button>
                   </div>
                 </div>
-                <button className="remove-btn" onClick={() => removeItem(item.id_product)}>
+                <button
+                  className="remove-btn"
+                  type="button"
+                  aria-label={`Remover ${item.products.name} do carrinho`}
+                  onClick={() => removeItem(getCartItemKey(item))}
+                >
                   🗑️
                 </button>
               </div>
@@ -90,7 +120,7 @@ export const CartModal = () => {
             </Button>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 };

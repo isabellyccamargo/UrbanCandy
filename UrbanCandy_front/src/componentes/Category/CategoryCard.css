@@ -1,9 +1,21 @@
 .category-card {
+  display: block;
   background: white;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   width: 320px;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.category-card:focus-visible {
+  outline: 3px solid #d81b60;
+  outline-offset: 3px;
 }
 
 .category-image-container {

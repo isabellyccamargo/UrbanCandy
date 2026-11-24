@@ -1,0 +1,219 @@
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
+import { useTheme } from '@/context/Theme';
+import { API_BASE_URL } from '@/services/api';
+
+type Product = {
+    id_product: number;
+    name: string;
+    price: number;
+    image?: string;
+};
+
+type CartItemProps = {
+    product: Product;
+    quantity: number;
+    isOffer?: boolean;
+    onIncrease: () => void;
+    onDecrease: () => void;
+    onRemove: () => void;
+};
+
+export default function CartItem({
+    product,
+    quantity,
+    isOffer = false,
+    onIncrease,
+    onDecrease,
+    onRemove,
+}: CartItemProps) {
+    const { colors, font, fontSize, space, radius } = useTheme();
+
+    const styles = StyleSheet.create({
+        container: {
+            flexDirection: 'row',
+            backgroundColor: colors.white,
+            marginHorizontal: 18,
+            marginBottom: space.md,
+            padding: space.md,
+            borderRadius: radius.lg,
+            minHeight: 125,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.12,
+            shadowRadius: 8,
+            elevation: 8,
+        },
+        imageContainer: {
+            width: 95,
+            height: 100,
+            borderRadius: radius.md,
+            overflow: 'hidden',
+        },
+        image: {
+            width: '100%' as const,
+            height: '100%' as const,
+        },
+        imagePlaceholder: {
+            flex: 1,
+            backgroundColor: colors.border,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        placeholderText: {
+            fontFamily: font.regular,
+            fontSize: fontSize.sm,
+            color: colors.textTertiary,
+        },
+        info: {
+            flex: 1,
+            marginLeft: space.md,
+        },
+        nameRow: {
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+        },
+        name: {
+            flex: 1,
+            fontFamily: font.semibold,
+            fontSize: fontSize.lg,
+            color: colors.text,
+            paddingRight: 6,
+        },
+        removeButton: {
+            padding: 2,
+            marginLeft: 4,
+        },
+        price: {
+            fontFamily: font.bold,
+            fontSize: fontSize.md,
+            color: colors.primary,
+            marginTop: 5,
+        },
+        offerLabel: {
+            alignSelf: 'flex-start',
+            marginTop: space.xs,
+            color: colors.primary,
+            fontFamily: font.medium,
+            fontSize: fontSize.xs,
+        },
+        bottomRow: {
+            marginTop: space.md,
+        },
+        quantity: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: colors.primary,
+            borderRadius: radius.xl,
+            overflow: 'hidden',
+            alignSelf: 'flex-start',
+        },
+        qtyButton: {
+            width: 30,
+            height: 30,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        qtyText: {
+            fontFamily: font.bold,
+            fontSize: fontSize.lg,
+            color: colors.primary,
+        },
+        quantityText: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.md,
+            color: colors.text,
+            minWidth: 25,
+            textAlign: 'center',
+        },
+        subtotal: {
+            position: 'absolute',
+            right: space.md,
+            bottom: space.md,
+            fontFamily: font.bold,
+            fontSize: fontSize.md,
+            color: colors.text,
+        },
+    });
+
+    const imageUrl = product.image
+        ? `${API_BASE_URL}/uploads/${product.image}`
+        : null;
+
+    const subtotal = Number(product.price) * quantity;
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.imageContainer}>
+                {imageUrl ? (
+                    <Image
+                        source={imageUrl}
+                        style={styles.image}
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                        transition={150}
+                    />
+                ) : (
+                    <View style={styles.imagePlaceholder}>
+                        <Text style={styles.placeholderText}>Sem imagem</Text>
+                    </View>
+                )}
+            </View>
+
+            <View style={styles.info}>
+                <View style={styles.nameRow}>
+                    <Text style={styles.name} numberOfLines={2}>
+                        {product.name}
+                    </Text>
+
+                    <Pressable
+                        onPress={onRemove}
+                        style={styles.removeButton}
+                    >
+                        <Ionicons
+                            name="trash-outline"
+                            size={21}
+                            color={colors.primary}
+                        />
+                    </Pressable>
+                </View>
+
+                <Text style={styles.price}>
+                    R$ {Number(product.price).toFixed(2).replace('.', ',')}
+                </Text>
+                {isOffer && (
+                    <Text style={styles.offerLabel}>Oferta especial</Text>
+                )}
+
+                <View style={styles.bottomRow}>
+                    <View style={styles.quantity}>
+                        <Pressable
+                            onPress={onDecrease}
+                            style={styles.qtyButton}
+                        >
+                            <Text style={styles.qtyText}>−</Text>
+                        </Pressable>
+
+                        <Text style={styles.quantityText}>{quantity}</Text>
+
+                        <Pressable
+                            onPress={onIncrease}
+                            style={styles.qtyButton}
+                        >
+                            <Text style={styles.qtyText}>+</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            </View>
+
+            <Text style={styles.subtotal}>
+                R$ {subtotal.toFixed(2).replace('.', ',')}
+            </Text>
+        </View>
+    );
+}

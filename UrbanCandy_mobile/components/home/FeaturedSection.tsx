@@ -7,8 +7,10 @@ import {
     View,
 } from 'react-native';
 
+import { useCart } from '@/context/CartContext';
+import { useTheme } from '@/context/Theme';
 import api from '@/services/api';
-import { Fonts } from '@/constants/fonts';
+
 import { FeaturedCard } from './FeaturedCard';
 
 type Product = {
@@ -20,15 +22,69 @@ type Product = {
     featured?: boolean;
 };
 
-export function FeaturedSection() {
+type FeaturedSectionProps = {
+    onProductAdded?: (productName: string) => void;
+};
+
+export function FeaturedSection({
+    onProductAdded,
+}: FeaturedSectionProps) {
+    const { addToCart } = useCart();
+    const { colors, font, fontSize, space } = useTheme();
+
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const styles = StyleSheet.create({
+        container: {
+            width: '100%',
+            marginTop: 30,
+        },
+        header: {
+            alignItems: 'center',
+            marginBottom: space.xl,
+        },
+        title: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.xxl,
+            color: colors.primary,
+        },
+        subtitle: {
+            fontFamily: font.regular,
+            fontSize: fontSize.md,
+            color: colors.textSecondary,
+            marginTop: 3,
+        },
+        list: {
+            paddingHorizontal: space.sm,
+            gap: space.md,
+        },
+        loading: {
+            height: 180,
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        empty: {
+            textAlign: 'center',
+            color: colors.textSecondary,
+            fontFamily: font.regular,
+            fontSize: fontSize.sm,
+        },
+    });
+
     useEffect(() => {
+        console.log('FeaturedSection montou');
+
         loadFeaturedProducts();
+
+        return () => {
+            console.log('FeaturedSection desmontou');
+        };
     }, []);
 
     async function loadFeaturedProducts() {
+        console.log('BUSCANDO PRODUTOS DESTAQUE');
+
         try {
             const response = await api.get('/produto/destaque', {
                 params: {
@@ -38,9 +94,6 @@ export function FeaturedSection() {
             });
 
             const data = response.data?.data;
-
-            console.log('========== DESTAQUES ==========');
-            console.log(data);
 
             if (Array.isArray(data)) {
                 setProducts(data);
@@ -59,6 +112,17 @@ export function FeaturedSection() {
         }
     }
 
+    function handleAddToCart(product: Product) {
+        addToCart({
+            id_product: product.id_product,
+            name: product.name,
+            price: Number(product.price),
+            image: product.image,
+        });
+
+        onProductAdded?.(product.name);
+    }
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -75,7 +139,7 @@ export function FeaturedSection() {
                 <View style={styles.loading}>
                     <ActivityIndicator
                         size="small"
-                        color="#DD2E8A"
+                        color={colors.primary}
                     />
                 </View>
             ) : products.length === 0 ? (
@@ -100,12 +164,7 @@ export function FeaturedSection() {
                                     product.id_product
                                 );
                             }}
-                            onAdd={() => {
-                                console.log(
-                                    'Adicionar ao carrinho:',
-                                    product.name
-                                );
-                            }}
+                            onAdd={() => handleAddToCart(product)}
                         />
                     ))}
                 </ScrollView>
@@ -113,45 +172,3 @@ export function FeaturedSection() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        width: '100%',
-        marginTop: 30,
-    },
-
-    header: {
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-
-    title: {
-        fontFamily: Fonts.semibold,
-        fontSize: 24,
-        color: '#DD2E8A',
-    },
-
-    subtitle: {
-        fontFamily: Fonts.regular,
-        fontSize: 16,
-        color: '#777777',
-        marginTop: 3,
-    },
-
-    list: {
-        paddingHorizontal: 20,
-        gap: 12,
-    },
-
-    loading: {
-        height: 180,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    empty: {
-        textAlign: 'center',
-        color: '#777777',
-        fontSize: 14,
-    },
-});

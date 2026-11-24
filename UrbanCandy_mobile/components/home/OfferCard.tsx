@@ -1,12 +1,13 @@
+import { Image } from 'expo-image';
 import {
-    Image,
     Pressable,
     StyleSheet,
     Text,
     View,
 } from 'react-native';
 
-import { Fonts } from '@/constants/fonts';
+import { SmallButton } from '@/components/ui/smallButton';
+import { useTheme } from '@/context/Theme';
 import { API_BASE_URL } from '@/services/api';
 
 type OfferCardProps = {
@@ -18,7 +19,7 @@ type OfferCardProps = {
     onAdd?: () => void;
 };
 
-export function OfferCard({
+function OfferCard({
     name,
     description,
     price,
@@ -26,6 +27,87 @@ export function OfferCard({
     onPress,
     onAdd,
 }: OfferCardProps) {
+    const {
+        colors,
+        font,
+        fontSize,
+        space,
+        radius,
+    } = useTheme();
+
+    const styles = StyleSheet.create({
+        container: {
+            width: 340,
+            height: 180,
+            backgroundColor: colors.white,
+            borderRadius: radius.md,
+            overflow: 'hidden',
+            marginRight: space.md,
+            shadowColor: colors.text,
+            shadowOffset: {
+                width: 0,
+                height: 2,
+            },
+            shadowOpacity: 0.12,
+            shadowRadius: 4,
+            elevation: 3,
+        },
+        content: {
+            flex: 1,
+            flexDirection: 'row',
+        },
+        info: {
+            flex: 1,
+            paddingLeft: space.md,
+            paddingTop: space.sm,
+            paddingBottom: space.sm,
+            paddingRight: space.xs,
+            justifyContent: 'space-between',
+        },
+        name: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.base,
+            color: colors.primary,
+        },
+        description: {
+            fontFamily: font.regular,
+            fontSize: fontSize.sm,
+            lineHeight: 14,
+            color: colors.textSecondary,
+        },
+        price: {
+            fontFamily: font.semibold,
+            fontSize: fontSize.md,
+            color: colors.primary,
+            marginTop: 2,
+        },
+        image: {
+            width: 170,
+            height: '100%' as const,
+            borderTopLeftRadius: 40,
+            borderBottomLeftRadius: 40,
+        },
+        imagePlaceholder: {
+            width: 110,
+            height: '100%' as const,
+            backgroundColor: '#EDEDED',
+        },
+        pressed: {
+            opacity: 0.75,
+            transform: [{ scale: 0.98 }],
+        },
+    });
+
+    const imageUrl = image
+        ? image.startsWith('http://') ||
+          image.startsWith('https://')
+            ? image
+            : `${API_BASE_URL.replace(
+                  /\/api\/?$/,
+                  ''
+              )}/uploads/${image.replace(/^\/?uploads\//, '')}`
+        : null;
+
     return (
         <Pressable
             onPress={onPress}
@@ -35,7 +117,6 @@ export function OfferCard({
             ]}
         >
             <View style={styles.content}>
-
                 <View style={styles.info}>
                     <Text
                         style={styles.name}
@@ -60,119 +141,26 @@ export function OfferCard({
                             .replace('.', ',')}
                     </Text>
 
-                    <Pressable
-                        style={styles.button}
-                        onPress={(event) => {
-                            event.stopPropagation();
-                            onAdd?.();
-                        }}
-                    >
-                        <Text style={styles.buttonText}>
-                            Adicionar
-                        </Text>
-                    </Pressable>
+                    <SmallButton
+                        title="Adicionar"
+                        onPress={() => onAdd?.()}
+                    />
                 </View>
 
-                {image ? (
+                {imageUrl ? (
                     <Image
-                        source={{
-                            uri: `${API_BASE_URL}/uploads/${image}`,
-                        }}
+                        source={imageUrl}
                         style={styles.image}
-                        resizeMode="cover"
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                        transition={150}
                     />
                 ) : (
                     <View style={styles.imagePlaceholder} />
                 )}
-
             </View>
         </Pressable>
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        width: 340,
-        height: 180,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 10,
-        overflow: 'hidden',
-        marginRight: 12,
-        shadowColor: '#000000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.12,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-
-    content: {
-        flex: 1,
-        flexDirection: 'row',
-    },
-
-    info: {
-        flex: 1,
-        paddingLeft: 12,
-        paddingTop: 8,
-        paddingBottom: 8,
-        paddingRight: 4,
-        justifyContent: 'space-between',
-    },
-
-    name: {
-        fontFamily: Fonts.semibold,
-        fontSize: 14,
-        color: '#DD2E8A',
-    },
-
-    description: {
-        fontFamily: Fonts.regular,
-        fontSize: 12,
-        lineHeight: 14,
-        color: '#555555',
-    },
-
-    price: {
-        fontFamily: Fonts.semibold,
-        fontSize: 16,
-        color: '#DD2E8A',
-
-        marginTop: 2,
-    },
-
-    button: {
-        width: 85,
-        height: 25,
-        backgroundColor: '#DD2E8A',
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    buttonText: {
-        fontFamily: Fonts.regular,
-        fontSize: 12,
-        color: '#FFFFFF',
-    },
-
-    image: {
-        width: 170,
-        height: '100%',
-        borderTopLeftRadius: 40,
-        borderBottomLeftRadius: 40,
-    },
-
-    imagePlaceholder: {
-        width: 110,
-        height: '100%',
-        backgroundColor: '#EDEDED',
-    },
-
-    pressed: {
-        opacity: 0.75,
-        transform: [{ scale: 0.98 }],
-    },
-});
+export default OfferCard;
