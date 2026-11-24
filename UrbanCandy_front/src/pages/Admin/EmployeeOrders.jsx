@@ -27,6 +27,7 @@ const EmployeeOrders = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
+  const [statusConfirmation, setStatusConfirmation] = useState(null);
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -64,12 +65,8 @@ const EmployeeOrders = () => {
   );
 
   const getNextStatus = (order) => {
-    const currentName = getStatusName(order).toLowerCase();
-    if (
-      currentName.includes('cancel') ||
-      currentName.includes('entregue') ||
-      currentName.includes('concluido')
-    ) {
+    const currentStatusId = getStatusId(order);
+    if (currentStatusId === 4 || currentStatusId === 5) {
       return null;
     }
 
@@ -85,10 +82,6 @@ const EmployeeOrders = () => {
   const advanceOrderStatus = async (order) => {
     const nextStatus = getNextStatus(order);
     if (!nextStatus) return;
-
-    if (!window.confirm(`Deseja alterar o pedido para "${getStatusItemName(nextStatus)}"?`)) {
-      return;
-    }
 
     setUpdating(true);
     try {
@@ -110,6 +103,7 @@ const EmployeeOrders = () => {
         )
       );
       toast.success(`Pedido atualizado para ${getStatusItemName(nextStatus)}.`);
+      setStatusConfirmation(null);
     } catch (requestError) {
       toast.error(
         requestError.response?.data?.message ||
@@ -234,7 +228,12 @@ const EmployeeOrders = () => {
                   type="button"
                   className="employee-order-advance"
                   disabled={updating}
-                  onClick={() => advanceOrderStatus(selectedOrder)}
+                  onClick={() =>
+                    setStatusConfirmation({
+                      order: selectedOrder,
+                      nextStatus: getNextStatus(selectedOrder),
+                    })
+                  }
                 >
                   {updating ? 'Atualizando...' : `Avançar para ${getStatusItemName(getNextStatus(selectedOrder))}`}
                 </button>
@@ -247,6 +246,42 @@ const EmployeeOrders = () => {
           )}
         </section>
       </div>
+
+      {statusConfirmation && (
+        <div className="modal-overlay" role="presentation">
+          <section
+            className="modal-confirmacao employee-order-confirmation"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="employee-order-confirmation-title"
+          >
+            <div className="modal-icon" aria-hidden="true">🍬</div>
+            <h3 id="employee-order-confirmation-title">Alterar status do pedido</h3>
+            <p>
+              Deseja alterar o pedido #{statusConfirmation.order.id_orders} para{' '}
+              <strong>{getStatusItemName(statusConfirmation.nextStatus)}</strong>?
+            </p>
+            <div className="modal-buttons">
+              <button
+                type="button"
+                className="employee-confirm-button secondary"
+                onClick={() => setStatusConfirmation(null)}
+                disabled={updating}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="employee-confirm-button primary"
+                onClick={() => advanceOrderStatus(statusConfirmation.order)}
+                disabled={updating}
+              >
+                {updating ? 'Atualizando...' : 'Confirmar'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 };

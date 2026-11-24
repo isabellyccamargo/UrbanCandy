@@ -30,7 +30,9 @@ if ($Mode -eq 'local' -and -not $SkipApiHealthCheck) {
   if ($LASTEXITCODE -ne 0) {
     throw 'Backend local não respondeu em http://127.0.0.1:3000/api/health. Inicie-o com NODE_ENV=development antes de trocar o modo.'
   }
+}
 
+if ($Mode -eq 'local' -and -not $SkipApiHealthCheck) {
   & curl.exe --fail --silent --show-error --max-time 5 --output NUL http://127.0.0.1:5173/
   if ($LASTEXITCODE -ne 0) {
     throw 'Frontend Vite local não respondeu em http://127.0.0.1:5173. Inicie-o em UrbanCandy_front antes de trocar o modo.'
@@ -165,8 +167,10 @@ foreach ($setting in @{
 [System.IO.File]::WriteAllText($envPath, $updatedContent, $encoding)
 
 try {
-  & docker compose up -d --no-deps urbancandy-frontend
-  if ($LASTEXITCODE -ne 0) { throw 'Docker Compose não conseguiu iniciar o frontend do UrbanCandy.' }
+  if ($Mode -eq 'docker') {
+    & docker compose up -d --no-deps urbancandy-frontend
+    if ($LASTEXITCODE -ne 0) { throw 'Docker Compose não conseguiu iniciar o frontend do UrbanCandy.' }
+  }
 
   & docker compose up -d --no-deps --force-recreate urbancandy-nginx
   if ($LASTEXITCODE -ne 0) { throw 'Docker Compose não conseguiu recriar o Nginx.' }

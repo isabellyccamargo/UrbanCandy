@@ -83,10 +83,6 @@ server.use(errorHandler);
 
 async function startServer() {
   initializeDatabase();
-  await initializeRedisCache();
-  await dataBaseConectionn();
-  await initializeOrderEventSubscriber();
-  await startOrderStatusOutbox();
 
   server.listen(PORT, () => {
     console.log(`Servidor TypeScript rodando na porta ${PORT}`);
@@ -94,6 +90,12 @@ async function startServer() {
   metricsServer.listen(METRICS_PORT, METRICS_HOST, () => {
     console.log(`Endpoint de métricas disponível em ${METRICS_HOST}:${METRICS_PORT}`);
   });
+
+  await dataBaseConectionn();
+  await initializeRedisCache();
+
+  await initializeOrderEventSubscriber();
+  await startOrderStatusOutbox();
 }
 
 startServer().catch((error: unknown) => {

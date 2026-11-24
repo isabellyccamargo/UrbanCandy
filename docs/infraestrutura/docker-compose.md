@@ -48,16 +48,65 @@ O script executa o Compose, seleciona o backend Docker e verifica a API. Para
 usar `https://urbancandy.local`, configure esse nome para apontar ao computador
 local no arquivo `hosts`; como alternativa, tente `https://localhost`.
 
-## Usar o mesmo endereço com o backend local
+## Iniciar localmente (sem Docker)
 
-Para desenvolver com o banco local, inicie o MySQL local e rode `npm run dev`
-na pasta `UrbanCandy_back`. O comando seleciona o backend local para
-`https://urbancandy.local`; o frontend e o Nginx continuam no Compose.
+Use dois terminais. No primeiro, inicie o MySQL local e a API:
 
-Para voltar ao backend Docker, execute novamente
-`.\scripts\start-docker.ps1`. Essa seleção de backend não migra nem modifica
-dados. Detalhes de conexão do backend local estão em
+```powershell
+cd UrbanCandy_back
+npm run dev
+```
+
+No segundo, inicie a interface:
+
+```powershell
+cd UrbanCandy_front
+npm run dev
+```
+
+Acesse `http://localhost:5173`. O Vite encaminha as chamadas para a API local
+na porta `3000`. O comando `npm run dev` do backend não inicia, reconfigura nem
+depende do Docker ou do Nginx. A API local usa o banco definido em
+`UrbanCandy_back/.env`; os dados são separados do banco Docker. Detalhes de
+configuração estão em
 [`UrbanCandy_back/.env.example`](../../UrbanCandy_back/.env.example).
+
+## Iniciar com Docker
+
+Na raiz do projeto, execute:
+
+```powershell
+.\scripts\start-docker.ps1
+```
+
+Depois, acesse `https://urbancandy.local`. O catálogo Docker fica no volume
+persistente `mysql_data`; iniciar a API local não apaga esses dados. Para ver o
+catálogo Docker usando o Vite local, execute `npm run dev:docker` na pasta
+`UrbanCandy_front` e acesse `http://localhost:5173`.
+
+## Usar o frontend Vite local com o backend Docker
+
+Para testar a interface local apontando para a API e os dados do Docker, não é
+necessário iniciar o frontend e o Nginx do Compose. Inicie os serviços que a
+API e as demonstrações precisam:
+
+```powershell
+docker compose up -d urbancandy-backend urbancandy-email
+curl.exe --fail http://localhost:3030/api/health
+```
+
+Em outro terminal, na pasta `UrbanCandy_front`, inicie o Vite no modo Docker:
+
+```powershell
+npm run dev:docker
+```
+
+Abra `http://localhost:5173`. Nesse modo, o proxy local do Vite encaminha
+`/api` e `/uploads` para o backend Docker publicado em `127.0.0.1:3030`.
+Para usar o backend local em `127.0.0.1:3000`, inicie-o com `npm run dev` na
+pasta `UrbanCandy_back` e use `npm run dev` normal no frontend. O código e o
+layout do frontend são os mesmos; o banco de dados e os serviços usados são
+aqueles configurados no backend selecionado.
 
 ## Portas principais
 
@@ -80,12 +129,9 @@ Para acessar a API pelo Nginx em um celular físico, configure uma vez
 `EXPO_PUBLIC_API_URL=http://<IP-do-computador>:80` em
 `UrbanCandy_mobile/.env`. O celular e o computador devem estar na mesma rede,
 e o firewall deve permitir conexões à porta HTTP publicada pelo Nginx. Essa
-porta encaminha `/api/` e `/uploads/` à API; as demais rotas HTTP continuam
-redirecionando para HTTPS. Ao selecionar modo local (`npm run dev` no backend)
-ou Docker (`scripts/start-docker.ps1`), `set-api-mode.ps1` mantém o endereço do
-Expo na porta `HTTP_PORT` (padrão `80`); o Nginx seleciona o upstream local ou
-Docker, então o celular não precisa mudar de URL. Reinicie o Expo após a troca
-de modo. No emulador Android padrão, use
+porta encaminha `/api/` e `/uploads/` à API Docker; as demais rotas HTTP
+continuam redirecionando para HTTPS. Esse acesso é separado do fluxo local de
+navegador. No emulador Android padrão, use
 `http://10.0.2.2:80` como URL inicial.
 
 Antes de abrir o app, valide no navegador do celular
@@ -150,20 +196,22 @@ disponibilizá-lo para outros dispositivos da rede.
 
 ### Backend local com o aplicativo mobile
 
-Para desenvolver no celular sem conectar o backend ao MySQL do Compose:
+Para usar o app mobile com o backend local em vez do MySQL do Compose, este é
+um fluxo avançado: o Nginx do Docker continua necessário para o celular. Inicie
+o backend local (`npm run dev` em `UrbanCandy_back`) e o Vite normal
+(`npm run dev` em `UrbanCandy_front`) antes de selecionar o upstream:
 
 1. Inicie somente o Redis do Compose com `docker compose up -d urbancandy-redis`.
 2. No arquivo local `UrbanCandy_back/.env`, mantenha a configuração do MySQL de
    desenvolvimento e defina `REDIS_URL=redis://127.0.0.1:6380`. O modelo de
    configuração está em `UrbanCandy_back/.env.example`. Se `REDIS_PORT` foi
    alterado no `.env` da raiz, use a porta correspondente no `REDIS_URL`.
-3. Configure a URL inicial no `.env` do mobile conforme o dispositivo: use
+3. Execute `.\scripts\set-api-mode.ps1 -Mode local` na raiz para configurar o
+   Nginx para o backend local. Esse comando é opcional para o desenvolvimento
+   web e não é executado pelo `npm run dev`.
+4. Configure a URL inicial no `.env` do mobile conforme o dispositivo: use
    `http://10.0.2.2:80` no emulador Android padrão ou
-   `http://<IP-do-computador>:80` em um celular físico. Inicie a API local;
-   o `predev` seleciona o modo local e configura o Nginx para encaminhar a API
-   ao backend local. Para voltar ao backend Docker, execute
-   `scripts/start-docker.ps1`. A porta no `.env` do mobile é atualizada conforme
-   `HTTP_PORT`; reinicie o Expo para carregar a configuração nova.
+   `http://<IP-do-computador>:80` em um celular físico.
 
 Esse acesso HTTP é apenas para desenvolvimento em rede local confiável. Não
 use em rede pública ou com dados reais: credenciais e tokens não são

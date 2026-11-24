@@ -23,12 +23,11 @@ Para usar o app em um celular físico, configure uma vez
 pasta. O endereço usa o Nginx como proxy para a API; o celular e o computador
 devem estar na mesma rede, e o firewall deve permitir a porta HTTP do Nginx.
 
-O seletor de ambiente do repositório (`scripts/set-api-mode.ps1`) mantém o
-endereço do Expo na porta `HTTP_PORT` (padrão `80`). Iniciar o backend com
-`npm run dev` seleciona o upstream local do Nginx; `scripts/start-docker.ps1`
-seleciona o upstream Docker. O celular continua usando a mesma URL; reinicie o
-Expo após a troca para recarregar a configuração. No emulador Android padrão,
-use `http://10.0.2.2:80` como URL inicial.
+Para usar o backend Docker, inicie-o pela raiz do repositório com
+`.\scripts\start-docker.ps1`; o celular acessa a API pelo Nginx. O comando
+`npm run dev` do backend inicia apenas a API local para uso no navegador e não
+altera o Nginx. No emulador Android padrão, use
+`http://10.0.2.2:80` como URL inicial.
 
 O HTTP sem TLS é somente para desenvolvimento em uma rede local confiável; não
 use em rede pública nem para tráfego com dados reais.

@@ -1,298 +1,157 @@
-# 🍬 UrbanCandy — E-commerce de Doces
+# UrbanCandy
 
-O **UrbanCandy** (SugarBeat) é uma plataforma de e-commerce desenvolvida para a venda de doces e guloseimas, oferecendo uma experiência de compra digital e ferramentas para gerenciamento de pedidos e produtos.
+O **UrbanCandy** é uma plataforma de e-commerce de doces, desenvolvida como
+projeto acadêmico. Oferece uma interface Web e um aplicativo Mobile conectados
+à mesma API. O backend principal é um monólito organizado em camadas; o envio e
+a confirmação de e-mails são tratados por um serviço separado.
 
-O projeto possui uma arquitetura dividida entre uma API em Node.js e interfaces web e mobile, utilizando o mesmo backend para compartilhar dados e funcionalidades.
+## Funcionalidades
 
----
+- Catálogo de produtos, categorias e ofertas.
+- Cadastro, login e gerenciamento de dados do cliente.
+- Carrinho, checkout, pagamentos e opções de entrega. No checkout Web local há
+  um fluxo de Pix demonstrativo: o QR Code é ilustrativo e, ao confirmar, o
+  pedido é registrado como aprovado para teste, sem transferência ou cobrança
+  real. Esse fluxo não substitui a integração real com o Mercado Pago.
+- Consulta e acompanhamento de pedidos.
+- Área administrativa para gestão de produtos e pedidos, com controle de
+  acesso por funções e permissões.
+- Confirmação de e-mail e notificações de atualização de pedidos.
 
-## 🚀 Sobre o Projeto
+## Componentes e tecnologias
 
-O UrbanCandy foi desenvolvido para modernizar a experiência de compra em uma confeitaria, proporcionando praticidade aos clientes e organização para a gestão do negócio.
+| Componente | Tecnologias e responsabilidades |
+| --- | --- |
+| `UrbanCandy_front` | React e Vite; interface Web responsiva. |
+| `UrbanCandy_mobile` | React Native, Expo e TypeScript; aplicativo executado separadamente pelo Expo. |
+| `UrbanCandy_back` | Node.js, TypeScript, Express, Sequelize e MySQL; API, autenticação JWT e regras de negócio. |
+| `UrbanCandy_email` | Node.js, TypeScript, MySQL e Redis; confirmação e envio de e-mails. |
+| Infraestrutura | Docker Compose, Nginx, Redis, Prometheus e Grafana. |
 
-A plataforma conta com:
+No ambiente Docker, o Nginx encaminha as requisições da aplicação Web e da API.
+O Redis é usado para cache de produtos e comunicação de eventos de pedidos
+entre o backend e o serviço de e-mail. Prometheus coleta métricas e Grafana
+apresenta os dashboards. O Mobile não faz parte do Compose: ele roda pelo Expo
+e consome a mesma API.
 
-* 🛍️ Catálogo de produtos e categorias.
-* 🛒 Carrinho de compras e checkout.
-* 💳 Formas de pagamento e entrega.
-* 👤 Cadastro, login e gerenciamento de dados.
-* 📦 Acompanhamento e cancelamento de pedidos.
-* 🔐 Controle de acesso por funções e permissões.
-* 📱 Aplicativo mobile integrado à API.
-* 🖥️ Interface web responsiva.
-
----
-
-## 🏗️ Arquitetura do Projeto
-
-| Aplicação           | Descrição                                                      |
-| ------------------- | -------------------------------------------------------------- |
-| `UrbanCandy_front`  | Interface web em React e Vite.                                 |
-| `UrbanCandy_mobile` | Aplicativo mobile em Expo, React Native e TypeScript.          |
-| `UrbanCandy_back`   | API responsável pelas regras de negócio, autenticação e dados. |
-
-**Web e mobile utilizam o mesmo backend**, permitindo o compartilhamento de clientes, produtos, pedidos e demais informações.
-
----
-
-## 🚀 Tecnologias Utilizadas
-
-### Frontend Web — `UrbanCandy_front`
-
-* React + Vite
-* TypeScript
-* React Router DOM
-* Lucide React
-* React Toastify
-* Playwright / Jest
-
-### Aplicativo Mobile — `UrbanCandy_mobile`
-
-* React Native
-* Expo + Expo Router
-* TypeScript
-* Expo Image (cache de imagens)
-* AsyncStorage / Expo SecureStore
-* Context API
-* Expo Go
-
-### Backend — `UrbanCandy_back`
-
-* Node.js + TypeScript
-* Express
-* Sequelize
-* MySQL
-* JWT
-* Multer
-* Arquitetura em camadas
-* RBAC (funções e permissões)
-
-### Ferramentas
-
-* Docker & Docker Compose
-* Nginx
-* Jest / Playwright
-* ESLint & Prettier
-* Husky & Commitlint
-* Git & GitHub
-
----
-
-## 📁 Estrutura do Projeto
+## Estrutura do repositório
 
 ```text
-URBANCANDY/
-├── UrbanCandy_back/          # API REST
-│   ├── src/
-│   │   ├── controllers/
-│   │   ├── dto/
-│   │   ├── models/
-│   │   ├── repositories/
-│   │   ├── routes/
-│   │   ├── service/
-│   │   └── middlewares/
-│   └── uploads/
-│
-├── UrbanCandy_front/         # Interface web
-│   ├── e2e/
-│   └── src/
-│       ├── assets/
-│       ├── components/
-│       ├── context/
-│       ├── hooks/
-│       ├── pages/
-│       └── services/
-│
-├── UrbanCandy_mobile/        # Aplicativo mobile
-│   ├── app/
-│   ├── assets/
-│   ├── components/
-│   ├── constants/
-│   ├── context/
-│   ├── hooks/
-│   └── services/
-│
-├── nginx/
+UrbanCandy/
+├── UrbanCandy_back/       # API e regras de negócio
+├── UrbanCandy_email/      # Serviço de confirmação e envio de e-mails
+├── UrbanCandy_front/      # Aplicação Web
+├── UrbanCandy_mobile/     # Aplicativo Expo
+├── docs/                  # Guias, arquitetura e gestão do projeto
+├── nginx/                 # Configuração do proxy reverso
+├── observability/         # Configuração do Prometheus e Grafana
+├── scripts/               # Scripts para alternar os ambientes
 ├── docker-compose.yml
 └── README.md
 ```
 
----
+## Como executar
 
-## 🔐 Autenticação e Controle de Acesso
+### Ambiente completo com Docker
 
-O UrbanCandy utiliza autenticação por JWT e controle de acesso baseado em funções e permissões.
+Pré-requisitos: Docker Desktop (ou Docker Engine com Compose) ativo. Na raiz,
+prepare o arquivo `.env` com base em `.env.example`, preencha os valores
+obrigatórios e disponibilize os certificados locais esperados pelo Nginx.
+Consulte o [guia Docker Compose](docs/infraestrutura/docker-compose.md) para
+detalhes de configuração.
 
-| Perfil      | Funcionalidades                               |
-| ----------- | --------------------------------------------- |
-| Cliente     | Produtos, carrinho, pedidos e dados pessoais. |
-| Funcionário | Gerenciamento de pedidos conforme permissões. |
-| Gerente     | Recursos administrativos conforme permissões. |
+Inicie os serviços:
 
-O acesso às funcionalidades administrativas é controlado pelo backend.
-
----
-
-## 📦 Funcionalidades de Pedidos
-
-* Visualização dos próprios pedidos.
-* Consulta de detalhes, pagamento e entrega.
-* Acompanhamento do status.
-* Cancelamento do próprio pedido quando permitido.
-
-### Cancelamento de pedidos
-
-O cliente pode cancelar o próprio pedido enquanto ele não estiver no status **"Preparando"**.
-
-Após o início da preparação, o cancelamento não é permitido. Essa regra deve ser validada no backend para garantir a segurança da operação.
-
----
-
-## 📱 Funcionalidades do Aplicativo Mobile
-
-* Login e cadastro.
-* Persistência de autenticação.
-* Home com categorias, destaques e ofertas.
-* Cardápio com navegação por categorias.
-* Carrinho, checkout e pagamentos.
-* Formas de entrega.
-* Consulta e cancelamento de pedidos.
-* Perfil e edição de dados.
-* Menu inferior de navegação.
-* Cache de imagens dos produtos.
-
----
-
-## 🗄️ Banco de Dados
-
-O backend utiliza **MySQL** com **Sequelize**.
-
-Principais entidades:
-
-* Users
-* People
-* Address
-* Products
-* Orders
-* OrderItem
-* Offers
-* OfferProducts
-* TypeOfPayment
-* TypeOfDelivery
-* Role
-* Permission
-* UserRole
-* RolePermission
-
-Os relacionamentos estão representados no DER do projeto.
-
----
-
-## 🐳 Como Rodar o Projeto
-
-### Pré-requisitos
-
-* Git
-* Node.js e npm
-* Docker e Docker Compose
-* Expo Go (para testar o mobile)
-
-### 1. Clonar o repositório
-
-```bash
-git clone https://github.com/isabellyccamargo/UrbanCandy.git
-cd UrbanCandy
+```powershell
+.\scripts\start-docker.ps1
 ```
 
-### 2. Backend
+O script constrói e inicia os serviços e valida a API e a observabilidade.
+Depois, acesse:
 
-```bash
+- Aplicação Web: `https://urbancandy.local` (ou `https://localhost`, conforme
+  a configuração local).
+- API: `http://localhost:3030`.
+- Grafana: `http://localhost:3001`.
+- Prometheus: `http://localhost:9090`.
+
+Para verificar os containers ou acompanhar os logs:
+
+```powershell
+docker compose ps
+docker compose logs -f --tail=50 urbancandy-backend urbancandy-email
+```
+
+### Desenvolvimento local de Web e API
+
+O backend local precisa de um MySQL acessível e de suas configurações em
+`UrbanCandy_back/.env`. Use
+[`UrbanCandy_back/.env.example`](UrbanCandy_back/.env.example) como referência
+e configure as credenciais locais. Em um terminal, inicie a API:
+
+```powershell
 cd UrbanCandy_back
 npm install
 npm run dev
 ```
 
-### 3. Frontend Web
+Em outro terminal, inicie o frontend:
 
-Em outro terminal:
-
-```bash
+```powershell
 cd UrbanCandy_front
 npm install
 npm run dev
 ```
 
-Para que `https://urbancandy.local` use o mesmo frontend Vite e backend local, inicie o Vite e selecione o modo local:
+Acesse `http://localhost:5173`. O Vite encaminha as chamadas para a API local
+na porta `3000`. Os passos para alternar entre execução local e Docker estão
+no [guia de execução](docs/como-executar.md).
+
+### Aplicativo Mobile
+
+O Mobile é executado pelo Expo, fora do Docker Compose:
 
 ```powershell
-.\scripts\set-api-mode.ps1 -Mode local
-```
-
-Nesse modo, o Nginx do Docker encaminha o site para o Vite local e a API para o backend local. As alterações salvas no frontend aparecem nos dois endereços sem reconstruir a imagem. Para usar os serviços empacotados no Docker, selecione `-Mode docker`; nesse modo, o frontend é servido pela imagem do Docker.
-
-### 4. Aplicativo Mobile
-
-Em outro terminal:
-
-```bash
 cd UrbanCandy_mobile
 npm install
 npx expo start
 ```
 
-Para usar o Expo em um celular físico, configure uma vez
-`EXPO_PUBLIC_API_URL=http://<IP-do-computador>:80` em
-`UrbanCandy_mobile/.env` (celular e computador devem estar na mesma rede). O
-app passa pelo Nginx; o comando `npm run dev` do backend seleciona o upstream
-local e `.\scripts\start-docker.ps1` seleciona o upstream Docker. A URL do app
-permanece na porta `HTTP_PORT` (padrão `80`); reinicie o Expo após trocar o
-modo para carregar a configuração atualizada. O acesso HTTP é somente para
-desenvolvimento em rede local confiável, pois não criptografa credenciais.
+Para acessar a API Docker por um celular físico, configure
+`EXPO_PUBLIC_API_URL` no arquivo `UrbanCandy_mobile/.env` com o endereço IP do
+computador na rede local. Para o emulador Android padrão, o endereço inicial é
+`http://10.0.2.2:80`. Consulte o
+[guia Docker Compose](docs/infraestrutura/docker-compose.md) antes de configurar
+o acesso: HTTP sem TLS é indicado somente para desenvolvimento em uma rede
+local confiável.
 
-No emulador Android padrão, use `http://10.0.2.2:80` como URL inicial.
+## Testes e verificações
 
-### Docker
+Na raiz do repositório, após instalar as dependências com `npm install`:
 
-Para executar os serviços configurados no Docker Compose:
-
-```bash
-.\scripts\start-docker.ps1
+```powershell
+npm run test:back
+npm run test:front
+npm run test:email
+npm run lint:check
+npm run build:check
 ```
 
----
+O workflow de CI executa testes e verificações de build e valida as imagens
+Docker. Consulte [CI/CD e runbook](docs/arquitetura/05-entrega-continua/ci-cd-e-runbook.md)
+para entender o pipeline e seus limites: o deploy do GitHub Actions é
+temporário, para validação, e não mantém o sistema hospedado.
 
-## 🧪 Testes Automatizados
+## Documentação
 
-### Frontend Web
+- [Índice da documentação](docs/README.md)
+- [Guia para executar localmente ou com Docker](docs/como-executar.md)
+- [Docker Compose](docs/infraestrutura/docker-compose.md)
+- [Pagamentos e demonstração de Pix](docs/infraestrutura/pagamento-mercado-pago.md)
+- [Arquitetura de software](docs/arquitetura/README.md)
+- [Roteiro de apresentação](docs/roteiro-apresentacao-rubrica.md)
 
-```bash
-cd UrbanCandy_front
-npm run test
-```
+## Projeto acadêmico
 
-### Backend
-
-```bash
-cd UrbanCandy_back
-npm test
-```
-
-Os comandos dependem dos scripts configurados nos respectivos `package.json`.
-
----
-
-## 📚 Documentação do Projeto
-
-A documentação apresenta os objetivos, requisitos, arquitetura, modelagem de dados e funcionalidades do UrbanCandy.
-
-📘 **[Acessar a documentação completa do UrbanCandy](https://docs.google.com/document/d/1yNbEy7QVzsXAts5HcmVfDUTbv5w3EJYmjcVROHTeSYg/edit?tab=t.0#heading=h.kiz4lse391rn)**
-
-A documentação também inclui o DER e os diagramas do sistema.
-
----
-
-## 👩‍💻 Desenvolvido por
-
-**Isabelly Camargo** ✨
-
-Projeto desenvolvido para fins acadêmicos, com foco em e-commerce de confeitaria, experiência do usuário e eficiência na gestão de pedidos.
+Desenvolvido por **Isabelly Camargo** para fins acadêmicos, com foco em
+comércio eletrônico, experiência do usuário e gestão de pedidos.

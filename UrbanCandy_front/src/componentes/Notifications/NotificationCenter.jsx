@@ -78,7 +78,7 @@ export function NotificationCenter() {
     if (!userId) return undefined;
 
     const initialLoad = setTimeout(() => void loadNotifications(), 0);
-    const interval = setInterval(() => void loadNotifications(), 10_000);
+    const interval = setInterval(() => void loadNotifications(), 30_000);
     return () => {
       clearTimeout(initialLoad);
       clearInterval(interval);

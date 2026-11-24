@@ -31,6 +31,32 @@ O dashboard abre na janela de 20 dias e inclui o sucesso do probe de saúde.
 Os demais gráficos de requisições dependem de tráfego real na API. Após iniciar
 o ambiente, aguarde pelo menos dois ciclos de coleta para os primeiros dados.
 
+## Como explicar cada gráfico
+
+- **HTTP request rate** mostra quantas requisições por segundo chegam à API,
+  calculadas em uma janela móvel de cinco minutos.
+- **HTTP response latency (p95)** mostra o tempo de resposta abaixo do qual
+  ficaram 95% das requisições observadas. Não é a média.
+- **Request success ratio** mostra a porcentagem das respostas de sucesso,
+  excluindo os tipos de resposta definidos na consulta.
+- **Catalog API latency** compara a latência p95 das rotas de produto e
+  categoria.
+- **Dependency operations** mostra a quantidade de chamadas a dependências,
+  como banco ou serviços externos, separadas por resultado.
+- **ViaCEP circuit breaker state** mostra `0` para o circuito fechado e `1`
+  para o circuito aberto por falhas repetidas.
+- **15-day request success ratio** é parcial até existirem pelo menos 15 dias
+  consecutivos de dados.
+- **API health probe success** mede o resultado do probe HTTP `/api/health`
+  dentro da janela configurada de 20 dias. Não é garantia de disponibilidade
+  externa nem um SLO comprovado.
+
+Os gráficos acumulados não geram automaticamente um histórico. É necessário
+manter o Docker Desktop e o Prometheus em execução durante o período observado;
+reinicializações ou períodos desligados aparecem como lacunas. Assim, os dados
+atuais podem representar apenas alguns minutos ou horas de uso, não 24 horas
+consecutivas ou 30 dias completos.
+
 O Prometheus coleta o backend Docker, mesmo que o Nginx esteja temporariamente
 direcionado ao backend local. A coleta para quando os serviços Docker estão
 parados. Os volumes devem ser preservados para manter o histórico; não use

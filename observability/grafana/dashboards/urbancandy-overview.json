@@ -27,7 +27,7 @@
           "refId": "A"
         }
       ],
-      "title": "HTTP request rate",
+      "title": "HTTP request rate (Taxa de requisições)",
       "type": "timeseries"
     },
     {
@@ -42,7 +42,7 @@
           "refId": "A"
         }
       ],
-      "title": "HTTP response latency (p95)",
+      "title": "HTTP response latency (p95) — Latência p95",
       "type": "timeseries"
     },
     {
@@ -60,7 +60,7 @@
           "refId": "A"
         }
       ],
-      "title": "Request success ratio (4xx excluded)",
+      "title": "Request success ratio (4xx excluded) — Taxa de sucesso",
       "type": "timeseries"
     },
     {
@@ -75,7 +75,7 @@
           "refId": "A"
         }
       ],
-      "title": "Catalog API latency (p95 by route)",
+      "title": "Catalog API latency (p95 by route) — Latência por rota",
       "type": "timeseries"
     },
     {
@@ -90,7 +90,7 @@
           "refId": "A"
         }
       ],
-      "title": "Dependency operations",
+      "title": "Dependency operations — Operações de dependências",
       "type": "timeseries"
     },
     {
@@ -108,7 +108,7 @@
           "refId": "A"
         }
       ],
-      "title": "ViaCEP circuit breaker state",
+      "title": "ViaCEP circuit breaker state — Estado do circuit breaker",
       "type": "timeseries"
     },
     {
@@ -126,7 +126,7 @@
           "refId": "A"
         }
       ],
-      "title": "15-day request success ratio (partial until 15 days of data)",
+      "title": "15-day request success ratio (partial until 15 days) — Sucesso acumulado em 15 dias",
       "type": "timeseries"
     },
     {
@@ -144,7 +144,7 @@
           "refId": "A"
         }
       ],
-      "title": "API health probe success (20-day rolling window)",
+      "title": "API health probe success (20-day rolling window) — Saúde da API em 20 dias",
       "type": "timeseries"
     }
   ],

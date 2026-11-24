@@ -176,6 +176,74 @@
   text-align: center;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(93, 64, 55, 0.55);
+}
+
+.modal-confirmacao.employee-order-confirmation {
+  width: min(400px, 100%);
+  padding: 24px;
+  border-radius: 14px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 8px 28px rgba(93, 64, 55, 0.22);
+}
+
+.employee-order-confirmation .modal-icon {
+  margin-bottom: 8px;
+  font-size: 2rem;
+}
+
+.employee-order-confirmation h3 {
+  margin: 8px 0;
+  color: #5d4037;
+}
+
+.employee-order-confirmation p {
+  margin: 12px 0 0;
+  color: #777;
+}
+
+.employee-order-confirmation .modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.employee-confirm-button {
+  min-width: 110px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.employee-confirm-button.secondary {
+  border: 1px solid #d9bdc7;
+  color: #7a4659;
+  background: #fff;
+}
+
+.employee-confirm-button.primary {
+  border: 1px solid #d81b60;
+  color: #fff;
+  background: #d81b60;
+}
+
+.employee-confirm-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 @media (max-width: 800px) {
   .employee-orders-content {
     grid-template-columns: 1fr;

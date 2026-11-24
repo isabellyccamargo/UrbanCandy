@@ -4,7 +4,6 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "predev": "powershell -NoProfile -ExecutionPolicy Bypass -File ..\\scripts\\set-api-mode.ps1 -Mode local -SkipApiHealthCheck",
     "dev": "cross-env NODE_ENV=development tsx watch Server.ts",
     "build": "tsc",
     "test:server": "cross-env NODE_ENV=development tsx Server.ts",
@@ -19,7 +18,8 @@
     "format:check": "prettier --check .",
     "reset-db:test": "cross-env NODE_ENV=test tsx scripts/resetTestDatabase.ts",
     "seed-db:test": "cross-env NODE_ENV=test tsx scripts/seedTestDatabase.ts",
-    "prepare-db:test": "npm run reset-db:test && npm run seed-db:test"
+    "prepare-db:test": "npm run reset-db:test && npm run seed-db:test",
+    "migrate-db:docker": "tsx scripts/migrateLocalToDocker.ts"
   },
   "keywords": [],
   "author": "",

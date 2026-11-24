@@ -58,19 +58,23 @@ export async function dispatchPendingOrderStatusEvents(): Promise<void> {
 export async function startOrderStatusOutbox(): Promise<void> {
   if (process.env.NODE_ENV === 'test') return;
 
-  await connectAcknowledgementSubscriber();
-  await acknowledgementClient.subscribe(ORDER_STATUS_ACK_CHANNEL, (eventId) => {
-    void OrderStatusOutbox.update(
-      { acknowledgedAt: new Date() },
-      { where: { eventId, acknowledgedAt: null } }
-    )
-      .then(([updated]) => {
-        if (updated > 0) console.info(`[outbox] Acknowledged eventId=${eventId}.`);
-      })
-      .catch((error: unknown) => {
-        console.error(`[outbox] Could not acknowledge event ${eventId}:`, error);
-      });
-  });
+  try {
+    await connectAcknowledgementSubscriber();
+    await acknowledgementClient.subscribe(ORDER_STATUS_ACK_CHANNEL, (eventId) => {
+      void OrderStatusOutbox.update(
+        { acknowledgedAt: new Date() },
+        { where: { eventId, acknowledgedAt: null } }
+      )
+        .then(([updated]) => {
+          if (updated > 0) console.info(`[outbox] Acknowledged eventId=${eventId}.`);
+        })
+        .catch((error: unknown) => {
+          console.error(`[outbox] Could not acknowledge event ${eventId}:`, error);
+        });
+    });
+  } catch (error) {
+    console.error('[outbox] Redis indisponível; o outbox não será iniciado agora:', error);
+  }
 
   const timer = setInterval(() => {
     void dispatchPendingOrderStatusEvents();

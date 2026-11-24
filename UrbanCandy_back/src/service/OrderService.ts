@@ -81,6 +81,26 @@ class OrderService {
     }
 
     const previousStatusId = Number(order.status_id);
+    const STATUS_ENTREGUE_ID = 4;
+    const STATUS_CANCELADO_ID = 5;
+
+    if (previousStatusId === STATUS_ENTREGUE_ID || previousStatusId === STATUS_CANCELADO_ID) {
+      throw new ApiException(
+        'CANNOT_ADVANCE_FINAL_STATUS',
+        400,
+        'Pedidos entregues ou cancelados não podem avançar de status.'
+      );
+    }
+    if (status_id === STATUS_ENTREGUE_ID || status_id === STATUS_CANCELADO_ID) {
+      if (status_id === STATUS_CANCELADO_ID) {
+        throw new ApiException(
+          'INVALID_STATUS_TRANSITION',
+          400,
+          'O cancelamento deve ser feito pela ação de cancelamento do pedido.'
+        );
+      }
+    }
+
     if (previousStatusId === status_id) {
       return { message: 'Status do pedido atualizado com sucesso.' };
     }
